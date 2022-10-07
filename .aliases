@@ -49,8 +49,7 @@ function killaudio() {
 # Bootstrap
 function bootstrap() {
     git clone git@github.com:JARMourato/"$1"-bootstrap.git ~/Workspace/Temp/"$1"-bootstrap
-    cd ~/Workspace/Temp/"$1"-bootstrap
-    ./bootstrap.sh
+    ~/Workspace/Temp/"$1"-bootstrap/bootstrap.sh
     rm -rf ~/Workspace/Temp
 }
 
