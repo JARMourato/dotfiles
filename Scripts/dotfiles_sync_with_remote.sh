@@ -1,7 +1,4 @@
-#!/bin/bash
-
-# exit when any command fails
-set -e
+#!/bin/zsh
 
 cd ~/.dotfiles
 
