@@ -48,11 +48,12 @@ PACKAGES=(
 	swiftlint
 	robotsandpencils/made/xcodes
 )
-echo "🍺 Installing brew packages..."
+echo "🍺 Installing utility packages..."
 brew install ${PACKAGES[@]}
 
 CASKS=(
 	android-studio
+	betterzip
 	bitwarden
 	google-chrome
 	iina
@@ -69,8 +70,21 @@ CASKS=(
 	whatsapp
 	zoom
 )
-echo "🍺 Installing cask apps..."
+echo "🍺 Installing apps..."
 brew install --cask ${CASKS[@]}
+
+QUICKLOOKPLUGINS=(
+	qlcolorcode
+	qlmarkdown
+	qlprettypatch
+    qlstephen
+    quicklook-csv
+    quicklook-json
+    suspicious-package
+    webpquicklook
+)
+echo "🍺 Installing quicklook plugins..."
+brew install --cask ${QUICKLOOKPLUGINS[@]}
 
 GEMS=(
 	fastlane -NV

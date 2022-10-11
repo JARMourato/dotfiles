@@ -21,19 +21,16 @@ function txt() {
   "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" "$1"
 }
 
-function git_commit() {
-  git add .
-  git commit -m "$1"
-  git push
+function commit() {
+  ~/.dotfiles/Scripts/git_commit.sh "$1"
 }
 
-function git_repo_setup() {
-    git init
-    git add .
-    git commit -m "first commit"
-    git branch -M main
-    git remote add origin git@github.com:"$1".git
-    git push -u origin main
+function reposetup() {
+  ~/.dotfiles/Scripts/git_repo_setup.sh "$1"
+}
+
+function swiftpackage() {
+  ~/.dotfiles/Scripts/create_spm_package.sh "$1"
 }
 
 # This command kills and relaunches several audio and bluetooth related processes,
