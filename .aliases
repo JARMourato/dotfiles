@@ -25,6 +25,14 @@ function commit() {
   ~/.dotfiles/Scripts/git_commit.sh "$1"
 }
 
+function dotfiles_sync() {
+  ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$1"
+}
+
+function dotfiles_push_changes() {
+  ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$1"
+}
+
 function reposetup() {
   ~/.dotfiles/Scripts/git_repo_setup.sh "$1"
 }
