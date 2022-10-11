@@ -41,6 +41,11 @@ function swiftpackage() {
   ~/.dotfiles/Scripts/create_spm_package.sh "$1"
 }
 
+function tagsreset() {
+  git tag -l | xargs git tag -d
+  git fetch --tags
+}
+
 # This command kills and relaunches several audio and bluetooth related processes,
 # fixing issues bluetooth headsets malfunctioning.
 function killaudio() {
