@@ -4,7 +4,12 @@
 ### Set up symbolic links
 ################################################################################
 
-# TODO: Make this script idempotent
+rm -rf $HOME/.aliases
+rm -rf $HOME/.exports
+rm -rf $HOME/.gemrc
+rm -rf $HOME/.paths
+rm -rf $HOME/.ruby-version
+rm -rf $HOME/.zshrc
 
 # DOTFILES_DIR may have not been initialized yet, if this is the first time setting up .zshrc
 source .exports
