@@ -80,5 +80,5 @@ set -e # Immediately rethrows exceptions
 rm -rf ~/.dotfiles
 git clone git@github.com:jarmourato/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-./_set_up.sh
+./_set_up.sh $1
 echo "Done"
