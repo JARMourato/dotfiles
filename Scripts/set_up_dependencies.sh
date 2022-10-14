@@ -84,12 +84,8 @@ QUICKLOOKPLUGINS=(
 echo "🍺 Installing quicklook plugins..."
 brew install --cask ${QUICKLOOKPLUGINS[@]}
 
-GEMS=(
-	fastlane -NV
-	bundler
-)
-echo "💎 Installing Ruby gems..."
-sudo gem install ${GEMS[@]} -N
+echo "📦 Installing bundler..."
+gem install bundler
 
 echo "🧼 Cleaning up..."
 brew cleanup -s
