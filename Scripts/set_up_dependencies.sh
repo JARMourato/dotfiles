@@ -6,9 +6,6 @@
 
 echo "🚀 Starting setup"
 
-# Ask for the administrator password upfront
-sudo -v
-
 # Install Homebrew if not already installed
 if test ! $(which brew); then
 	echo "🍺 Installing homebrew..."
@@ -39,6 +36,7 @@ PACKAGES=(
 	detekt
 	ktlint
 	hub
+	make
 	pyenv
 	python
 	rbenv
