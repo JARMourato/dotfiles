@@ -22,11 +22,20 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 HIST_STAMPS="%Y/%m/%d %k:%M"
 
 # Plugins
+
+BUNDLED_COMMANDS=(
+  rubocop
+  fastlane
+)
+
+# Plugins
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   bundler
   git
+  pod
+  pyenv
   z
 )
 
@@ -34,7 +43,9 @@ plugins=(
 # See https://github.com/ohmyzsh/ohmyzsh/issues/6835#issuecomment-390216875
 ZSH_DISABLE_COMPFIX=true
 
-source $ZSH/oh-my-zsh.sh
+if [ -f $ZSH/oh-my-zsh.sh ]; then
+  source $ZSH/oh-my-zsh.sh
+fi
 
 ################################################################################
 # Exports
@@ -49,7 +60,7 @@ source "$HOME/.paths"
 # User configuration
 ################################################################################
 
-# Navigate to Projects folder if trying to open a new window under $HOME (which
+# Navigate to Workspace folder if trying to open a new window under $HOME (which
 # is the default folder). This works alongside "New tabs open with: Same Working
 # Directory" behavior.
 if [[ $PWD == $HOME ]]; then
@@ -79,6 +90,20 @@ if which rbenv > /dev/null; then
   eval "$(rbenv init -)"
 fi
 
+# Initialize pyenv if it's already installed
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+
+# Load nvm
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+# https://zsh.sourceforge.io/Doc/Release/Options.html#index-NOMATCH
+# https://thoughtbot.com/blog/how-to-use-arguments-in-a-rake-task
+if which unsetopt > /dev/null; then
+  unsetopt nomatch
+fi
 
 ################################################################################
 # Aliases
