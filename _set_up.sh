@@ -11,5 +11,6 @@ source .zshrc # Must be run again after installing dependencies to apply changes
 source Scripts/decrypt_files.sh $1
 source Scripts/set_up_user_defaults.sh
 source Terminal/set_up_terminal.sh
+source Xcode/set_up_xcode.sh
 source Scripts/set_up_machine_specific_settings.sh
 source Scripts/clean_up.sh
