@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FILEHEADER</key>
+	<!-- When the file being created is in the main project, it contains the "Organization" information,
+	     so it's possible to use the ___COPYRIGHT___ macro. However, when creating files outside the main
+	     project, that info is not available, thus it would create broken headers. This is why we're using
+	     this hardcoded version of the macro, just using a dynamic __YEAR__ macro. -->
+	<string> Copyright © ___YEAR___ JARMourato All rights reserved.</string>
+</dict>
+</plist>
