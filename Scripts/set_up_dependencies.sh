@@ -34,8 +34,9 @@ fi
 PACKAGES=(
 	aria2
 	detekt
-	ktlint
+	gh
 	hub
+	ktlint
 	make
 	pyenv
 	python
