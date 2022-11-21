@@ -7,7 +7,9 @@
 source .exports
 source Scripts/set_up_symlinks.sh
 source Scripts/set_up_dependencies.sh
-source .zshrc # Must be run again after installing dependencies to apply changes
+ # Must be run again after installing dependencies to apply changes
+source .exports
+source .zshrc
 source Scripts/decrypt_files.sh $1
 source Scripts/set_up_user_defaults.sh
 source Terminal/set_up_terminal.sh
