@@ -78,7 +78,7 @@ QUICKLOOKPLUGINS=(
 	qlmarkdown
 	qlprettypatch
     qlstephen
-    quicklook-csv
+    🍏-csv
     quicklook-json
     suspicious-package
     webpquicklook
@@ -98,5 +98,9 @@ RUBY_VERSION="$(cat ~/.ruby-version)"
 rbenv install
 rbenv global $RUBY_VERSION
 echo "💎 Ruby $RUBY_VERSION installed successfully!"
+
+echo "🍏 Installing Appstore Apps"
+mas install 904280696 # Things 3
+mas install 1477385213 # Save to Pocket
 
 echo "🎉 Dependencies Setup complete!"
