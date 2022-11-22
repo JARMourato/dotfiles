@@ -41,6 +41,10 @@ function swiftpackage() {
   ~/.dotfiles/Scripts/create_spm_package.sh "$1"
 }
 
+function xcodeSetup() {
+  ~/.dotfiles/Xcode/set_up_xcode.sh
+}
+
 function tagsreset() {
   git tag -l | xargs git tag -d
   git fetch --tags

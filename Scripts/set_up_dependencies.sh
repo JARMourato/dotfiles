@@ -38,6 +38,7 @@ PACKAGES=(
 	hub
 	ktlint
 	make
+	mas
 	pyenv
 	python
 	rbenv
