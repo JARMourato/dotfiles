@@ -34,7 +34,7 @@ sed -i '' "s/PACKAGE/$PACKAGENAME/g" Package.swift
 
 echo "1️⃣ Local files set up"
 
-hub create -p $GITREMOTE
+gh repo create $GITREMOTE --private
 
 echo "2️⃣ Remote git repo set up"
 
