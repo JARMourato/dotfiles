@@ -74,11 +74,13 @@ echo "🍺 Installing apps..."
 brew install --cask ${CASKS[@]}
 
 QUICKLOOKPLUGINS=(
+	apparency
 	qlcolorcode
+	qlimagesize
 	qlmarkdown
 	qlprettypatch
     qlstephen
-    🍏-csv
+    quicklook-csv
     quicklook-json
     suspicious-package
     webpquicklook
