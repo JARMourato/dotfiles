@@ -45,6 +45,10 @@ function xcodeSetup() {
   ~/.dotfiles/Xcode/set_up_xcode.sh
 }
 
+function updateXcode() {
+  xcodes install --latest --experimental-unxip
+}
+
 function tagsreset() {
   git tag -l | xargs git tag -d
   git fetch --tags
