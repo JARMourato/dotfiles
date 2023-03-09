@@ -57,6 +57,7 @@ CASKS=(
 	bitwarden
 	google-chrome
 	iina
+	notion
 	raycast
 	setapp
 	sf-symbols
