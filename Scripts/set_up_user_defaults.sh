@@ -254,8 +254,14 @@ defaults write $HOME/Library/Preferences/com.apple.controlcenter.plist "NSStatus
 # Mouse                                                                        #
 ################################################################################
 
-# Tracking speed: maximum 5.0
-defaults write -g com.apple.mouse.scaling 5.0
+# Tracking speed
+defaults write -g com.apple.mouse.scaling 2.5
+
+# Double Click Threshold
+defaults write -g com.apple.mouse.doubleClickThreshold 0.2
+
+# Scroll wheel speed
+defaults write -g com.apple.scrollwheel.scaling 1
 
 ################################################################################
 # Photos                                                                       #
