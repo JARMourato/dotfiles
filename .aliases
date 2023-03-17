@@ -64,6 +64,10 @@ function killaudio() {
   sudo kextunload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
 }
 
+function bluetoothreset() {
+  sudo pkill bluetoothd
+}
+
 # Bootstrap
 function bootstrap() {
     git clone git@github.com:JARMourato/"$1"-bootstrap.git ~/Workspace/Temp/"$1"-bootstrap
