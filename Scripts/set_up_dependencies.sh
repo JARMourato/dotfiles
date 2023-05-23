@@ -37,10 +37,12 @@ PACKAGES=(
 	gh
 	hub
 	ktlint
+	libusb
 	make
 	mas
 	pyenv
 	python
+	python-tk
 	rbenv
 	ruby
 	ruby-build
@@ -101,6 +103,9 @@ RUBY_VERSION="$(cat ~/.ruby-version)"
 rbenv install
 rbenv global $RUBY_VERSION
 echo "💎 Ruby $RUBY_VERSION installed successfully!"
+
+echo "🐍 Installing python usb..."
+pip3 install pyusb
 
 echo "🍏 Installing Appstore Apps"
 mas install 904280696 # Things 3
