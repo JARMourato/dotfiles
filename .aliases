@@ -75,6 +75,10 @@ function bootstrap() {
     rm -rf ~/Workspace/Temp
 }
 
+function switchdbi() {
+  python3 ~/.dotfiles/bin/dbi/dbibackend
+}
+
 # gpg-agent eventually dies, randomly, failing to sign commits. This command kills existing gpg-agent process and relaunches it.
 alias killgpg="pkill gpg-agent && gpg-agent --daemon"
 
