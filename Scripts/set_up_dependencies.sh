@@ -36,6 +36,7 @@ PACKAGES=(
 	detekt
 	gh
 	hub
+	jq
 	ktlint
 	libusb
 	make

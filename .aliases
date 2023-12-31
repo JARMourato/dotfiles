@@ -54,6 +54,14 @@ function tagsreset() {
   git fetch --tags
 }
 
+function backupMyGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --user JARMourato "$1"
+}
+
+function backupOrgGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --org "$1" "$2"
+}
+
 # This command kills and relaunches several audio and bluetooth related processes,
 # fixing issues bluetooth headsets malfunctioning.
 function killaudio() {
