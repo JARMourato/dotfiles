@@ -111,5 +111,7 @@ pip3 install pyusb
 echo "🍏 Installing Appstore Apps"
 mas install 904280696 # Things 3
 mas install 1477385213 # Save to Pocket
+mas install 472226235 # LanScan
+mas install 441258766 # Magnet
 
 echo "🎉 Dependencies Setup complete!"
