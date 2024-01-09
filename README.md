@@ -4,7 +4,11 @@ A bundle of all my dotfiles as well as a handful of scripts to help set up macOS
 
 Before doing anything, make sure you know what are you doing! Settings applied by this repository are very personal, and definitely don't suite everyone's needs. I suggest you to create your own set of dotfiles based on this repo.
 
-*Make sure the system is updated before proceeding*
+# Requirements
+
+ - *Make sure the system is updated before proceeding*
+
+ - *Terminal needs full disk access*
 
 # Installation Steps
 

@@ -7,15 +7,6 @@
 # Prerequisite:
 # Terminal Access
 
-echo "To be able to set up all of the settings, Terminal needs full disk access, follow these steps"
-echo "  1 - Click on the Apple icon in the top left of your menu bar and choose \"System Preferences...\"."
-echo "  2 - Click \"Security & Privacy\""
-echo "  3 - Click the "Privacy" tab at the top."
-echo "  4 - Scroll the sidebar and click \"Full Disk Access\""
-echo "  5 - Unlock to allow changes"
-echo "  6 - Add Terminal to the Full Disk Access list"
-read -p "Press enter to continue after completing granting full disk access..."
-
 set -e # Immediately rethrows exceptions
 set -x # Logs every command on Terminal
 
