@@ -76,6 +76,14 @@ function bluetoothreset() {
   sudo pkill bluetoothd
 }
 
+function dotedit() {
+  txt ~/.dotfiles
+}
+
+function dotgit() {
+  sourcetree ~/.dotfiles
+}
+
 # Bootstrap
 function bootstrap() {
     git clone git@github.com:JARMourato/"$1"-bootstrap.git ~/Workspace/Temp/"$1"-bootstrap

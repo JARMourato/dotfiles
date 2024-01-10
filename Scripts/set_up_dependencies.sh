@@ -60,6 +60,7 @@ CASKS=(
 	bitwarden
 	google-chrome
 	iina
+	logi-options-plus
 	notion
 	raycast
 	setapp
