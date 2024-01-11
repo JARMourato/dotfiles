@@ -58,6 +58,7 @@ CASKS=(
 	android-studio
 	betterzip
 	bitwarden
+	calibre
 	google-chrome
 	iina
 	logi-options-plus
