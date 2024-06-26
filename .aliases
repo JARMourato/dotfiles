@@ -41,6 +41,11 @@ function swiftpackage() {
   ~/.dotfiles/Scripts/create_spm_package.sh "$1"
 }
 
+function spmcachereset() {
+  rm -rf ~/Library/Caches/org.swift.swiftpm
+  rm -rf ~/Library/org.swift.swiftpm
+}
+
 function xcodeSetup() {
   ~/.dotfiles/Xcode/set_up_xcode.sh
 }
