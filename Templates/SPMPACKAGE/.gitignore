@@ -22,3 +22,5 @@ DerivedData/
 .swiftpm/
 .netrc
 gradlew.bat
+.swiftpm/
+Package.resolved
