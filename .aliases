@@ -1,0 +1,110 @@
+#!/bin/bash
+
+################################################################################
+### Configure System-Wide Aliases
+################################################################################
+
+
+# Opens a Sourcetree window using the given path, if needed.
+# Example: `sourcetree .` opens a new Sourcetree window for the current directory
+#          or focuses on the open one if there's one open already.
+function sourcetree() {
+  open -a Sourcetree "$1"
+}
+
+function doit() {
+  sourcetree "$1"
+  txt "$1"
+}
+
+function txt() {
+  "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" "$1"
+}
+
+function commit() {
+  ~/.dotfiles/Scripts/git_commit.sh "$1"
+}
+
+function dotfiles_sync() {
+  ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$1"
+}
+
+function dotfiles_push_changes() {
+  ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$1"
+}
+
+function reposetup() {
+  ~/.dotfiles/Scripts/git_repo_setup.sh "$1"
+}
+
+function swiftpackage() {
+  ~/.dotfiles/Scripts/create_spm_package.sh "$1"
+}
+
+function spmcachereset() {
+  rm -rf ~/Library/Caches/org.swift.swiftpm
+  rm -rf ~/Library/org.swift.swiftpm
+}
+
+function xcodeSetup() {
+  ~/.dotfiles/Xcode/set_up_xcode.sh
+}
+
+function updateXcode() {
+  xcodes install --latest --experimental-unxip
+}
+
+function tagsreset() {
+  git tag -l | xargs git tag -d
+  git fetch --tags
+}
+
+function backupMyGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --user JARMourato "$1"
+}
+
+function backupOrgGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --org "$1" "$2"
+}
+
+# This command kills and relaunches several audio and bluetooth related processes,
+# fixing issues bluetooth headsets malfunctioning.
+function killaudio() {
+  sudo kill `pgrep coreaudiod`
+  sudo kill `pgrep bluetoothd`
+  sudo kextunload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+  sudo kextload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+  sudo kextunload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+}
+
+function bluetoothreset() {
+  sudo pkill bluetoothd
+}
+
+function dotedit() {
+  txt ~/.dotfiles
+}
+
+function dotgit() {
+  sourcetree ~/.dotfiles
+}
+
+# Bootstrap
+function bootstrap() {
+    git clone git@github.com:JARMourato/"$1"-bootstrap.git ~/Workspace/Temp/"$1"-bootstrap
+    ~/Workspace/Temp/"$1"-bootstrap/bootstrap.sh
+    rm -rf ~/Workspace/Temp
+}
+
+function switchdbi() {
+  python3 ~/.dotfiles/bin/dbi/dbibackend
+}
+
+# gpg-agent eventually dies, randomly, failing to sign commits. This command kills existing gpg-agent process and relaunches it.
+alias killgpg="pkill gpg-agent && gpg-agent --daemon"
+
+# Opens the Google Play Store console (beta view), ready to publish a new version of the app
+alias playstore="open -a safari https://play.google.com/console/u/1/developers/6280656057399977520/app-list"
+
+# Prints the PATH env var in a user-friendly way
+alias path="tr ':' '\n' <<< \"$PATH\""
