@@ -12,19 +12,93 @@ set -euo pipefail
 # Global variables for parallel execution
 declare -a PARALLEL_PIDS=()
 declare -a PARALLEL_OPERATIONS=()
-declare -A PARALLEL_STATUS=()
-declare -A PARALLEL_LOGS=()
+declare -a PARALLEL_STATUS_KEYS=()
+declare -a PARALLEL_STATUS_VALUES=()
+declare -a PARALLEL_LOGS_KEYS=()
+declare -a PARALLEL_LOGS_VALUES=()
 
 ################################################################################
 ### Core Parallel Functions
 ################################################################################
 
+# Helper functions for bash 3.2 compatibility with associative arrays
+
+# Set status for an operation
+set_parallel_status() {
+    local operation_name="$1"
+    local status="$2"
+    local i
+    
+    # Check if key already exists
+    for ((i=0; i<${#PARALLEL_STATUS_KEYS[@]}; i++)); do
+        if [ "${PARALLEL_STATUS_KEYS[i]}" = "$operation_name" ]; then
+            PARALLEL_STATUS_VALUES[i]="$status"
+            return 0
+        fi
+    done
+    
+    # Add new key-value pair
+    PARALLEL_STATUS_KEYS+=("$operation_name")
+    PARALLEL_STATUS_VALUES+=("$status")
+}
+
+# Get status for an operation
+get_parallel_status() {
+    local operation_name="$1"
+    local i
+    
+    for ((i=0; i<${#PARALLEL_STATUS_KEYS[@]}; i++)); do
+        if [ "${PARALLEL_STATUS_KEYS[i]}" = "$operation_name" ]; then
+            echo "${PARALLEL_STATUS_VALUES[i]}"
+            return 0
+        fi
+    done
+    
+    echo ""  # Return empty if not found
+}
+
+# Set log file for an operation
+set_parallel_log() {
+    local operation_name="$1"
+    local log_file="$2"
+    local i
+    
+    # Check if key already exists
+    for ((i=0; i<${#PARALLEL_LOGS_KEYS[@]}; i++)); do
+        if [ "${PARALLEL_LOGS_KEYS[i]}" = "$operation_name" ]; then
+            PARALLEL_LOGS_VALUES[i]="$log_file"
+            return 0
+        fi
+    done
+    
+    # Add new key-value pair
+    PARALLEL_LOGS_KEYS+=("$operation_name")
+    PARALLEL_LOGS_VALUES+=("$log_file")
+}
+
+# Get log file for an operation
+get_parallel_log() {
+    local operation_name="$1"
+    local i
+    
+    for ((i=0; i<${#PARALLEL_LOGS_KEYS[@]}; i++)); do
+        if [ "${PARALLEL_LOGS_KEYS[i]}" = "$operation_name" ]; then
+            echo "${PARALLEL_LOGS_VALUES[i]}"
+            return 0
+        fi
+    done
+    
+    echo ""  # Return empty if not found
+}
+
 # Initialize parallel execution system
 init_parallel() {
     PARALLEL_PIDS=()
     PARALLEL_OPERATIONS=()
-    PARALLEL_STATUS=()
-    PARALLEL_LOGS=()
+    PARALLEL_STATUS_KEYS=()
+    PARALLEL_STATUS_VALUES=()
+    PARALLEL_LOGS_KEYS=()
+    PARALLEL_LOGS_VALUES=()
     
     # Create log directory for parallel operations
     mkdir -p "$HOME/.dotfiles_logs/parallel"
@@ -37,8 +111,8 @@ queue_parallel_operation() {
     local log_file="$HOME/.dotfiles_logs/parallel/${operation_name}.log"
     
     PARALLEL_OPERATIONS+=("$operation_name")
-    PARALLEL_STATUS["$operation_name"]="queued"
-    PARALLEL_LOGS["$operation_name"]="$log_file"
+    set_parallel_status "$operation_name" "queued"
+    set_parallel_log "$operation_name" "$log_file"
     
     echo "📋 Queued parallel operation: $operation_name"
 }
@@ -47,10 +121,10 @@ queue_parallel_operation() {
 start_parallel_operation() {
     local operation_name="$1"
     local operation_function="$2"
-    local log_file="${PARALLEL_LOGS[$operation_name]}"
+    local log_file="$(get_parallel_log "$operation_name")"
     
     echo "🚀 Starting parallel operation: $operation_name"
-    PARALLEL_STATUS["$operation_name"]="running"
+    set_parallel_status "$operation_name" "running"
     
     # Run operation in background with logging
     {
@@ -66,7 +140,7 @@ start_parallel_operation() {
     
     local pid=$!
     PARALLEL_PIDS+=("$pid")
-    PARALLEL_STATUS["$operation_name"]="running:$pid"
+    set_parallel_status "$operation_name" "running:$pid"
     
     echo "📍 Operation $operation_name started with PID $pid"
 }
@@ -74,19 +148,19 @@ start_parallel_operation() {
 # Check if an operation is complete
 is_operation_complete() {
     local operation_name="$1"
-    local status="${PARALLEL_STATUS[$operation_name]}"
+    local status="$(get_parallel_status "$operation_name")"
     
     if [[ "$status" == "running:"* ]]; then
         local pid="${status#running:}"
         if ! kill -0 "$pid" 2>/dev/null; then
             # Process finished, check status
-            local log_file="${PARALLEL_LOGS[$operation_name]}"
+            local log_file="$(get_parallel_log "$operation_name")"
             if [ -f "${log_file}.status" ]; then
                 local result=$(cat "${log_file}.status")
-                PARALLEL_STATUS["$operation_name"]="$result"
+                set_parallel_status "$operation_name" "$result"
                 return 0
             else
-                PARALLEL_STATUS["$operation_name"]="unknown"
+                set_parallel_status "$operation_name" "unknown"
                 return 0
             fi
         fi
@@ -125,7 +199,7 @@ get_operations_status() {
     echo "=============================="
     
     for operation in "${PARALLEL_OPERATIONS[@]}"; do
-        local status="${PARALLEL_STATUS[$operation]}"
+        local status="$(get_parallel_status "$operation")"
         local icon="❓"
         
         case "$status" in
@@ -145,7 +219,7 @@ show_failed_operations() {
     local has_failures=false
     
     for operation in "${PARALLEL_OPERATIONS[@]}"; do
-        if [ "${PARALLEL_STATUS[$operation]}" = "failed" ]; then
+        if [ "$(get_parallel_status "$operation")" = "failed" ]; then
             if [ "$has_failures" = false ]; then
                 echo "❌ Failed Operations Logs:"
                 echo "=========================="
@@ -154,7 +228,7 @@ show_failed_operations() {
             
             echo ""
             echo "--- $operation ---"
-            local log_file="${PARALLEL_LOGS[$operation]}"
+            local log_file="$(get_parallel_log "$operation")"
             if [ -f "$log_file" ]; then
                 tail -20 "$log_file"
             else
@@ -172,14 +246,15 @@ show_failed_operations() {
 
 # Run operations with dependency management
 run_parallel_with_dependencies() {
-    local -A dependencies=()
-    
-    # Define operation dependencies
-    dependencies["homebrew_formulas"]="homebrew_install"
-    dependencies["homebrew_casks"]="homebrew_install"
-    dependencies["mas_apps"]="homebrew_install"
-    dependencies["ruby_gems"]="homebrew_formulas"  # Needs rbenv from formulas
-    dependencies["python_packages"]="homebrew_formulas"  # Needs pyenv from formulas
+    # Define operation dependencies using bash 3.2 compatible approach
+    # Format: "operation:dependency"
+    local dependencies=(
+        "homebrew_formulas:homebrew_install"
+        "homebrew_casks:homebrew_install"
+        "mas_apps:homebrew_install"
+        "ruby_gems:homebrew_formulas"      # Needs rbenv from formulas
+        "python_packages:homebrew_formulas" # Needs pyenv from formulas
+    )
     
     echo "🔄 Starting parallel execution with dependency management..."
     
@@ -251,7 +326,7 @@ wait_for_operation() {
         sleep 1
     done
     
-    local status="${PARALLEL_STATUS[$operation_name]}"
+    local status="$(get_parallel_status "$operation_name")"
     if [ "$status" = "success" ]; then
         echo "✅ $operation_name completed successfully"
         return 0
