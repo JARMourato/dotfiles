@@ -12,13 +12,57 @@ if [ "${BASH_SOURCE[0]:-}" = "${0:-}" ]; then
     set -euo pipefail
 fi
 
-# Global configuration variables
-declare -A DOTFILES_CONFIG
+# Global configuration variables - bash 3.2 compatible
+declare -a DOTFILES_CONFIG_KEYS=()
+declare -a DOTFILES_CONFIG_VALUES=()
 DOTFILES_CONFIG_LOADED=false
 DOTFILES_SETUP_MODE=""
 
 # Default configuration file path
 DOTFILES_CONFIG_FILE="${DOTFILES_DIR:-$(pwd)}/.dotfiles.config"
+
+################################################################################
+### Helper Functions for bash 3.2 Compatibility
+################################################################################
+
+# Set configuration value
+set_config() {
+    local key="$1"
+    local value="$2"
+    local i
+    
+    # Check if key already exists
+    for ((i=0; i<${#DOTFILES_CONFIG_KEYS[@]}; i++)); do
+        if [ "${DOTFILES_CONFIG_KEYS[i]}" = "$key" ]; then
+            DOTFILES_CONFIG_VALUES[i]="$value"
+            return 0
+        fi
+    done
+    
+    # Add new key-value pair
+    DOTFILES_CONFIG_KEYS+=("$key")
+    DOTFILES_CONFIG_VALUES+=("$value")
+}
+
+# Get configuration value with default fallback
+get_config() {
+    local key="$1"
+    local default_value="${2:-}"
+    local i
+    
+    if [ "$DOTFILES_CONFIG_LOADED" = false ]; then
+        load_dotfiles_config
+    fi
+    
+    for ((i=0; i<${#DOTFILES_CONFIG_KEYS[@]}; i++)); do
+        if [ "${DOTFILES_CONFIG_KEYS[i]}" = "$key" ]; then
+            echo "${DOTFILES_CONFIG_VALUES[i]}"
+            return 0
+        fi
+    done
+    
+    echo "$default_value"  # Return default if not found
+}
 
 ################################################################################
 ### Configuration Loading Functions
@@ -50,25 +94,14 @@ load_dotfiles_config() {
         value="${value%\"}"
         value="${value#\"}"
         
-        # Store in associative array
-        DOTFILES_CONFIG["$key"]="$value"
+        # Store in configuration arrays
+        set_config "$key" "$value"
     done < <(grep -E '^[^#]*=' "$config_file" || true)
     
     DOTFILES_CONFIG_LOADED=true
     echo "✅ Configuration loaded successfully"
 }
 
-# Get configuration value with default fallback
-get_config() {
-    local key="$1"
-    local default_value="${2:-}"
-    
-    if [ "$DOTFILES_CONFIG_LOADED" = false ]; then
-        load_dotfiles_config
-    fi
-    
-    echo "${DOTFILES_CONFIG[$key]:-$default_value}"
-}
 
 # Check if configuration value is true
 config_is_true() {
@@ -119,13 +152,13 @@ apply_minimal_mode_config() {
     echo "🔧 Applying minimal mode overrides..."
     
     # Override package lists
-    DOTFILES_CONFIG["HOMEBREW_FORMULAS"]=$(get_config "MINIMAL_MODE_PACKAGES" "age git jq")
-    DOTFILES_CONFIG["HOMEBREW_CASKS"]=""
-    DOTFILES_CONFIG["QUICKLOOK_PLUGINS"]=""
-    DOTFILES_CONFIG["SKIP_MAS_APPS"]="true"
-    DOTFILES_CONFIG["SKIP_RUBY_INSTALL"]="true"
-    DOTFILES_CONFIG["SKIP_PYTHON_INSTALL"]="true"
-    DOTFILES_CONFIG["SETUP_POWERLINE"]="false"
+    set_config "HOMEBREW_FORMULAS" "$(get_config "MINIMAL_MODE_PACKAGES" "age git jq")"
+    set_config "HOMEBREW_CASKS" ""
+    set_config "QUICKLOOK_PLUGINS" ""
+    set_config "SKIP_MAS_APPS" "true"
+    set_config "SKIP_RUBY_INSTALL" "true"
+    set_config "SKIP_PYTHON_INSTALL" "true"
+    set_config "SETUP_POWERLINE" "false"
 }
 
 # Apply development mode configuration
@@ -137,12 +170,14 @@ apply_dev_mode_config() {
     
     # Add to skip list
     if [ -n "$skip_packages" ]; then
-        DOTFILES_CONFIG["SKIP_PACKAGES"]="${DOTFILES_CONFIG[SKIP_PACKAGES]:-} $skip_packages"
+        local current_skip=$(get_config "SKIP_PACKAGES")
+        set_config "SKIP_PACKAGES" "$current_skip $skip_packages"
     fi
     
     # Add extra dev packages
     if [ -n "$extra_packages" ]; then
-        DOTFILES_CONFIG["HOMEBREW_FORMULAS"]="${DOTFILES_CONFIG[HOMEBREW_FORMULAS]:-} $extra_packages"
+        local current_formulas=$(get_config "HOMEBREW_FORMULAS")
+        set_config "HOMEBREW_FORMULAS" "$current_formulas $extra_packages"
     fi
 }
 
@@ -156,17 +191,20 @@ apply_work_mode_config() {
     # Skip personal packages
     if config_is_true "WORK_MODE_SKIP_PERSONAL"; then
         local personal_packages=$(get_config "PERSONAL_PACKAGES")
-        DOTFILES_CONFIG["SKIP_PACKAGES"]="${DOTFILES_CONFIG[SKIP_PACKAGES]:-} $personal_packages"
+        local current_skip=$(get_config "SKIP_PACKAGES")
+        set_config "SKIP_PACKAGES" "$current_skip $personal_packages"
     fi
     
     # Add work-specific skip packages
     if [ -n "$skip_packages" ]; then
-        DOTFILES_CONFIG["SKIP_PACKAGES"]="${DOTFILES_CONFIG[SKIP_PACKAGES]:-} $skip_packages"
+        local current_skip=$(get_config "SKIP_PACKAGES")
+        set_config "SKIP_PACKAGES" "$current_skip $skip_packages"
     fi
     
     # Add work-specific packages
     if [ -n "$extra_packages" ]; then
-        DOTFILES_CONFIG["HOMEBREW_FORMULAS"]="${DOTFILES_CONFIG[HOMEBREW_FORMULAS]:-} $extra_packages"
+        local current_formulas=$(get_config "HOMEBREW_FORMULAS")
+        set_config "HOMEBREW_FORMULAS" "$current_formulas $extra_packages"
     fi
 }
 
@@ -175,14 +213,14 @@ apply_quick_mode_config() {
     echo "🔧 Applying quick mode overrides..."
     
     # Skip time-consuming installations
-    DOTFILES_CONFIG["SKIP_XCODE"]="true"
-    DOTFILES_CONFIG["SKIP_MAS_APPS"]="true"
-    DOTFILES_CONFIG["SKIP_RUBY_INSTALL"]="true"
-    DOTFILES_CONFIG["SKIP_PYTHON_INSTALL"]="true"
+    set_config "SKIP_XCODE" "true"
+    set_config "SKIP_MAS_APPS" "true"
+    set_config "SKIP_RUBY_INSTALL" "true"
+    set_config "SKIP_PYTHON_INSTALL" "true"
     
     # Reduce package list to essentials
-    DOTFILES_CONFIG["HOMEBREW_CASKS"]="google-chrome visual-studio-code"
-    DOTFILES_CONFIG["QUICKLOOK_PLUGINS"]=""
+    set_config "HOMEBREW_CASKS" "google-chrome visual-studio-code"
+    set_config "QUICKLOOK_PLUGINS" ""
 }
 
 ################################################################################
