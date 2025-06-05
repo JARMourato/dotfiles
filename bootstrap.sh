@@ -4,8 +4,8 @@
 ### Parse command line arguments
 ################################################################################
 
-ENCRYPTION_PASSWORD=""
 PROFILE=""
+SETUP_KEYCHAIN=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -18,33 +18,86 @@ while [[ $# -gt 0 ]]; do
             PROFILE="$2"
             shift 2
             ;;
+        --setup-keychain)
+            SETUP_KEYCHAIN=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: $0 <encryption_password> [--profile=PROFILE]"
+            echo "Usage: $0 [--profile=PROFILE] [--setup-keychain]"
             echo ""
             echo "Available profiles: dev, personal, server"
             echo "If no profile specified, default configuration will be used"
+            echo ""
+            echo "Options:"
+            echo "  --profile=PROFILE     Use specific machine profile"
+            echo "  --setup-keychain      Set up encryption password in keychain"
+            echo ""
+            echo "Examples:"
+            echo "  $0 --profile=personal"
+            echo "  $0 --profile=dev --setup-keychain"
+            echo "  $0 --setup-keychain  # Set up keychain first time"
             exit 0
             ;;
         *)
-            if [ -z "$ENCRYPTION_PASSWORD" ]; then
-                ENCRYPTION_PASSWORD="$1"
-            else
-                echo "Unknown argument: $1"
-                exit 1
-            fi
-            shift
+            echo "Unknown argument: $1"
+            echo "Use --help for usage information"
+            exit 1
             ;;
     esac
 done
 
 ################################################################################
-### Check for encryption password
+### Keychain functions
 ################################################################################
 
-if [ -z "$ENCRYPTION_PASSWORD" ]; then
-   echo "Encryption password missing"
-   echo "Usage: $0 <encryption_password> [--profile=PROFILE]"
-   exit 1
+KEYCHAIN_SERVICE="dotfiles-encryption"
+KEYCHAIN_ACCOUNT="default"
+
+# Function to retrieve password from keychain
+get_keychain_password() {
+    security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w 2>/dev/null
+}
+
+# Function to setup keychain password
+setup_keychain_password() {
+    echo "🔑 Setting up encryption password in keychain..."
+    echo -n "Enter encryption password: "
+    read -s password
+    echo
+    
+    if [[ -n "$password" ]]; then
+        # Delete existing entry if it exists
+        security delete-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" 2>/dev/null || true
+        
+        # Add new entry
+        security add-generic-password -s "$KEYCHAIN_SERVICE" -a "$KEYCHAIN_ACCOUNT" -w "$password"
+        echo "✅ Password stored in keychain successfully"
+        echo "$password"
+    else
+        echo "❌ No password provided"
+        exit 1
+    fi
+}
+
+################################################################################
+### Get or setup encryption password
+################################################################################
+
+ENCRYPTION_PASSWORD=""
+
+if [[ "$SETUP_KEYCHAIN" == true ]]; then
+    ENCRYPTION_PASSWORD=$(setup_keychain_password)
+else
+    echo "🔑 Retrieving encryption password from keychain..."
+    ENCRYPTION_PASSWORD=$(get_keychain_password)
+    
+    if [[ -z "$ENCRYPTION_PASSWORD" ]]; then
+        echo "❌ No encryption password found in keychain"
+        echo "💡 Setting up keychain password for first time..."
+        ENCRYPTION_PASSWORD=$(setup_keychain_password)
+    else
+        echo "✅ Encryption password retrieved from keychain"
+    fi
 fi
 
 ################################################################################
