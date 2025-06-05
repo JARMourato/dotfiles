@@ -153,7 +153,7 @@ fi
 ##### Command line developer tools
 ##################################################################################
 
-if type xcode-select >&- && xpath=$( xcode-select --print-path ) && test -d "${xpath}" && test -x "${xpath}" ; then
+if command -v xcode-select >/dev/null 2>&1 && xpath=$( xcode-select --print-path ) && test -d "${xpath}" && test -x "${xpath}" ; then
    echo "Xcode Command Line Tools already installed"
 else
    echo "Need to install xcode tools"
