@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, improvs ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test on macOS
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Show macOS info
+      run: |
+        echo "🍎 macOS $(sw_vers -productVersion)"
+        echo "Architecture: $(uname -m)"
+        
+    - name: Install test dependencies
+      run: |
+        brew install shellcheck bats-core shfmt
+        
+    - name: Lint shell scripts
+      run: |
+        echo "🔍 Linting shell scripts..."
+        find . -name "*.sh" -not -path "./.git/*" -not -path "./Templates/*" | while read -r script; do
+          echo "Checking: $script"
+          shellcheck -e SC2039 -e SC3010 -s bash "$script" || true
+        done
+        
+    - name: Check script formatting
+      run: |
+        echo "✨ Checking script formatting..."
+        shfmt -d -i 4 Scripts/*.sh bootstrap.sh _set_up.sh || true
+        
+    - name: Validate syntax
+      run: |
+        echo "🔍 Validating bash syntax..."
+        find . -name "*.sh" -not -path "./.git/*" -not -path "./Templates/*" | while read -r script; do
+          echo "Checking syntax: $script"
+          bash -n "$script"
+        done
+        
+    - name: Test dry-run setup
+      run: |
+        echo "🧪 Testing dry-run setup..."
+        ./profile-setup.sh dev
+        echo "test" | ./Scripts/encrypt_files.sh --setup-keychain || true
+        ./Scripts/health_monitor.sh check || true
+        
+    - name: Test help commands
+      run: |
+        echo "📖 Testing help commands..."
+        ./Scripts/create_snapshot.sh --help
+        ./Scripts/encrypt_files.sh --help
+        ./Scripts/bootstrap_project.sh --help
+        ./Scripts/create_private_bootstrap.sh --help

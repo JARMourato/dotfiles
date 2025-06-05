@@ -1,0 +1,37 @@
+repos:
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning", "--shell=bash"]
+        exclude: ^tests/
+        
+  - repo: https://github.com/mvdan/sh
+    rev: v3.7.0
+    hooks:
+      - id: shfmt
+        args: ["-w", "-i", "4"]
+        exclude: ^tests/
+        
+  - repo: local
+    hooks:
+      - id: test-scripts
+        name: Run shell script tests
+        entry: make test
+        language: system
+        pass_filenames: false
+        files: '\.sh$'
+        
+      - id: validate-config
+        name: Validate dotfiles configuration
+        entry: ./Scripts/manage_config.sh validate
+        language: system
+        pass_filenames: false
+        files: '\.config$'
+        
+      - id: check-macos-compatibility
+        name: Check macOS compatibility
+        entry: make check-macos
+        language: system
+        pass_filenames: false
+        files: '\.sh$'
