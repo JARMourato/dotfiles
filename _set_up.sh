@@ -82,10 +82,10 @@ load_performance_libraries() {
         echo "💾 Initialized caching system"
     fi
     
-    # Load parallel operations
-    if [ -f "Scripts/parallel_operations.sh" ]; then
-        source Scripts/parallel_operations.sh
-        echo "⚡ Loaded parallel operations"
+    # Load progress indicators for better UX
+    if [ -f "Scripts/progress_indicators.sh" ]; then
+        source Scripts/progress_indicators.sh
+        echo "📊 Loaded progress indicators"
     fi
 }
 
@@ -116,14 +116,7 @@ else
 fi
 
 echo "📦 Installing dependencies..."
-# Use parallel operations if available, otherwise fallback to sequential
-if command -v run_parallel_with_dependencies >/dev/null 2>&1; then
-    echo "⚡ Running parallel dependency installation..."
-    run_parallel_with_dependencies
-else
-    echo "📦 Running sequential dependency installation..."
-    source Scripts/set_up_dependencies.sh
-fi
+source Scripts/set_up_dependencies.sh
 
 echo "♻️  Reloading exports after dependency installation..."
 # Must be run again after installing dependencies to apply changes
