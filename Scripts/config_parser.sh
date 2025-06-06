@@ -56,12 +56,42 @@ get_config() {
     
     for ((i=0; i<${#DOTFILES_CONFIG_KEYS[@]}; i++)); do
         if [ "${DOTFILES_CONFIG_KEYS[i]}" = "$key" ]; then
-            echo "${DOTFILES_CONFIG_VALUES[i]}"
+            local value="${DOTFILES_CONFIG_VALUES[i]}"
+            # Expand variables in the value
+            value=$(expand_config_variables "$value")
+            echo "$value"
             return 0
         fi
     done
     
     echo "$default_value"  # Return default if not found
+}
+
+# Expand variables in configuration values
+expand_config_variables() {
+    local value="$1"
+    local expanded_value="$value"
+    
+    # Handle $BASE_HOMEBREW_FORMULAS expansion
+    if [[ "$expanded_value" == *'$BASE_HOMEBREW_FORMULAS'* ]]; then
+        local base_formulas=$(get_config_raw "BASE_HOMEBREW_FORMULAS")
+        expanded_value="${expanded_value//\$BASE_HOMEBREW_FORMULAS/$base_formulas}"
+    fi
+    
+    echo "$expanded_value"
+}
+
+# Get config value without expansion (to avoid infinite recursion)
+get_config_raw() {
+    local key="$1"
+    local i
+    
+    for ((i=0; i<${#DOTFILES_CONFIG_KEYS[@]}; i++)); do
+        if [ "${DOTFILES_CONFIG_KEYS[i]}" = "$key" ]; then
+            echo "${DOTFILES_CONFIG_VALUES[i]}"
+            return 0
+        fi
+    done
 }
 
 ################################################################################
