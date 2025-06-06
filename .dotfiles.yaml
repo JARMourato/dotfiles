@@ -1,0 +1,68 @@
+# Base Dotfiles Configuration
+# This is the base configuration that applies to all your machines
+# Profile-specific overrides are in .dotfiles.dev.yaml, .dotfiles.personal.yaml, .dotfiles.server.yaml
+
+profile:
+  name: "base"
+  description: "Base configuration for all machines"
+
+# Git Configuration (applies to all machines)
+git:
+  name: "jarmourato"
+  email: "joao.armourato@gmail.com"
+  auto_setup_ssh: true
+
+# SSH Configuration
+ssh:
+  key_type: "ed25519"
+  auto_configure_github: true
+
+# Base packages that every machine should have
+packages:
+  homebrew:
+    formulas:
+      core:
+        - git          # Version control system
+        - gh           # GitHub CLI for repo management
+        - jq           # JSON processor for API work
+        - curl         # Data transfer tool (updated version)
+        - wget         # File downloader
+        - tree         # Directory structure visualization
+        - bat          # Enhanced cat with syntax highlighting
+        - fd           # Modern file finder (faster than find)
+        - ripgrep      # Fast text search tool
+        - htop         # Interactive process viewer
+    
+    casks: []  # No base apps, profiles will add specific ones
+
+# Security settings
+security:
+  encryption_method: "age"
+  secrets_warning_days: 90
+  create_snapshot: true
+
+# System preferences (macOS defaults that apply everywhere)
+system:
+  setup_macos_defaults: true
+  skip_xcode: false  # Profiles can override this
+
+# Sync settings
+sync:
+  enable_machine_sync: true
+  auto_sync_enabled: false  # Manual sync by default
+
+# Skip categories (can be overridden by profiles)
+skip:
+  homebrew: false
+  mas_apps: true     # Skip Mac App Store by default, enable in profiles if needed
+  ruby_install: true
+  python_install: false
+  node_install: false
+
+# Maintenance
+maintenance:
+  auto_maintenance_enabled: true
+  daily_health_check: true
+
+# Default to minimal mode (profiles will override with additional packages)
+minimal_packages: true

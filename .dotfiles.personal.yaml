@@ -1,0 +1,109 @@
+# Personal Machine Profile
+# This config extends the base configuration for personal use
+
+profile:
+  name: "personal"
+  description: "Personal machine for productivity and entertainment"
+  extends: "base"
+
+# Personal machine settings
+minimal_packages: false
+development_type: "general"
+
+# Personal packages - focus on productivity and entertainment
+packages:
+  homebrew:
+    formulas:
+      media:
+        - youtube-dl      # Download videos from YouTube and other sites
+        - ffmpeg         # Video/audio conversion and processing
+        - imagemagick    # Image manipulation and conversion
+    
+    casks:
+      browsers:
+        - google-chrome   # Primary web browser
+        - firefox        # Alternative web browser
+      
+      communication:
+        - spotify        # Music streaming
+        - telegram       # Messaging app
+        - whatsapp       # Messaging app
+        - discord        # Gaming/community chat
+        - zoom          # Video conferencing
+      
+      productivity:
+        - notion         # Note-taking and organization
+        - obsidian       # Knowledge management
+        - 1password      # Password manager
+        - bitwarden      # Alternative password manager
+        - dropbox        # Cloud storage
+        - google-drive   # Google cloud storage
+      
+      entertainment:
+        - iina           # Modern media player for macOS
+        - vlc            # Universal media player
+        - handbrake      # Video transcoder
+        - steam          # Gaming platform
+        - epic-games-launcher  # Epic Games store
+        - nvidia-geforce-now   # Cloud gaming
+        - netflix        # Streaming service app
+      
+      creative:
+        - adobe-creative-cloud  # Creative suite
+        - final-cut-pro        # Video editing
+        - logic-pro           # Music production
+      
+      utilities:
+        - cleanmymac     # System cleaner
+        - bartender      # Menu bar organizer
+        - alfred         # Application launcher
+        - raycast        # Modern launcher alternative
+        - rectangle      # Window management
+
+# Enable Mac App Store apps for personal use
+skip:
+  mas_apps: false
+
+# Personal Mac App Store apps
+mas_apps:
+  - id: "904280696"
+    name: "Things 3"
+    description: "Task management app"
+  - id: "1477385213" 
+    name: "Save to Pocket"
+    description: "Read-later app"
+  - id: "1295203466"
+    name: "Microsoft Remote Desktop"
+    description: "Remote desktop client"
+
+# Personal development (lighter than dev machine)
+xcode:
+  skip_install: false  # Enable Xcode on personal machine too
+
+# Language environments
+environments:
+  python:
+    skip_install: false
+    versions: ["3.11"]
+  
+  node:
+    skip_install: false
+    version: "lts"
+
+# Personal Git config (different editor preference)
+git:
+  editor: "nano"
+
+# Terminal preferences for personal use
+terminal:
+  enable_powerline: true
+  theme: "basic"
+  setup_custom_terminal: true
+
+# Personal-specific features
+aliases:
+  setup_personal_aliases: true
+  enable_fun_commands: true
+
+# Machine profile identifier
+machine_profile: "personal"

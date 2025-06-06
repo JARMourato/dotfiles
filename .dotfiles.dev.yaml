@@ -1,0 +1,99 @@
+# Development Machine Profile
+# This config extends the base configuration for development work
+
+profile:
+  name: "dev"
+  description: "Swift/iOS development machine setup"
+  extends: "base"
+
+# Override base settings for development
+minimal_packages: false
+development_type: "swift"  # Since you do Swift/iOS development
+
+# Development Tools - Swift/iOS Focus
+packages:
+  homebrew:
+    formulas:
+      swift:
+        - swiftlint      # Swift code linting
+        - swiftformat    # Swift code formatting
+        - carthage       # Dependency manager for Swift/Objective-C
+        - cocoapods      # Dependency manager for Swift/Objective-C
+        - fastlane       # iOS deployment automation
+        - xcbeautify     # Xcode build output formatter
+      
+      additional:
+        - docker         # Containerization platform
+        - docker-compose # Multi-container Docker applications
+        - kubernetes-cli # Kubernetes command line
+        - terraform      # Infrastructure as code
+        - ansible        # Configuration management
+        - aws-cli        # Amazon Web Services CLI
+
+    casks:
+      development:
+        - simulator      # iOS Simulator (separate from Xcode)
+        - sf-symbols     # Apple's symbol library
+        - proxyman       # HTTP debugging proxy
+        - charles        # HTTP proxy/monitor
+        - visual-studio-code  # Microsoft's code editor
+        - sublime-text   # Text editor
+        - sourcetree     # Git GUI client
+        - github-desktop # GitHub's Git GUI client
+      
+      productivity:
+        - postman        # API development/testing
+        - insomnia       # REST client
+        - raycast        # Spotlight replacement
+        - alfred         # Application launcher
+        - rectangle      # Window management
+        - cleanmymac     # System cleaner
+      
+      design:
+        - figma          # Design and prototyping tool
+
+# Enable Xcode and related tools
+xcode:
+  skip_install: false
+  setup_templates: true
+
+# Development environments
+environments:
+  python:
+    skip_install: false
+    versions: ["3.11", "3.12"]
+  
+  node:
+    skip_install: false
+    version: "lts"
+
+# Development-specific Git config
+git:
+  editor: "code --wait"
+  diff_tool: "vscode"
+  merge_tool: "vscode"
+
+# Enable useful development features
+terminal:
+  enable_powerline: true
+  enable_autosuggestions: true
+  enable_syntax_highlighting: true
+  theme: "pro"
+  setup_custom_terminal: true
+
+# QuickLook plugins for development
+quicklook:
+  plugins:
+    - qlcolorcode     # Syntax highlighting in QuickLook
+    - qlmarkdown      # Markdown preview
+    - qlstephen       # Plain text files
+    - qlprettypatch   # Patch files
+    - quicklookapk    # Android APK files
+    - webpquicklook   # WebP images
+
+# Development-specific aliases and functions
+aliases:
+  setup_dev_aliases: true
+
+# Machine profile identifier
+machine_profile: "dev"

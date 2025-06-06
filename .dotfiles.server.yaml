@@ -1,0 +1,107 @@
+# Server Machine Profile (Mac Mini)
+# This config extends the base configuration for server/headless use
+
+profile:
+  name: "server"
+  description: "Server/headless machine for DevOps and automation"
+  extends: "base"
+
+# Server-specific settings
+minimal_packages: true
+development_type: "devops"
+
+# Server-focused tools (no GUI apps)
+packages:
+  homebrew:
+    formulas:
+      containers:
+        - docker          # Container platform
+        - docker-compose  # Multi-container applications
+        - docker-buildx   # Extended build capabilities
+      
+      orchestration:
+        - kubernetes-cli  # Kubernetes command line tool
+        - helm           # Kubernetes package manager
+        - terraform      # Infrastructure as code
+        - ansible        # Configuration management
+        - portainer-cli  # Container management CLI
+      
+      monitoring:
+        - iftop          # Network bandwidth monitor
+        - nethogs        # Network usage by process
+        - ncdu           # Disk usage analyzer
+        - tmux           # Terminal multiplexer
+        - screen         # Terminal session manager
+      
+      network:
+        - rsync          # File synchronization
+        - ssh-copy-id    # SSH key management
+        - mosh           # Mobile shell
+        - nmap           # Network discovery and security
+    
+    # No GUI applications for server
+    casks: []
+
+# Skip unnecessary components for server
+skip:
+  casks: true
+  mas_apps: true
+  terminal_setup: true      # Minimal terminal setup
+  macos_defaults: true      # Don't change system preferences on server
+
+# Disable Xcode for server
+xcode:
+  skip_install: true
+
+# Minimal language support
+environments:
+  python:
+    skip_install: false     # Keep Python for server scripts
+    versions: ["3.11"]
+  
+  node:
+    skip_install: true      # Skip Node.js unless needed
+  
+  ruby:
+    skip_install: true
+
+# Server-specific Git config
+git:
+  editor: "nano"
+
+# Disable GUI features
+terminal:
+  enable_powerline: false
+  setup_custom_terminal: false
+
+# Server security and management
+security:
+  enable_ssh_hardening: true
+  enable_auto_updates: true
+
+# Container-specific settings
+docker:
+  compose_version: "latest"
+  enable_daemon: true
+
+# Server monitoring and health
+monitoring:
+  enable_server_monitoring: true
+  setup_log_rotation: true
+
+# Backup and maintenance
+backup:
+  enable_automated_backups: true
+  frequency: "daily"
+
+# Network services
+network:
+  enable_ssh_server: true
+  setup_vpn_server: false  # Can enable later
+
+# Server-specific aliases and functions
+aliases:
+  setup_server_aliases: true
+
+# Machine profile identifier
+machine_profile: "server"
