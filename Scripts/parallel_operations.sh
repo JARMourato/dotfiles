@@ -379,13 +379,41 @@ parallel_install_homebrew() {
         return 0
     fi
     
-    # Install if not present
-    if ! command -v brew >/dev/null 2>&1; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Check if Homebrew is already installed
+    if command -v brew >/dev/null 2>&1; then
+        echo "✅ Homebrew already installed"
+        brew update
+        return 0
     fi
     
-    # Update Homebrew
-    brew update
+    # Check if we have sudo access without prompting
+    echo "🔐 Checking sudo access..."
+    if ! sudo -n true 2>/dev/null; then
+        echo "❌ Homebrew installation requires sudo access."
+        echo "💡 Please run: sudo -v"
+        echo "💡 Then re-run the bootstrap script."
+        return 1
+    fi
+    
+    # Install Homebrew with non-interactive flag
+    echo "📥 Installing Homebrew..."
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Add Homebrew to PATH for current session
+    if [[ -d "/opt/homebrew" ]]; then
+        export PATH="/opt/homebrew/bin:$PATH"
+    elif [[ -d "/usr/local/Homebrew" ]]; then
+        export PATH="/usr/local/bin:$PATH"
+    fi
+    
+    # Verify installation
+    if command -v brew >/dev/null 2>&1; then
+        echo "✅ Homebrew installed successfully"
+        brew update
+    else
+        echo "❌ Homebrew installation failed"
+        return 1
+    fi
 }
 
 # Parallel formula installation

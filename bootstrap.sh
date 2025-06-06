@@ -187,5 +187,15 @@ if [ -n "$PROFILE" ]; then
     ./profile-setup.sh "$PROFILE"
 fi
 
+# Request sudo access for Homebrew installation if needed
+if ! command -v brew >/dev/null 2>&1; then
+    echo "🔐 Homebrew installation requires administrator access."
+    echo "Please enter your password when prompted."
+    sudo -v
+    
+    # Keep sudo session alive during setup
+    while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+fi
+
 ./_set_up.sh "$ENCRYPTION_PASSWORD"
 echo "Done"
