@@ -127,12 +127,11 @@ fi
 if [ "${SKIP_XCODE:-false}" = "true" ]; then
     echo "⏭️  Skipping Xcode installation (configured)"
 else
-    # Check Xcode
-    xcode=`ls /Applications | grep 'Xcode-' || true`
-
-    if [[ ! -z "$xcode" ]]; then
+    # Check Xcode (use proper conditional to avoid script exit)
+    if ls /Applications | grep -q 'Xcode-'; then
         echo "Xcode is already installed 🎉"
     else
+        echo "Xcode not found, installing..."
         # Install Xcode 
         brew install aria2
         brew install robotsandpencils/made/xcodes
