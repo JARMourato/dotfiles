@@ -169,9 +169,13 @@ else
 fi
 
 # Get cask lists from configuration
+echo "🔍 DEBUG: Loading casks configuration..."
 if command -v get_homebrew_casks >/dev/null 2>&1; then
+    echo "🔍 DEBUG: Using get_homebrew_casks function"
     CASKS=($(get_homebrew_casks))
+    echo "🔍 DEBUG: Got casks from config: ${CASKS[*]}"
 else
+    echo "🔍 DEBUG: Using fallback casks"
     # Fallback to default casks if configuration not available
     CASKS=(android-studio betterzip bitwarden calibre google-chrome iina logi-options-plus notion raycast setapp sf-symbols slack sourcetree spotify sublime-text telegram visual-studio-code xcodes whatsapp zoom)
 fi
@@ -180,12 +184,15 @@ if [ ${#CASKS[@]} -gt 0 ]; then
     echo "🍺 Installing apps (${#CASKS[@]} casks)..."
     echo "Apps: ${CASKS[*]}"
     
-    # Use caching and progress if available
-    if command -v install_packages_with_progress >/dev/null 2>&1; then
-        install_packages_with_progress "cask" "${CASKS[@]}"
-    else
-        retry_command brew install --cask ${CASKS[@]}
-    fi
+    # Install casks one by one to avoid progress bar issues
+    echo "🔍 Installing casks with brew..."
+    for cask in "${CASKS[@]}"; do
+        if [ -n "$cask" ] && [ "$cask" != "" ]; then
+            echo "📦 Installing app: $cask"
+            retry_command brew install --cask "$cask"
+        fi
+    done
+    echo "✅ All apps installed successfully"
 else
     echo "⏭️  No apps to install (configuration)"
 fi
