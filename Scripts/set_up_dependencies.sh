@@ -81,8 +81,8 @@ if ! command_exists brew; then
 	echo "🍺 Installing homebrew..."
 	# Note: Homebrew doesn't publish checksums for their install script
 	# Consider pinning to a specific commit hash for better security
-	local homebrew_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-	local temp_script="/tmp/homebrew_install.sh"
+	homebrew_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+	temp_script="/tmp/homebrew_install.sh"
 	
 	echo "📥 Downloading Homebrew install script..."
 	retry_command curl -fsSL "$homebrew_url" > "$temp_script"
@@ -234,12 +234,12 @@ else
     
     # Get MAS apps from configuration
     if command -v get_mas_apps >/dev/null 2>&1; then
-        local mas_apps=$(get_mas_apps)
+        mas_apps=$(get_mas_apps)
         if [ -n "$mas_apps" ]; then
             echo "Installing configured MAS apps..."
             for app_entry in $mas_apps; do
-                local app_id="${app_entry%:*}"
-                local app_name="${app_entry#*:}"
+                app_id="${app_entry%:*}"
+                app_name="${app_entry#*:}"
                 echo "Installing: $app_name ($app_id)"
                 retry_command mas install "$app_id"
             done
