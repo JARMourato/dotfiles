@@ -139,34 +139,23 @@ else
     fi
 fi
 
-# Get package lists from configuration
-if command -v get_homebrew_formulas >/dev/null 2>&1; then
-    PACKAGES=($(get_homebrew_formulas))
-else
-    # Fallback to default packages if configuration not available
-    PACKAGES=(age aria2 detekt gh hub jq ktlint libusb make mas pyenv python python-tk rbenv ruby ruby-build swiftformat swiftlint robotsandpencils/made/xcodes)
-fi
+# Use simple package list - skip complex configuration for now
+PACKAGES=(age detekt gh hub jq ktlint libusb make mas pyenv python python-tk rbenv ruby ruby-build swiftformat swiftlint carthage cocoapods fastlane xcbeautify)
 
 if [ ${#PACKAGES[@]} -gt 0 ]; then
     echo "🍺 Installing utility packages (${#PACKAGES[@]} packages)..."
     echo "Packages: ${PACKAGES[*]}"
-    echo "🔍 DEBUG: About to check for install_packages_with_progress function"
     
-    # Use caching and progress if available
-    if command -v install_packages_with_progress >/dev/null 2>&1; then
-        echo "🔍 DEBUG: Using install_packages_with_progress"
-        install_packages_with_progress "formula" "${PACKAGES[@]}"
-        echo "🔍 DEBUG: install_packages_with_progress completed"
-    else
-        echo "🔍 DEBUG: Using direct brew install"
-        retry_command brew install ${PACKAGES[@]}
-        echo "🔍 DEBUG: Direct brew install completed"
-    fi
-    echo "🔍 DEBUG: Package installation section completed"
+    # Use direct brew install to avoid progress bar issues
+    echo "🔍 Installing packages with brew..."
+    for package in "${PACKAGES[@]}"; do
+        echo "📦 Installing: $package"
+        retry_command brew install "$package"
+    done
+    echo "✅ All packages installed successfully"
 else
-    echo "⏭️  No utility packages to install (configuration)"
+    echo "⏭️  No utility packages to install"
 fi
-echo "🔍 DEBUG: Reached end of package installation block"
 
 # Get cask lists from configuration
 if command -v get_homebrew_casks >/dev/null 2>&1; then
