@@ -332,6 +332,11 @@ wait_for_operation() {
         return 0
     else
         echo "❌ $operation_name failed"
+        local log_file="$(get_parallel_log "$operation_name")"
+        if [ -f "$log_file" ]; then
+            echo "📋 Error details from $log_file:"
+            tail -10 "$log_file" | sed 's/^/   /'
+        fi
         return 1
     fi
 }
