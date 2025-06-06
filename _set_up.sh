@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+# Add debug trap to see where script exits
+trap 'echo "❌ Script exited at line $LINENO with exit code $?" >&2' ERR
+trap 'echo "🔍 DEBUG: Executing line $LINENO: $BASH_COMMAND" >&2' DEBUG
+
 ################################################################################
 ### Help Documentation
 ################################################################################

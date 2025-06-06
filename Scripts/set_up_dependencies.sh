@@ -123,8 +123,8 @@ else
     retry_command brew update
 fi
 
-# Check if Xcode installation should be skipped (default: skip for dev profile)
-if [ "${SKIP_XCODE:-true}" = "true" ]; then
+# Check if Xcode installation should be skipped
+if [ "${SKIP_XCODE:-false}" = "true" ]; then
     echo "⏭️  Skipping Xcode installation (configured)"
 else
     # Check Xcode
@@ -133,8 +133,10 @@ else
     if [[ ! -z "$xcode" ]]; then
         echo "Xcode is already installed 🎉"
     else
-        echo "⚠️  Xcode installation requires manual download from Apple Developer"
-        echo "💡 Set SKIP_XCODE=false in config to enable automatic installation"
+        # Install Xcode 
+        brew install aria2
+        brew install robotsandpencils/made/xcodes
+        xcodes install --latest --experimental-unxip
     fi
 fi
 
@@ -149,16 +151,23 @@ fi
 if [ ${#PACKAGES[@]} -gt 0 ]; then
     echo "🍺 Installing utility packages (${#PACKAGES[@]} packages)..."
     echo "Packages: ${PACKAGES[*]}"
+    echo "🔍 DEBUG: About to check for install_packages_with_progress function"
     
     # Use caching and progress if available
     if command -v install_packages_with_progress >/dev/null 2>&1; then
+        echo "🔍 DEBUG: Using install_packages_with_progress"
         install_packages_with_progress "formula" "${PACKAGES[@]}"
+        echo "🔍 DEBUG: install_packages_with_progress completed"
     else
+        echo "🔍 DEBUG: Using direct brew install"
         retry_command brew install ${PACKAGES[@]}
+        echo "🔍 DEBUG: Direct brew install completed"
     fi
+    echo "🔍 DEBUG: Package installation section completed"
 else
     echo "⏭️  No utility packages to install (configuration)"
 fi
+echo "🔍 DEBUG: Reached end of package installation block"
 
 # Get cask lists from configuration
 if command -v get_homebrew_casks >/dev/null 2>&1; then
