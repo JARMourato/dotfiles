@@ -123,8 +123,8 @@ else
     retry_command brew update
 fi
 
-# Check if Xcode installation should be skipped
-if [ "${SKIP_XCODE:-false}" = "true" ]; then
+# Check if Xcode installation should be skipped (default: skip for dev profile)
+if [ "${SKIP_XCODE:-true}" = "true" ]; then
     echo "⏭️  Skipping Xcode installation (configured)"
 else
     # Check Xcode
@@ -133,10 +133,8 @@ else
     if [[ ! -z "$xcode" ]]; then
         echo "Xcode is already installed 🎉"
     else
-        # Install Xcode 
-        brew install aria2
-        brew install robotsandpencils/made/xcodes
-        xcodes install --latest --experimental-unxip
+        echo "⚠️  Xcode installation requires manual download from Apple Developer"
+        echo "💡 Set SKIP_XCODE=false in config to enable automatic installation"
     fi
 fi
 
