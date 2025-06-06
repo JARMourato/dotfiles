@@ -30,10 +30,18 @@ command_exists() {
 
 # Validate brew installation
 validate_brew() {
+    # Add Homebrew to PATH for validation
+    if [[ -d "/opt/homebrew" ]]; then
+        export PATH="/opt/homebrew/bin:$PATH"
+    elif [[ -d "/usr/local/Homebrew" ]]; then
+        export PATH="/usr/local/bin:$PATH"
+    fi
+    
     if ! command_exists brew; then
         echo "Error: Homebrew installation failed"
         exit 1
     fi
+    echo "✅ Homebrew installation validated"
 }
 
 ################################################################################
@@ -90,6 +98,16 @@ if ! command_exists brew; then
 	echo "🔧 Executing Homebrew installation..."
 	retry_command bash "$temp_script"
 	rm -f "$temp_script"
+	
+	# Add Homebrew to PATH immediately after installation
+	if [[ -d "/opt/homebrew" ]]; then
+		export PATH="/opt/homebrew/bin:$PATH"
+		eval "$(/opt/homebrew/bin/brew shellenv)"
+	elif [[ -d "/usr/local/Homebrew" ]]; then
+		export PATH="/usr/local/bin:$PATH"
+		eval "$(/usr/local/bin/brew shellenv)"
+	fi
+	
 	validate_brew
 fi
 
