@@ -87,8 +87,16 @@ calculate_eta() {
     fi
     
     local elapsed=$(($(date +%s) - start_time))
+    # Prevent division by zero
+    if [ $elapsed -eq 0 ]; then
+        elapsed=1
+    fi
     local rate=$((current * 1000 / elapsed))  # items per second * 1000
     local remaining=$((total - current))
+    # Prevent division by zero for rate
+    if [ $rate -eq 0 ]; then
+        rate=1
+    fi
     local eta_seconds=$((remaining * 1000 / rate))
     
     if [ $eta_seconds -lt 60 ]; then
