@@ -128,7 +128,7 @@ if [ "${SKIP_XCODE:-false}" = "true" ]; then
     echo "⏭️  Skipping Xcode installation (configured)"
 else
     # Check Xcode
-    xcode=`ls /Applications | grep 'Xcode-'`
+    xcode=`ls /Applications | grep 'Xcode-' || true`
 
     if [[ ! -z "$xcode" ]]; then
         echo "Xcode is already installed 🎉"
