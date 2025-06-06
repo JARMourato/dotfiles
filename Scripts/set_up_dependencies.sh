@@ -139,18 +139,29 @@ else
     fi
 fi
 
-# Use simple package list - skip complex configuration for now
-PACKAGES=(age detekt gh hub jq ktlint libusb make mas pyenv python python-tk rbenv ruby ruby-build swiftformat swiftlint carthage cocoapods fastlane xcbeautify)
+# Get package lists from configuration
+echo "🔍 DEBUG: Loading package configuration..."
+if command -v get_homebrew_formulas >/dev/null 2>&1; then
+    echo "🔍 DEBUG: Using get_homebrew_formulas function"
+    PACKAGES=($(get_homebrew_formulas))
+    echo "🔍 DEBUG: Got packages from config: ${PACKAGES[*]}"
+else
+    echo "🔍 DEBUG: Using fallback packages"
+    # Fallback to default packages if configuration not available
+    PACKAGES=(age aria2 detekt gh hub jq ktlint libusb make mas pyenv python python-tk rbenv ruby ruby-build swiftformat swiftlint)
+fi
 
 if [ ${#PACKAGES[@]} -gt 0 ]; then
     echo "🍺 Installing utility packages (${#PACKAGES[@]} packages)..."
     echo "Packages: ${PACKAGES[*]}"
     
-    # Use direct brew install to avoid progress bar issues
+    # Install packages one by one to avoid progress bar issues
     echo "🔍 Installing packages with brew..."
     for package in "${PACKAGES[@]}"; do
-        echo "📦 Installing: $package"
-        retry_command brew install "$package"
+        if [ -n "$package" ] && [ "$package" != "" ]; then
+            echo "📦 Installing: $package"
+            retry_command brew install "$package"
+        fi
     done
     echo "✅ All packages installed successfully"
 else
