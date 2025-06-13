@@ -1,0 +1,53 @@
+# Server machine profile configuration
+# This profile is optimized for headless/server environments
+
+profile:
+  name: "server"
+  description: "Server/headless machine setup"
+
+# Package management
+homebrew:
+  formulas:
+    # Essential server tools
+    - git
+    - curl
+    - wget
+    - jq
+    - tree
+    - bat
+    - fd
+    - ripgrep
+    - htop
+    
+    # Development and automation
+    - docker
+    - docker-compose
+    - kubernetes-cli
+    - terraform
+    - ansible
+    - awscli
+    - python3
+    - node
+    
+  casks: []  # No GUI applications for servers
+
+# Mac App Store applications
+mas_apps: []  # No Mac App Store apps for servers
+
+# Configuration
+config:
+  skip_xcode: true
+  skip_homebrew: false
+  skip_mas_apps: true
+  skip_ruby_install: true
+  skip_python_install: false
+  python_versions: ["3.12"]
+  skip_node_install: false
+  node_version: "lts"
+  
+  # Minimal terminal setup
+  enable_powerline: false
+  enable_autosuggestions: true
+  enable_syntax_highlighting: true
+  theme: "Basic"
+  setup_custom_terminal: false

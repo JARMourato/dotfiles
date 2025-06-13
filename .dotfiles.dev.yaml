@@ -1,0 +1,239 @@
+# Development machine profile configuration
+# This profile is optimized for iOS/Swift development
+
+profile:
+  name: "dev"
+  description: "Development machine setup"
+
+# Package management
+homebrew:
+  formulas:
+    # Core development tools
+    - git
+    - gh
+    - jq
+    - curl
+    - wget
+    - tree
+    - bat
+    - fd
+    - ripgrep
+    - htop
+    - mas
+    - rbenv
+    - ruby-build
+    - python
+    - python-tk
+    - node
+    
+    # Swift/iOS development
+    - swiftlint
+    - swiftformat
+    - carthage
+    - cocoapods
+    - fastlane
+    - xcbeautify
+    
+    # Cloud and DevOps
+    - docker
+    - docker-compose
+    - kubernetes-cli
+    - terraform
+    - ansible
+    - awscli
+    
+  casks:
+    # Development tools
+    - sf-symbols
+    - proxyman
+    - charles
+    - visual-studio-code
+    - sublime-text
+    - sourcetree
+    - postman
+    - cursor
+    
+    # Browsers and communication
+    - google-chrome
+    - slack
+    - zoom
+    - whatsapp
+    - telegram
+    
+    # Productivity
+    - bitwarden
+    - spotify
+    - iina
+    - betterzip
+    - openaudible
+    - setapp
+    - dockdoor
+    
+    # AI tools
+    - chatgpt
+    - claude
+
+# Mac App Store applications
+mas_apps:
+  - id: 472226235
+    name: "LanScan"
+  - id: 904280696
+    name: "Things 3"
+
+# Configuration
+config:
+  git:
+    user_name: "JARMourato"
+    user_email: "joao.armourato@gmail.com"
+  setup_xcode_templates: true
+  python_versions: ["3.12"]
+  node_version: "lts"
+  cleanup_apps:
+    - "GarageBand.app"
+    - "iMovie.app"
+    - "Keynote.app"
+    - "Numbers.app"
+    - "Pages.app"
+  
+  # Terminal setup
+  enable_powerline: true
+  enable_autosuggestions: true
+  enable_syntax_highlighting: true
+  theme: "Highway"
+  setup_custom_terminal: true
+  
+  # User Defaults Configuration
+  user_defaults:
+    # Activity Monitor
+    activity_monitor:
+      open_main_window: true
+      show_all_processes: true
+      sort_by_cpu: true
+    
+    # App Store
+    app_store:
+      check_updates_daily: true
+    
+    # Dock
+    dock:
+      autohide: false
+      tile_size: 40
+      large_size: 64
+      magnification: true
+      minimize_to_application: true
+      show_process_indicators: true
+      orientation: "bottom"
+      disable_recent_apps: true
+      disable_rearrange_spaces: true
+    
+    # Finder
+    finder:
+      new_window_target: "home"  # home, desktop, or custom path
+      show_external_drives: true
+      show_hard_drives: true
+      show_servers: true
+      show_removable_media: true
+      show_hidden_files: false
+      show_status_bar: true
+      show_path_bar: true
+      show_posix_path_title: true
+      sort_folders_first: true
+      search_current_folder: true
+      snap_to_grid: true
+      preferred_view: "column"  # icon, list, column, gallery
+      empty_trash_securely: true
+      expand_info_panes: true
+    
+    # Keyboard
+    keyboard:
+      disable_auto_capitalization: true
+      disable_smart_dashes: true
+      disable_period_substitution: true
+      disable_smart_quotes: true
+      disable_auto_correct: true
+      disable_text_completion: true
+      key_repeat_rate: 2
+      initial_key_repeat: 35
+      disable_press_and_hold: true
+      enable_tab_navigation: true
+    
+    # Language & Region
+    language_region:
+      languages: ["en-US", "pt-PT"]
+      locale: "en_US@currency=EUR"
+      measurement_units: "Centimeters"
+      metric_units: true
+      temperature_unit: "Celsius"
+      force_24_hour: true
+      hide_language_menu: true
+    
+    # Mouse & Trackpad
+    mouse:
+      tracking_speed: 2.5
+      double_click_threshold: 0.2
+      scroll_speed: 1
+    
+    trackpad:
+      tap_to_click: true
+      silent_clicking: true
+      haptic_feedback: 0  # 0=light, 1=medium, 2=firm
+      tracking_speed: 2.5
+      disable_swipe_navigation: true
+    
+    # Power Management
+    power:
+      sleep_on_power: 0  # 0 = never
+      sleep_on_battery: 10
+      disable_proximity_wake: true
+      disable_power_nap: true
+      require_password_immediately: true
+    
+    # Screen & Screenshots
+    screen:
+      font_smoothing: 1
+      enable_hidpi: true
+      screenshot_location: "~/Pictures/Screenshots"
+      screenshot_format: "png"
+      disable_screenshot_shadows: false
+    
+    # Menu Bar Clock
+    menu_bar:
+      show_full_date_time: true  # Shows full date with seconds
+      date_format: "EEE MMM d  h:mm:ss a"  # Custom format: "Mon Jan 1  1:23:45 PM"
+      flash_date_separators: true  # Makes the colons blink
+    
+    # Terminal
+    terminal:
+      secure_keyboard_entry: true
+    
+    # Time Machine
+    time_machine:
+      disable_new_disk_prompt: true
+    
+    # Hot Corners
+    hot_corners:
+      top_left: 4      # Desktop
+      top_right: 3     # Application windows  
+      bottom_left: 0   # No action
+      bottom_right: 2  # Mission Control
+    
+    # Xcode (Developer Settings)
+    xcode:
+      trim_whitespace: true
+      trim_whitespace_only_lines: true
+      disable_case_indent: true
+      indent_on_paste: true
+      overscroll_amount: 0.25
+      hide_authors_panel: true
+      hide_minimap: true
+      show_build_steps: true
+      show_analyzer_results: true
+      show_errors: true
+      show_warnings: true
+      command_click_jumps: true
+      show_indexing_progress: true
+      show_build_duration: true
+  
+  # Development tools
+  install_claude_cli: true
+  install_claude_vscode_ext: true
