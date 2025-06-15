@@ -35,7 +35,6 @@ homebrew:
     - xcbeautify
     
     # Cloud and DevOps
-    - docker
     - docker-compose
     - kubernetes-cli
     - terraform
@@ -44,6 +43,7 @@ homebrew:
     
   casks:
     # Development tools
+    - docker
     - sf-symbols
     - proxyman
     - charles
