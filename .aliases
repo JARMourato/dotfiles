@@ -108,3 +108,6 @@ alias playstore="open -a safari https://play.google.com/console/u/1/developers/6
 
 # Prints the PATH env var in a user-friendly way
 alias path="tr ':' '\n' <<< \"$PATH\""
+
+# Update all dependencies based on current dotfiles profile
+alias update-dependencies="~/.dotfiles/Scripts/update_dependencies.sh"
