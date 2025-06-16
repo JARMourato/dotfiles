@@ -209,11 +209,11 @@ main() {
             
             # Check for local changes
             cd "${DOTFILES_DIR}"
-            if git diff --quiet "${YAML_FILE}"; then
+            if [[ -d .git ]] && git diff --quiet "${YAML_FILE}" 2>/dev/null; then
                 echo -e "\n${GREEN}No local YAML changes${NC}"
-            else
+            elif [[ -d .git ]]; then
                 echo -e "\n${YELLOW}Local YAML has uncommitted changes${NC}"
-                git diff --stat "${YAML_FILE}"
+                git diff --stat "${YAML_FILE}" 2>/dev/null || true
             fi
             
             # Check remote
