@@ -29,6 +29,10 @@ function dotfiles_sync() {
   ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$1"
 }
 
+function dotfiles_light_sync() {
+  ~/dotfiles/bin/yaml_sync.sh "$1"
+}
+
 function dotfiles_push_changes() {
   ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$1"
 }
