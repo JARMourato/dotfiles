@@ -26,16 +26,40 @@ function commit() {
 }
 
 function dotfiles_sync() {
-  ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$1"
+  ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$@"
 }
 
-function dotfiles_light_sync() {
-  ~/dotfiles/bin/yaml_sync.sh "$1"
+function dotfiles_check() {
+  ~/dotfiles/bin/yaml_sync.sh check
+}
+
+function dotfiles_pull() {
+  ~/dotfiles/bin/yaml_sync.sh pull
+}
+
+function dotfiles_push() {
+  ~/dotfiles/bin/yaml_sync.sh push
+}
+
+function dotfiles_status() {
+  ~/dotfiles/bin/yaml_sync.sh status
 }
 
 function dotfiles_push_changes() {
-  ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$1"
+  ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$@"
 }
+
+# Dotfiles sync shortcuts
+alias dots='dotfiles_status'        # What's my dotfiles status?
+alias dotcheck='dotfiles_check'     # Any remote changes?
+alias dotpull='dotfiles_pull'       # Get latest config
+alias dotpush='dotfiles_push'       # Push my config changes
+alias dotsync='dotfiles_sync'       # Full system sync
+alias dotforce='dotfiles_sync --force'  # Force full sync
+
+# Even shorter for frequent use
+alias ds='dotfiles_status'
+alias dc='dotfiles_check'
 
 function reposetup() {
   ~/.dotfiles/Scripts/git_repo_setup.sh "$1"
