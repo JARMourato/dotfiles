@@ -57,13 +57,13 @@ fetch_remote_yaml() {
     local remote_url="https://raw.githubusercontent.com/JARMourato/dotfiles/main/${YAML_FILE}"
     local temp_file="${STATE_DIR}/remote_${YAML_FILE}"
     
-    echo -e "${YELLOW}Fetching remote YAML configuration...${NC}"
+    echo -e "${YELLOW}Fetching remote YAML configuration...${NC}" >&2
     
     if curl -sL "$remote_url" -o "$temp_file"; then
-        echo -e "${GREEN}✓ Remote YAML fetched successfully${NC}"
+        echo -e "${GREEN}✓ Remote YAML fetched successfully${NC}" >&2
         echo "$temp_file"
     else
-        echo -e "${RED}✗ Failed to fetch remote YAML${NC}"
+        echo -e "${RED}✗ Failed to fetch remote YAML${NC}" >&2
         return 1
     fi
 }
