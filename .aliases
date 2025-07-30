@@ -30,19 +30,19 @@ function dotfiles_sync() {
 }
 
 function dotfiles_check() {
-  ~/dotfiles/bin/yaml_sync.sh check
+  ~/.dotfiles/bin/yaml_sync.sh check
 }
 
 function dotfiles_pull() {
-  ~/dotfiles/bin/yaml_sync.sh pull
+  ~/.dotfiles/bin/yaml_sync.sh pull
 }
 
 function dotfiles_push() {
-  ~/dotfiles/bin/yaml_sync.sh push
+  ~/.dotfiles/bin/yaml_sync.sh push
 }
 
 function dotfiles_status() {
-  ~/dotfiles/bin/yaml_sync.sh status
+  ~/.dotfiles/bin/yaml_sync.sh status
 }
 
 function dotfiles_push_changes() {
