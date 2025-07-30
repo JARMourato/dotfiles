@@ -48,7 +48,7 @@ parse_yaml_to_config() {
     echo "" >> "$output_file"
     
     # Extract basic config
-    echo "MACHINE_PROFILE=\"$profile\"" >> "$output_file"
+    echo "export MACHINE_PROFILE=\"$profile\"" >> "$output_file"
     
     # Parse homebrew formulas (precise parsing to avoid conflicts)
     local formulas=$(awk '/^  formulas:/{flag=1; next} /^  [a-z]/{flag=0} flag && /^    - /{gsub(/^    - /, ""); print}' "$yaml_file" | tr '\n' ' ' | sed 's/ $//')
