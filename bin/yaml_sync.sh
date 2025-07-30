@@ -9,17 +9,22 @@ DOTFILES_DIR="${HOME}/.dotfiles"
 
 # Read profile from config file
 if [[ -f "$DOTFILES_DIR/.dotfiles.config" ]]; then
-    PROFILE=$(grep '^export MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" | cut -d'"' -f2)
+    # Try with export prefix first
+    PROFILE=$(grep '^export MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" 2>/dev/null | cut -d'"' -f2 | head -n1)
     if [[ -z "$PROFILE" ]]; then
         # Try without export prefix
-        PROFILE=$(grep '^MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" | cut -d'"' -f2)
+        PROFILE=$(grep '^MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" 2>/dev/null | cut -d'"' -f2 | head -n1)
     fi
+else
+    echo -e "${RED}Error: Config file not found at $DOTFILES_DIR/.dotfiles.config${NC}"
+    exit 1
 fi
 
 # Ensure profile was found
 if [[ -z "${PROFILE:-}" ]]; then
-    echo -e "${RED}Error: Could not determine machine profile${NC}"
-    echo "Please run bootstrap.sh to set up your profile"
+    echo -e "${RED}Error: Could not determine machine profile from config file${NC}"
+    echo "Config file contents:"
+    grep MACHINE_PROFILE "$DOTFILES_DIR/.dotfiles.config" || echo "No MACHINE_PROFILE found"
     exit 1
 fi
 
@@ -217,19 +222,28 @@ main() {
             # Show current sync status
             echo "Profile: ${PROFILE}"
             echo "YAML file: ${YAML_FILE}"
+            echo "Config path: ${DOTFILES_DIR}/${CONFIG_FILE}"
             
             if [[ -f "$CHECKSUM_FILE" ]]; then
                 echo -e "\nLast sync:"
                 tail -n 1 "$CHECKSUM_FILE"
+            else
+                echo -e "\nNo sync history found"
             fi
             
-            # Check for local changes
-            cd "${DOTFILES_DIR}"
-            if [[ -d .git ]] && git diff --quiet "${YAML_FILE}" 2>/dev/null; then
-                echo -e "\n${GREEN}No local YAML changes${NC}"
-            elif [[ -d .git ]]; then
-                echo -e "\n${YELLOW}Local YAML has uncommitted changes${NC}"
-                git diff --stat "${YAML_FILE}" 2>/dev/null || true
+            # Check for local changes (if in git repo)
+            if [[ -d "${DOTFILES_DIR}/.git" ]]; then
+                cd "${DOTFILES_DIR}" || {
+                    echo -e "${RED}Error: Cannot change to dotfiles directory${NC}"
+                    exit 1
+                }
+                
+                if git diff --quiet "${YAML_FILE}" 2>/dev/null; then
+                    echo -e "\n${GREEN}No local YAML changes${NC}"
+                else
+                    echo -e "\n${YELLOW}Local YAML has uncommitted changes${NC}"
+                    git diff --stat "${YAML_FILE}" 2>/dev/null || true
+                fi
             fi
             
             # Check remote
