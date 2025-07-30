@@ -6,7 +6,15 @@ set -euo pipefail
 # This script handles pulling remote YAML changes and determining if a full sync is needed
 
 DOTFILES_DIR="${HOME}/dotfiles"
-PROFILE="${MACHINE_PROFILE:-dev}"
+PROFILE="${MACHINE_PROFILE}"
+
+# Ensure MACHINE_PROFILE is set
+if [[ -z "$PROFILE" ]]; then
+    echo -e "${RED}Error: MACHINE_PROFILE is not set${NC}"
+    echo "Please run 'source ~/.dotfiles/.exports' or set up your profile with bootstrap.sh"
+    exit 1
+fi
+
 YAML_FILE=".dotfiles.${PROFILE}.yaml"
 CONFIG_FILE=".dotfiles.config"
 STATE_DIR="${DOTFILES_DIR}/.state"
