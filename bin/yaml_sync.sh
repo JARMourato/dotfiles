@@ -9,12 +9,8 @@ DOTFILES_DIR="${HOME}/.dotfiles"
 
 # Read profile from config file
 if [[ -f "$DOTFILES_DIR/.dotfiles.config" ]]; then
-    # Try with export prefix first
-    PROFILE=$(grep '^export MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" 2>/dev/null | cut -d'"' -f2 | head -n1)
-    if [[ -z "$PROFILE" ]]; then
-        # Try without export prefix
-        PROFILE=$(grep '^MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" 2>/dev/null | cut -d'"' -f2 | head -n1)
-    fi
+    # Try both patterns and use the first one that matches
+    PROFILE=$(grep -E '^(export )?MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" 2>/dev/null | head -n1 | cut -d'"' -f2)
 else
     echo -e "${RED}Error: Config file not found at $DOTFILES_DIR/.dotfiles.config${NC}"
     exit 1
