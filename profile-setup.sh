@@ -8,22 +8,28 @@ set -e
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Available profiles
-AVAILABLE_PROFILES=("dev" "personal" "server")
+# Dynamically detect available profiles from YAML files
+AVAILABLE_PROFILES=()
+for file in "$SCRIPT_DIR"/.dotfiles.*.yaml; do
+    if [[ -f "$file" ]]; then
+        profile=$(basename "$file" | sed 's/^\.dotfiles\.\(.*\)\.yaml$/\1/')
+        AVAILABLE_PROFILES+=("$profile")
+    fi
+done
 
 # Function to show usage
 show_usage() {
     echo "Usage: $0 [PROFILE]"
     echo ""
     echo "Available profiles:"
-    echo "  dev       - Development machine (Xcode, development tools, IDEs)"
-    echo "  personal  - Personal machine (entertainment, productivity apps)"
-    echo "  server    - Server/headless machine (Docker, server tools, no GUI)"
+    for profile in "${AVAILABLE_PROFILES[@]}"; do
+        echo "  - $profile"
+    done
     echo ""
     echo "Examples:"
-    echo "  $0 dev        # Set up development machine"
-    echo "  $0 personal   # Set up personal machine"
-    echo "  $0 server     # Set up server machine"
+    for profile in "${AVAILABLE_PROFILES[@]}"; do
+        echo "  $0 $profile"
+    done
 }
 
 # Function to parse YAML and create shell config
