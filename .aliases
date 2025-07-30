@@ -49,6 +49,40 @@ function dotfiles_push_changes() {
   ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$@"
 }
 
+function dotfiles_profile() {
+  if [ -z "$1" ]; then
+    # No argument - show current profile and available profiles
+    echo "Current profile: $(grep 'MACHINE_PROFILE=' ~/.dotfiles/.dotfiles.config 2>/dev/null | cut -d'"' -f2 || echo 'unknown')"
+    echo ""
+    echo "Available profiles:"
+    for file in ~/.dotfiles/.dotfiles.*.yaml; do
+      if [ -f "$file" ]; then
+        profile=$(basename "$file" | sed 's/.dotfiles.\(.*\).yaml/\1/')
+        echo "  - $profile"
+      fi
+    done
+    echo ""
+    echo "Usage: dotfiles_profile <profile_name>"
+  else
+    # Profile specified - switch to it
+    profile="$1"
+    if [ -f ~/.dotfiles/.dotfiles."$profile".yaml ]; then
+      echo "Switching to profile: $profile"
+      cd ~/.dotfiles && ./bootstrap.sh --profile="$profile"
+    else
+      echo "Error: Profile '$profile' not found"
+      echo "Available profiles:"
+      for file in ~/.dotfiles/.dotfiles.*.yaml; do
+        if [ -f "$file" ]; then
+          available=$(basename "$file" | sed 's/.dotfiles.\(.*\).yaml/\1/')
+          echo "  - $available"
+        fi
+      done
+      return 1
+    fi
+  fi
+}
+
 # Dotfiles sync shortcuts
 alias dots='dotfiles_status'        # What's my dotfiles status?
 alias dotcheck='dotfiles_check'     # Any remote changes?
