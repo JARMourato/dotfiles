@@ -3,3 +3,6 @@
 
 # State directory
 .state/
+
+# Machine-specific configuration (generated from profile)
+.dotfiles.config
