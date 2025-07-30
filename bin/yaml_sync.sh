@@ -5,13 +5,21 @@ set -euo pipefail
 # YAML Sync - Lightweight sync mechanism for dotfiles YAML configuration
 # This script handles pulling remote YAML changes and determining if a full sync is needed
 
-DOTFILES_DIR="${HOME}/dotfiles"
-PROFILE="${MACHINE_PROFILE}"
+DOTFILES_DIR="${HOME}/.dotfiles"
 
-# Ensure MACHINE_PROFILE is set
-if [[ -z "$PROFILE" ]]; then
-    echo -e "${RED}Error: MACHINE_PROFILE is not set${NC}"
-    echo "Please run 'source ~/.dotfiles/.exports' or set up your profile with bootstrap.sh"
+# Read profile from config file
+if [[ -f "$DOTFILES_DIR/.dotfiles.config" ]]; then
+    PROFILE=$(grep '^export MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" | cut -d'"' -f2)
+    if [[ -z "$PROFILE" ]]; then
+        # Try without export prefix
+        PROFILE=$(grep '^MACHINE_PROFILE=' "$DOTFILES_DIR/.dotfiles.config" | cut -d'"' -f2)
+    fi
+fi
+
+# Ensure profile was found
+if [[ -z "${PROFILE:-}" ]]; then
+    echo -e "${RED}Error: Could not determine machine profile${NC}"
+    echo "Please run bootstrap.sh to set up your profile"
     exit 1
 fi
 
