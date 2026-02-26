@@ -1,8 +1,3 @@
-# Claude AI
-.claude
-
-# State directory
-.state/
-
-# Machine-specific configuration (generated from profile)
-.dotfiles.config
+node_modules/
+dist/
+*.js.map
