@@ -40,16 +40,17 @@ else
 fi
 
 # 4. Clone and run
-REPO_URL="https://github.com/JARMourato/dotfiles.git"
+REPO_URL="${MACSETUP_REPO:-https://github.com/JARMourato/dotfiles.git}"
+BRANCH="${MACSETUP_BRANCH:-main}"
 INSTALL_DIR="$HOME/.macsetup"
 
 if [ -d "$INSTALL_DIR" ]; then
   echo "🔄 Updating macsetup..."
   cd "$INSTALL_DIR"
-  git pull --ff-only
+  git pull --ff-only origin "$BRANCH"
 else
   echo "📥 Cloning macsetup..."
-  git clone "$REPO_URL" "$INSTALL_DIR"
+  git clone -b "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
   cd "$INSTALL_DIR"
 fi
 
