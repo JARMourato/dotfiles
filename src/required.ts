@@ -119,9 +119,19 @@ async function ensureDotfileSymlinks(opts: InstallOptions): Promise<void> {
   }
 }
 
+async function acquireSudo(dryRun: boolean): Promise<void> {
+  if (dryRun) return;
+  // Request sudo upfront and validate — some modules need it (openjdk symlink, pmset, app removal)
+  const check = await runCommand('sudo', ['-v'], { continueOnError: true });
+  if (!check.ok) {
+    log.warn('Could not acquire sudo. Some operations may be skipped.');
+  }
+}
+
 export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
   const s = spinner();
   s.start('Running required setup phase');
+  await acquireSudo(opts.dryRun);
   try {
     await ensureXcodeCliTools(opts);
     await ensureHomebrew(opts);
