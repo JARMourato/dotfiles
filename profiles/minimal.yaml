@@ -1,20 +1,26 @@
 name: minimal
 description: Minimal baseline setup
-modules:
-  - core
-  - terminal
-  - shell
-  - macos
-  - node
+
+core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+terminal: [oh-my-zsh, powerline, theme, fonts]
+languages: []
+ios: []
+cloud: []
+apps: []
+comms: []
+productivity: []
+ai: []
+mas: []
+macos: []
+macos_complex: []
+cleanup: []
+encryption: false
+xcode: false
 
 config:
   git:
     user_name: JARMourato
     user_email: joao.armourato@gmail.com
-  node:
-    version: lts
-  apps:
-    casks: []
   macos:
     dock:
       autohide: false

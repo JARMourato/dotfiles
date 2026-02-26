@@ -1,40 +1,33 @@
 name: dev
 description: Full development machine setup
-modules:
-  - core
-  - terminal
-  - shell
-  - macos
-  - macos-complex
-  - node
-  - python
-  - ruby
-  - ios
-  - cloud
-  - apps
-  - comms
-  - productivity
-  - ai
-  - ssh
-  - git
-  - xcode
-  - encryption
-  - cleanup
-  - mas
+
+core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+terminal: [oh-my-zsh, powerline, theme, fonts]
+languages: [python, ruby]
+ios: [swiftlint, swiftformat, cocoapods, fastlane, carthage, xcbeautify]
+cloud: [docker, docker-compose, terraform, ansible, awscli, kubernetes-cli]
+apps: [google-chrome, visual-studio-code, sublime-text, sourcetree, proxyman, charles, postman, cursor, sf-symbols]
+comms: [slack, zoom, whatsapp, telegram]
+productivity: [bitwarden, spotify, iina, betterzip, setapp, dockdoor, openaudible]
+ai: [claude, chatgpt, claude-code, openclaw]
+mas:
+  - { id: 472226235, name: LanScan }
+  - { id: 904280696, name: "Things 3" }
+  - { id: 441258766, name: Magnet }
+macos: [dock, finder, keyboard, trackpad, mouse, power, screenshots, menu-bar, hot-corners, language-region, activity-monitor, app-store, terminal, time-machine, xcode]
+macos_complex: [dock-folders, photos, spotlight, bluetooth-audio, printing, keyboard-shortcuts, scroll-behavior, login-window, sourcetree, advanced-trackpad]
+cleanup: [GarageBand.app, iMovie.app, Keynote.app, Numbers.app, Pages.app]
+encryption: true
+xcode: true
 
 config:
   git:
     user_name: JARMourato
     user_email: joao.armourato@gmail.com
-  node:
-    version: lts
-  python:
-    versions: ["3.12"]
-  ruby:
-    version: "3.4.1"
+  python_versions: ["3.12"]
+  ruby_version: "3.4.1"
   apps:
     casks:
-      - docker
       - sf-symbols
       - proxyman
       - charles
@@ -89,6 +82,8 @@ config:
         name: LanScan
       - id: 904280696
         name: Things 3
+      - id: 441258766
+        name: Magnet
   cleanup:
     remove:
       - GarageBand.app

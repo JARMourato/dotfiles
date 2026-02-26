@@ -6,10 +6,19 @@ import type { ProfileConfig } from './types';
 
 const CONFIG_PATH = path.join(os.homedir(), '.macsetup.config.yaml');
 
+function normalizeProfile(raw: Partial<ProfileConfig>): ProfileConfig {
+  return {
+    name: raw.name ?? 'custom',
+    description: raw.description ?? 'Custom setup',
+    ...raw,
+    config: raw.config ?? {},
+  } as ProfileConfig;
+}
+
 export async function loadUserConfig(): Promise<ProfileConfig | null> {
   try {
     const raw = await fs.readFile(CONFIG_PATH, 'utf8');
-    return parse(raw) as ProfileConfig;
+    return normalizeProfile(parse(raw) as Partial<ProfileConfig>);
   } catch {
     return null;
   }
@@ -22,7 +31,7 @@ export async function saveUserConfig(config: ProfileConfig): Promise<void> {
 export async function loadProfile(rootDir: string, profileName: string): Promise<ProfileConfig> {
   const profilePath = path.join(rootDir, 'profiles', `${profileName}.yaml`);
   const raw = await fs.readFile(profilePath, 'utf8');
-  return parse(raw) as ProfileConfig;
+  return normalizeProfile(parse(raw) as Partial<ProfileConfig>);
 }
 
 export async function listProfiles(rootDir: string): Promise<string[]> {

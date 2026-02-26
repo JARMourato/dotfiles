@@ -22,10 +22,30 @@ export interface StateFile {
   machine: MachineInfo;
 }
 
+export interface MasAppSelection {
+  id: number;
+  name: string;
+}
+
 export interface ProfileConfig {
   name: string;
   description: string;
-  modules: string[];
+  modules?: string[];
+  core?: string[];
+  terminal?: string[];
+  languages?: string[];
+  ios?: string[];
+  cloud?: string[];
+  apps?: string[];
+  comms?: string[];
+  productivity?: string[];
+  ai?: string[];
+  mas?: MasAppSelection[];
+  macos?: string[];
+  macos_complex?: string[];
+  cleanup?: string[];
+  encryption?: boolean;
+  xcode?: boolean;
   config: {
     git?: {
       user_name?: string;
@@ -40,12 +60,14 @@ export interface ProfileConfig {
     ios?: { formulas?: string[] };
     cloud?: { formulas?: string[]; casks?: string[] };
     cleanup?: { remove?: string[] };
-    mas?: { apps?: Array<{ id: number; name: string }> };
+    mas?: { apps?: MasAppSelection[] };
     terminal?: { enable_powerline?: boolean; theme?: string };
     encryption?: { keychain_service?: string; keychain_account?: string };
     node?: { version?: string };
     python?: { versions?: string[] };
     ruby?: { version?: string };
+    python_versions?: string[];
+    ruby_version?: string;
     macos?: Record<string, unknown>;
     [key: string]: unknown;
   };
@@ -70,12 +92,19 @@ export interface StateManager {
   diff(next: StateFile): Promise<string[]>;
 }
 
-export interface Module {
+export interface ModuleItem {
+  id: string;
+  label: string;
+  description?: string;
+}
+
+export interface ModuleV2 {
   name: string;
   label: string;
   description: string;
+  items: ModuleItem[];
+  defaultItems: string[];
   dependencies?: string[];
-  detect(opts: InstallOptions): Promise<DetectResult>;
-  install(opts: InstallOptions): Promise<void>;
-  uninstall?(opts: InstallOptions): Promise<void>;
+  detect(items: string[], opts: InstallOptions): Promise<DetectResult>;
+  install(items: string[], opts: InstallOptions): Promise<void>;
 }

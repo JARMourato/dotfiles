@@ -1,29 +1,29 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectCasks, installCasks } from './helpers';
 
-const defaults = [
-  'google-chrome',
-  'visual-studio-code',
-  'sublime-text',
-  'docker',
-  'postman',
-  'sourcetree',
-  'cursor',
-  'proxyman',
-  'charles',
+const items = [
+  { id: 'google-chrome', label: 'Google Chrome' },
+  { id: 'visual-studio-code', label: 'Visual Studio Code' },
+  { id: 'sublime-text', label: 'Sublime Text' },
+  { id: 'sourcetree', label: 'SourceTree' },
+  { id: 'proxyman', label: 'Proxyman' },
+  { id: 'charles', label: 'Charles' },
+  { id: 'postman', label: 'Postman' },
+  { id: 'cursor', label: 'Cursor' },
+  { id: 'sf-symbols', label: 'SF Symbols' },
 ];
 
-export const appsModule: Module = {
+export const appsModule: ModuleV2 = {
   name: 'apps',
-  label: 'Applications',
-  description: 'Developer and productivity application casks',
+  label: 'Apps',
+  description: 'Developer and utility applications',
+  items,
+  defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
-  async detect(opts) {
-    const casks = opts.profile.config.apps?.casks ?? defaults;
-    return detectCasks(casks);
+  async detect(selectedItems) {
+    return detectCasks(selectedItems);
   },
-  async install(opts) {
-    const casks = opts.profile.config.apps?.casks ?? defaults;
-    await installCasks(casks, opts);
+  async install(selectedItems, opts) {
+    await installCasks(selectedItems, opts);
   },
 };

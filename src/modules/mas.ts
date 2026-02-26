@@ -1,19 +1,53 @@
-import type { Module } from '../types';
+import type { MasAppSelection, ModuleV2 } from '../types';
 import { detectMasApps, installMasApps } from './helpers';
 
-const defaults = [472226235, 904280696, 1477385213, 441258766];
+const masItems: Array<{ id: string; label: string; app: MasAppSelection }> = [
+  { id: 'lanscan', label: 'LanScan', app: { id: 472226235, name: 'LanScan' } },
+  { id: 'things-3', label: 'Things 3', app: { id: 904280696, name: 'Things 3' } },
+  { id: 'magnet', label: 'Magnet', app: { id: 441258766, name: 'Magnet' } },
+];
 
-export const masModule: Module = {
+const byItem = new Map(masItems.map((item) => [item.id, item]));
+
+function idsForItems(items: string[]): number[] {
+  return items
+    .map((item) => byItem.get(item)?.app.id)
+    .filter((value): value is number => typeof value === 'number');
+}
+
+export function masAppsForItems(items: string[]): MasAppSelection[] {
+  return items
+    .map((item) => byItem.get(item)?.app)
+    .filter((value): value is MasAppSelection => Boolean(value));
+}
+
+export function masItemsFromApps(apps: MasAppSelection[]): string[] {
+  const byId = new Map(masItems.map((item) => [item.app.id, item.id]));
+  return apps
+    .map((app) => byId.get(app.id))
+    .filter((value): value is string => Boolean(value));
+}
+
+export const masModule: ModuleV2 = {
   name: 'mas',
   label: 'Mac App Store',
-  description: 'Install Mac App Store applications by id',
+  description: 'Install selected App Store applications',
+  items: masItems.map(({ id, label }) => ({ id, label })),
+  defaultItems: masItems.map((item) => item.id),
   dependencies: ['core'],
-  async detect(opts) {
-    const ids = (opts.profile.config.mas?.apps ?? []).map((app) => app.id);
-    return detectMasApps(ids.length > 0 ? ids : defaults);
+  async detect(selectedItems) {
+    const ids = idsForItems(selectedItems);
+    const detect = await detectMasApps(ids);
+
+    const idToItem = new Map(masItems.map((item) => [String(item.app.id), item.id]));
+    return {
+      installed: detect.installed.map((id) => idToItem.get(id) ?? id),
+      missing: detect.missing.map((id) => idToItem.get(id) ?? id),
+      partial: detect.partial,
+    };
   },
-  async install(opts) {
-    const ids = (opts.profile.config.mas?.apps ?? []).map((app) => app.id);
-    await installMasApps(ids.length > 0 ? ids : defaults, opts);
+  async install(selectedItems, opts) {
+    const ids = idsForItems(selectedItems);
+    await installMasApps(ids, opts);
   },
 };

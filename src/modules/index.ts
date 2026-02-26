@@ -1,4 +1,4 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { aiModule } from './ai';
 import { appsModule } from './apps';
 import { cleanupModule } from './cleanup';
@@ -6,43 +6,33 @@ import { cloudModule } from './cloud';
 import { commsModule } from './comms';
 import { coreModule } from './core';
 import { encryptionModule } from './encryption';
-import { gitModule } from './git';
 import { iosModule } from './ios';
+import { languagesModule } from './languages';
 import { macosModule } from './macos';
 import { macosComplexModule } from './macos-complex';
 import { masModule } from './mas';
-import { nodeModule } from './node';
 import { productivityModule } from './productivity';
-import { pythonModule } from './python';
-import { rubyModule } from './ruby';
-import { shellModule } from './shell';
-import { sshModule } from './ssh';
 import { terminalModule } from './terminal';
 import { xcodeModule } from './xcode';
 
-export const modules: Module[] = [
+export const modules: ModuleV2[] = [
   coreModule,
   terminalModule,
-  shellModule,
-  macosModule,
-  nodeModule,
-  pythonModule,
-  rubyModule,
+  languagesModule,
   iosModule,
   cloudModule,
   appsModule,
   commsModule,
   productivityModule,
   aiModule,
-  sshModule,
-  gitModule,
-  xcodeModule,
-  encryptionModule,
-  cleanupModule,
-  macosComplexModule,
   masModule,
+  macosModule,
+  macosComplexModule,
+  cleanupModule,
+  encryptionModule,
+  xcodeModule,
 ];
 
-export function getModuleByName(name: string): Module | undefined {
+export function getModuleByName(name: string): ModuleV2 | undefined {
   return modules.find((mod) => mod.name === name);
 }

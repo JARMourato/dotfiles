@@ -1,38 +1,35 @@
 name: server
 description: Media server optimized setup
-modules:
-  - core
-  - terminal
-  - shell
-  - macos
-  - cloud
-  - apps
-  - git
-  - ssh
-  - cleanup
+
+core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+terminal: [oh-my-zsh, powerline, theme, fonts]
+languages: []
+ios: []
+cloud: [docker, docker-compose]
+apps: [sublime-text, sourcetree]
+comms: []
+productivity: [iina]
+ai: []
+mas: []
+macos: [dock, finder, keyboard, screenshots, terminal]
+macos_complex: []
+cleanup: [GarageBand.app, iMovie.app, Keynote.app, Numbers.app, Pages.app]
+encryption: false
+xcode: false
 
 config:
   git:
     user_name: JARMourato
     user_email: joao.armourato@gmail.com
-  node:
-    version: lts
-  python:
-    versions: ["3.12"]
+  python_versions: ["3.12"]
   apps:
     casks:
-      - plex-media-server
-      - docker
       - iina
       - sublime-text
       - sourcetree
   cloud:
     formulas:
       - docker-compose
-      - ansible
-      - kubernetes-cli
-      - awscli
-      - terraform
     casks:
       - docker
   cleanup:
@@ -61,7 +58,6 @@ config:
       disable_auto_correct: true
       key_repeat_rate: 2
       initial_key_repeat: 35
-      disable_press_and_hold: true
     screen:
       screenshot_location: ~/Pictures/Screenshots
       screenshot_format: png

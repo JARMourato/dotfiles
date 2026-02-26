@@ -1,26 +1,48 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectCasks, detectFormulas, installCasks, installFormulas } from './helpers';
 
-const formulas = ['docker-compose', 'terraform', 'ansible', 'awscli', 'kubernetes-cli'];
-const casks = ['docker'];
+const items = [
+  { id: 'docker', label: 'Docker' },
+  { id: 'docker-compose', label: 'docker-compose' },
+  { id: 'terraform', label: 'terraform' },
+  { id: 'ansible', label: 'ansible' },
+  { id: 'awscli', label: 'awscli' },
+  { id: 'kubernetes-cli', label: 'kubernetes-cli' },
+];
 
-export const cloudModule: Module = {
+const caskItems = new Set(['docker']);
+
+export const cloudModule: ModuleV2 = {
   name: 'cloud',
-  label: 'Cloud Tools',
-  description: 'docker, terraform, ansible, awscli, kubernetes-cli',
+  label: 'Cloud',
+  description: 'Docker and cloud tooling',
+  items,
+  defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
-  async detect(opts) {
-    const config = (opts.profile.config.cloud as { formulas?: string[] } | undefined)?.formulas ?? formulas;
-    return detectFormulas(config);
+  async detect(selectedItems) {
+    const formulas = selectedItems.filter((item) => !caskItems.has(item));
+    const casks = selectedItems.filter((item) => caskItems.has(item));
+    const formulaDetect = formulas.length > 0
+      ? await detectFormulas(formulas)
+      : { installed: [], missing: [], partial: false };
+    const caskDetect = casks.length > 0
+      ? await detectCasks(casks)
+      : { installed: [], missing: [], partial: false };
+
+    return {
+      installed: [...formulaDetect.installed, ...caskDetect.installed],
+      missing: [...formulaDetect.missing, ...caskDetect.missing],
+      partial: formulaDetect.partial || caskDetect.partial,
+    };
   },
-  async install(opts) {
-    const config = opts.profile.config.cloud as { formulas?: string[]; casks?: string[] } | undefined;
-    await installFormulas(config?.formulas ?? formulas, opts);
-    await installCasks(config?.casks ?? casks, opts);
+  async install(selectedItems, opts) {
+    const formulas = selectedItems.filter((item) => !caskItems.has(item));
+    const casks = selectedItems.filter((item) => caskItems.has(item));
+    if (formulas.length > 0) {
+      await installFormulas(formulas, opts);
+    }
+    if (casks.length > 0) {
+      await installCasks(casks, opts);
+    }
   },
 };
-
-export async function detectCloudCasks(opts: Parameters<Module['detect']>[0]) {
-  const config = opts.profile.config.cloud as { casks?: string[] } | undefined;
-  return detectCasks(config?.casks ?? casks);
-}

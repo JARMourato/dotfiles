@@ -1,11 +1,11 @@
 import { log, spinner } from '@clack/prompts';
-import type { InstallOptions, Module, StateFile } from './types';
+import type { InstallOptions, ModuleV2, StateFile } from './types';
 
-function resolveExecutionOrder(modules: Module[], selected: string[]): Module[] {
+function resolveExecutionOrder(modules: ModuleV2[], selected: string[]): ModuleV2[] {
   const byName = new Map(modules.map((m) => [m.name, m]));
   const visiting = new Set<string>();
   const visited = new Set<string>();
-  const output: Module[] = [];
+  const output: ModuleV2[] = [];
 
   const visit = (name: string): void => {
     if (visited.has(name)) return;
@@ -24,11 +24,12 @@ function resolveExecutionOrder(modules: Module[], selected: string[]): Module[] 
 }
 
 export async function runModules(
-  modules: Module[],
-  selected: string[],
+  modules: ModuleV2[],
+  selected: Record<string, string[]>,
   opts: InstallOptions,
 ): Promise<{ failures: string[]; state: StateFile }> {
-  const order = resolveExecutionOrder(modules, selected);
+  const selectedModules = Object.keys(selected).filter((name) => (selected[name] ?? []).length > 0);
+  const order = resolveExecutionOrder(modules, selectedModules);
   const failures: string[] = [];
 
   const machine = (await opts.state.load())?.machine ?? {
@@ -45,19 +46,22 @@ export async function runModules(
   };
 
   for (const module of order) {
+    const selectedItems = selected[module.name] ?? [];
+    if (selectedItems.length === 0) continue;
+
     const s = spinner();
     s.start(`Running module: ${module.label}`);
     try {
-      const detect = await module.detect(opts);
+      const detect = await module.detect(selectedItems, opts);
       if (detect.missing.length === 0 && detect.installed.length > 0) {
         s.stop(`${module.label}: already installed`);
       } else {
-        await module.install(opts);
+        await module.install(selectedItems, opts);
         s.stop(`${module.label}: complete`);
       }
       nextState.modules[module.name] = {
-        installed: [...detect.installed, ...detect.missing],
-        version: '1.0.0',
+        installed: selectedItems,
+        version: '2.0.0',
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

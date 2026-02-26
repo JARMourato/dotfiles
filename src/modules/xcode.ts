@@ -1,20 +1,28 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { Module } from '../types';
-import { detectCommands, installFormulas } from './helpers';
+import type { ModuleV2 } from '../types';
+import { installFormulas } from './helpers';
 import { runCommand } from '../utils/shell';
 
-export const xcodeModule: Module = {
+const itemId = 'full-install';
+
+export const xcodeModule: ModuleV2 = {
   name: 'xcode',
   label: 'Xcode',
-  description: 'Install Xcode tools and copy Xcode templates/macros',
+  description: 'Install full Xcode via xcodes and set IDE template macros',
+  items: [{ id: itemId, label: 'Install full Xcode' }],
+  defaultItems: [itemId],
   dependencies: ['core'],
   async detect() {
-    return detectCommands(['xcode-select']);
+    const app = await runCommand('test', ['-d', '/Applications/Xcode.app'], { continueOnError: true });
+    return {
+      installed: app.ok ? [itemId] : [],
+      missing: app.ok ? [] : [itemId],
+      partial: false,
+    };
   },
-  async install(opts) {
-    await runCommand('xcode-select', ['--install'], { dryRun: opts.dryRun, continueOnError: true });
+  async install(_selectedItems, opts) {
     await installFormulas(['aria2', 'robotsandpencils/made/xcodes'], opts);
     await runCommand('xcodes', ['install', '--latest', '--experimental-unxip'], {
       dryRun: opts.dryRun,

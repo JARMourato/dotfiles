@@ -1,18 +1,26 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormulas } from './helpers';
 
-const defaults = ['swiftlint', 'swiftformat', 'cocoapods', 'fastlane', 'carthage', 'xcbeautify'];
+const items = [
+  { id: 'swiftlint', label: 'swiftlint' },
+  { id: 'swiftformat', label: 'swiftformat' },
+  { id: 'cocoapods', label: 'cocoapods' },
+  { id: 'fastlane', label: 'fastlane' },
+  { id: 'carthage', label: 'carthage' },
+  { id: 'xcbeautify', label: 'xcbeautify' },
+];
 
-export const iosModule: Module = {
+export const iosModule: ModuleV2 = {
   name: 'ios',
-  label: 'iOS Tooling',
+  label: 'iOS Dev',
   description: 'swiftlint, swiftformat, cocoapods, fastlane, carthage, xcbeautify',
+  items,
+  defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
-  async detect() {
-    return detectFormulas(defaults);
+  async detect(selectedItems) {
+    return detectFormulas(selectedItems);
   },
-  async install(opts) {
-    const formulas = (opts.profile.config.ios as { formulas?: string[] } | undefined)?.formulas ?? defaults;
-    await installFormulas(formulas, opts);
+  async install(selectedItems, opts) {
+    await installFormulas(selectedItems, opts);
   },
 };

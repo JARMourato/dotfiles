@@ -1,26 +1,34 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { runCommand } from '../utils/shell';
 
-const defaults = ['GarageBand.app', 'iMovie.app', 'Keynote.app', 'Numbers.app', 'Pages.app'];
+const items = [
+  { id: 'GarageBand.app', label: 'GarageBand.app' },
+  { id: 'iMovie.app', label: 'iMovie.app' },
+  { id: 'Keynote.app', label: 'Keynote.app' },
+  { id: 'Numbers.app', label: 'Numbers.app' },
+  { id: 'Pages.app', label: 'Pages.app' },
+];
 
-export const cleanupModule: Module = {
+export const cleanupModule: ModuleV2 = {
   name: 'cleanup',
   label: 'Cleanup',
   description: 'Remove optional bundled macOS applications',
-  async detect(opts) {
-    const apps = opts.profile.config.cleanup?.remove ?? defaults;
+  items,
+  defaultItems: items.map((item) => item.id),
+  async detect(selectedItems) {
     const installed: string[] = [];
     const missing: string[] = [];
-    for (const app of apps) {
+
+    for (const app of selectedItems) {
       const check = await runCommand('test', ['-d', `/Applications/${app}`], { continueOnError: true });
       if (check.ok) installed.push(app);
       else missing.push(app);
     }
+
     return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
   },
-  async install(opts) {
-    const apps = opts.profile.config.cleanup?.remove ?? defaults;
-    for (const app of apps) {
+  async install(selectedItems, opts) {
+    for (const app of selectedItems) {
       await runCommand('sudo', ['rm', '-rf', `/Applications/${app}`], { dryRun: opts.dryRun, continueOnError: true });
     }
   },

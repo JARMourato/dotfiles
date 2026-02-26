@@ -1,19 +1,24 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectCasks, installCasks } from './helpers';
 
-const defaults = ['slack', 'zoom', 'whatsapp', 'telegram'];
+const items = [
+  { id: 'slack', label: 'Slack' },
+  { id: 'zoom', label: 'Zoom' },
+  { id: 'whatsapp', label: 'WhatsApp' },
+  { id: 'telegram', label: 'Telegram' },
+];
 
-export const commsModule: Module = {
+export const commsModule: ModuleV2 = {
   name: 'comms',
   label: 'Communication',
-  description: 'Slack, Zoom, WhatsApp, Telegram',
+  description: 'Messaging and meeting apps',
+  items,
+  defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
-  async detect(opts) {
-    const casks = opts.profile.config.comms?.casks ?? defaults;
-    return detectCasks(casks);
+  async detect(selectedItems) {
+    return detectCasks(selectedItems);
   },
-  async install(opts) {
-    const casks = opts.profile.config.comms?.casks ?? defaults;
-    await installCasks(casks, opts);
+  async install(selectedItems, opts) {
+    await installCasks(selectedItems, opts);
   },
 };

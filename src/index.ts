@@ -1,4 +1,3 @@
-import path from 'node:path';
 import {
   cancel,
   confirm,
@@ -15,9 +14,11 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { loadProfile, loadUserConfig, saveUserConfig } from './config';
 import { modules } from './modules';
+import { masAppsForItems, masItemsFromApps } from './modules/mas';
+import { runRequiredPhase } from './required';
 import { runModules } from './runner';
 import { JsonStateManager } from './state';
-import type { InstallOptions, ProfileConfig } from './types';
+import type { InstallOptions, ModuleV2, ProfileConfig } from './types';
 import { detectMachine } from './utils/detect';
 import { getKeychainPassword, setKeychainPassword } from './utils/keychain';
 
@@ -51,22 +52,177 @@ function handleCancelled<T>(value: T): T {
   return value;
 }
 
-function profileFromPreset(name: string): string[] {
-  switch (name) {
-    case 'dev':
-      return ['core', 'terminal', 'shell', 'macos', 'macos-complex', 'node', 'python', 'ruby', 'ios', 'cloud', 'apps', 'comms', 'productivity', 'ai', 'ssh', 'git', 'xcode', 'encryption', 'cleanup', 'mas'];
-    case 'server':
-      return ['core', 'terminal', 'shell', 'macos', 'cloud', 'apps', 'comms', 'git', 'ssh', 'cleanup'];
-    case 'minimal':
-      return ['core', 'terminal', 'shell', 'macos', 'node'];
-    default:
-      return [];
+function itemLabel(module: ModuleV2, id: string): string {
+  return module.items.find((item) => item.id === id)?.label ?? id;
+}
+
+function sanitizeItems(module: ModuleV2, items: string[]): string[] {
+  const available = new Set(module.items.map((item) => item.id));
+  return items.filter((item) => available.has(item));
+}
+
+function legacyIncludes(profile: ProfileConfig, name: string): boolean {
+  return Array.isArray(profile.modules) && profile.modules.includes(name);
+}
+
+function selectionsFromProfile(profile: ProfileConfig): Record<string, string[]> {
+  const selected: Record<string, string[]> = {};
+  const profileAny = profile as unknown as Record<string, unknown>;
+
+  for (const module of modules) {
+    let items: string[] = [];
+
+    if (module.name === 'encryption') {
+      if (profile.encryption || legacyIncludes(profile, 'encryption')) {
+        items = [...module.defaultItems];
+      }
+    } else if (module.name === 'xcode') {
+      if (profile.xcode || legacyIncludes(profile, 'xcode')) {
+        items = [...module.defaultItems];
+      }
+    } else if (module.name === 'mas') {
+      if (Array.isArray(profile.mas)) {
+        items = masItemsFromApps(profile.mas);
+      } else if (legacyIncludes(profile, 'mas')) {
+        items = [...module.defaultItems];
+      } else {
+        const legacyApps = profile.config.mas?.apps ?? [];
+        items = masItemsFromApps(legacyApps);
+      }
+    } else if (module.name === 'macos_complex') {
+      const direct = profile.macos_complex;
+      if (Array.isArray(direct)) {
+        items = direct;
+      } else if (legacyIncludes(profile, 'macos-complex')) {
+        items = [...module.defaultItems];
+      }
+    } else if (module.name === 'languages') {
+      if (Array.isArray(profile.languages)) {
+        items = profile.languages;
+      } else {
+        if (legacyIncludes(profile, 'languages') || legacyIncludes(profile, 'python')) items.push('python');
+        if (legacyIncludes(profile, 'languages') || legacyIncludes(profile, 'ruby')) items.push('ruby');
+        if (items.length === 0 && (profile.config.python || profile.config.ruby)) {
+          if (profile.config.python) items.push('python');
+          if (profile.config.ruby) items.push('ruby');
+        }
+      }
+    } else {
+      const direct = profileAny[module.name];
+      if (Array.isArray(direct)) {
+        items = direct.map(String);
+      } else if (legacyIncludes(profile, module.name)) {
+        items = [...module.defaultItems];
+      }
+    }
+
+    selected[module.name] = sanitizeItems(module, items);
+  }
+
+  return selected;
+}
+
+function applySelectionsToProfile(profile: ProfileConfig, selected: Record<string, string[]>): void {
+  delete profile.modules;
+  const profileAny = profile as unknown as Record<string, unknown>;
+
+  for (const module of modules) {
+    const items = selected[module.name] ?? [];
+
+    if (module.name === 'encryption') {
+      profile.encryption = items.length > 0;
+      continue;
+    }
+
+    if (module.name === 'xcode') {
+      profile.xcode = items.length > 0;
+      continue;
+    }
+
+    if (module.name === 'mas') {
+      profile.mas = masAppsForItems(items);
+      continue;
+    }
+
+    if (module.name === 'macos_complex') {
+      profile.macos_complex = items;
+      continue;
+    }
+
+    profileAny[module.name] = items;
   }
 }
 
-async function resolveProfile(rootDir: string): Promise<ProfileConfig> {
+function defaultCustomProfile(config: ProfileConfig['config']): ProfileConfig {
+  return {
+    name: 'custom',
+    description: 'Custom setup',
+    config,
+  };
+}
+
+async function promptModuleItems(
+  selectedModules: string[],
+  prefill: Record<string, string[]>,
+): Promise<Record<string, string[]>> {
+  const selected: Record<string, string[]> = {};
+
+  for (const moduleName of selectedModules) {
+    const module = modules.find((candidate) => candidate.name === moduleName);
+    if (!module) continue;
+
+    const initial = prefill[module.name]?.length ? prefill[module.name] : module.defaultItems;
+
+    const items = handleCancelled(
+      await multiselect({
+        message: `${module.label} - select items`,
+        options: module.items.map((item) => ({
+          value: item.id,
+          label: item.label,
+          hint: item.description,
+          selected: initial.includes(item.id),
+        })),
+      }),
+    ) as string[];
+
+    selected[module.name] = sanitizeItems(module, items);
+  }
+
+  return selected;
+}
+
+async function promptModuleSelection(
+  initialSelections: Record<string, string[]>,
+): Promise<Record<string, string[]>> {
+  const selectedModules = handleCancelled(
+    await multiselect({
+      message: 'Select modules to install',
+      options: modules.map((module) => ({
+        value: module.name,
+        label: module.label,
+        hint: module.description,
+        selected: (initialSelections[module.name] ?? []).length > 0,
+      })),
+      required: true,
+    }),
+  ) as string[];
+
+  const itemSelection = await promptModuleItems(selectedModules, initialSelections);
+  const output: Record<string, string[]> = {};
+  for (const module of modules) {
+    const items = itemSelection[module.name] ?? [];
+    if (items.length > 0) {
+      output[module.name] = items;
+    }
+  }
+  return output;
+}
+
+async function resolveProfile(rootDir: string): Promise<{ profile: ProfileConfig; selected: Record<string, string[]> }> {
   if (options.profile) {
-    return loadProfile(rootDir, options.profile);
+    const profile = await loadProfile(rootDir, options.profile);
+    const selected = selectionsFromProfile(profile);
+    return { profile, selected };
   }
 
   const lastConfig = await loadUserConfig();
@@ -88,55 +244,37 @@ async function resolveProfile(rootDir: string): Promise<ProfileConfig> {
     }),
   );
 
-  if (setupKind === 'last' && lastConfig) return lastConfig;
-
   if (setupKind === 'custom') {
-    const tempProfile: ProfileConfig = {
-      name: 'custom',
-      description: 'Custom setup',
-      modules: [],
-      config: {},
-    };
-
-    const detectOpts: InstallOptions = {
-      dryRun: Boolean(options.dryRun),
-      verbose: Boolean(options.verbose),
-      nonInteractive: false,
-      profile: tempProfile,
-      state: new JsonStateManager(),
-      rootDir,
-    };
-
-    const detected = await Promise.all(modules.map(async (mod) => ({ mod, result: await mod.detect(detectOpts) })));
-
-    const selected = handleCancelled(
-      await multiselect({
-        message: 'Select modules',
-        options: detected.map(({ mod, result }) => ({
-          value: mod.name,
-          label: mod.label,
-          hint: mod.description,
-          selected: result.missing.length > 0,
-        })),
-        required: true,
-      }),
-    ) as string[];
-
-    return {
-      name: 'custom',
-      description: 'Custom setup',
-      modules: selected,
-      config: lastConfig?.config ?? {},
-    };
+    const profile = defaultCustomProfile(lastConfig?.config ?? {});
+    const selected = await promptModuleSelection({});
+    applySelectionsToProfile(profile, selected);
+    return { profile, selected };
   }
 
-  const profileName = String(setupKind);
-  return loadProfile(rootDir, profileName);
+  if (setupKind === 'last' && lastConfig) {
+    const selected = selectionsFromProfile(lastConfig);
+    return { profile: lastConfig, selected };
+  }
+
+  const profile = await loadProfile(rootDir, String(setupKind));
+  let selected = selectionsFromProfile(profile);
+
+  const customize = handleCancelled(
+    await confirm({
+      message: `${profile.name} profile selected. Customize items?`,
+      initialValue: false,
+    }),
+  );
+
+  if (customize) {
+    selected = await promptModuleSelection(selected);
+  }
+
+  applySelectionsToProfile(profile, selected);
+  return { profile, selected };
 }
 
 async function maybePromptGit(profile: ProfileConfig): Promise<void> {
-  if (!profile.modules.includes('git')) return;
-
   if (!profile.config.git?.user_name) {
     const userName = handleCancelled(await text({ message: 'Git user.name' }));
     profile.config.git = { ...profile.config.git, user_name: String(userName) };
@@ -148,8 +286,8 @@ async function maybePromptGit(profile: ProfileConfig): Promise<void> {
   }
 }
 
-async function maybeResolveEncryptionPassword(profile: ProfileConfig): Promise<string | undefined> {
-  if (!profile.modules.includes('encryption')) return undefined;
+async function maybeResolveEncryptionPassword(selected: Record<string, string[]>): Promise<string | undefined> {
+  if ((selected.encryption ?? []).length === 0) return undefined;
 
   let secret = await getKeychainPassword();
   if (secret) return secret;
@@ -162,7 +300,7 @@ async function maybeResolveEncryptionPassword(profile: ProfileConfig): Promise<s
   );
 
   if (!create) {
-    throw new Error('Encryption module selected but no keychain password available.');
+    throw new Error('Encryption selected but no keychain password available.');
   }
 
   const entered = handleCancelled(
@@ -177,6 +315,19 @@ async function maybeResolveEncryptionPassword(profile: ProfileConfig): Promise<s
   secret = String(entered);
   await setKeychainPassword(secret);
   return secret;
+}
+
+function summaryLines(selected: Record<string, string[]>): string[] {
+  const lines: string[] = [];
+
+  for (const module of modules) {
+    const items = selected[module.name] ?? [];
+    if (items.length === 0) continue;
+    const labels = items.map((item) => itemLabel(module, item));
+    lines.push(`${module.label}: ${labels.join(', ')}`);
+  }
+
+  return lines;
 }
 
 async function run(): Promise<void> {
@@ -205,25 +356,46 @@ async function run(): Promise<void> {
     const exported: ProfileConfig = {
       name: `${current.profile}-exported`,
       description: `Exported profile from ${current.lastRun}`,
-      modules: Object.keys(current.modules),
       config: {},
     };
+    const exportedAny = exported as unknown as Record<string, unknown>;
+
+    for (const module of modules) {
+      const installed = current.modules[module.name]?.installed ?? [];
+      if (module.name === 'encryption') exported.encryption = installed.length > 0;
+      else if (module.name === 'xcode') exported.xcode = installed.length > 0;
+      else if (module.name === 'mas') exported.mas = masAppsForItems(installed);
+      else if (module.name === 'macos_complex') exported.macos_complex = installed;
+      else exportedAny[module.name] = installed;
+    }
+
     console.log(yaml.stringify(exported));
     return;
   }
 
-  const profile = await resolveProfile(rootDir);
+  const resolved = await resolveProfile(rootDir);
+  const profile = resolved.profile;
+  let selected = resolved.selected;
 
   if (options.module) {
-    profile.modules = [options.module];
+    const module = modules.find((candidate) => candidate.name === options.module);
+    if (!module) {
+      throw new Error(`Unknown module: ${options.module}`);
+    }
+    const current = selected[module.name] ?? [];
+    selected = {
+      [module.name]: current.length > 0 ? current : module.defaultItems,
+    };
+    applySelectionsToProfile(profile, selected);
   }
 
   await maybePromptGit(profile);
-  const encryptionPassword = await maybeResolveEncryptionPassword(profile);
+  const encryptionPassword = await maybeResolveEncryptionPassword(selected);
 
   const machine = await detectMachine();
+  const summary = summaryLines(selected);
   log.info(
-    `Profile: ${profile.name}\nModules: ${profile.modules.join(', ')}\nDry run: ${Boolean(options.dryRun) ? 'yes' : 'no'}`,
+    `Profile: ${profile.name}\nRequired: xcode-select, homebrew, node, ssh, git, shell dotfiles\nOptional:\n${summary.length > 0 ? summary.join('\n') : 'none'}\nDry run: ${Boolean(options.dryRun) ? 'yes' : 'no'}`,
   );
 
   const shouldRun = options.profile || options.module
@@ -249,7 +421,9 @@ async function run(): Promise<void> {
     encryptionPassword,
   };
 
-  const result = await runModules(modules, profile.modules, installOpts);
+  await runRequiredPhase(installOpts);
+
+  const result = await runModules(modules, selected, installOpts);
   result.state.machine = machine;
 
   await state.save(result.state);

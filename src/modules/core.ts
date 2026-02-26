@@ -1,47 +1,27 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormulas } from './helpers';
-import { runCommand } from '../utils/shell';
 
-const defaultFormulas = [
-  'git',
-  'gh',
-  'curl',
-  'wget',
-  'jq',
-  'tree',
-  'bat',
-  'fd',
-  'ripgrep',
-  'htop',
-  'mas',
+const items = [
+  { id: 'jq', label: 'jq' },
+  { id: 'curl', label: 'curl' },
+  { id: 'wget', label: 'wget' },
+  { id: 'tree', label: 'tree' },
+  { id: 'bat', label: 'bat' },
+  { id: 'fd', label: 'fd' },
+  { id: 'ripgrep', label: 'ripgrep' },
+  { id: 'htop', label: 'htop' },
 ];
 
-async function ensureHomebrew(dryRun: boolean): Promise<void> {
-  const exists = (await runCommand('brew', ['--version'], { continueOnError: true })).ok;
-  if (exists) {
-    await runCommand('brew', ['update'], { dryRun, continueOnError: true });
-    return;
-  }
-
-  await runCommand(
-    '/bin/bash',
-    ['-c', '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'],
-    { dryRun, continueOnError: true },
-  );
-  await runCommand('brew', ['update'], { dryRun, continueOnError: true });
-}
-
-export const coreModule: Module = {
+export const coreModule: ModuleV2 = {
   name: 'core',
   label: 'Core Tools',
-  description: 'git, gh, curl, wget, jq, tree, bat, fd, ripgrep, htop, mas',
-  async detect(opts) {
-    const formulas = (opts.profile.config.core?.formulas as string[] | undefined) ?? defaultFormulas;
-    return detectFormulas(formulas);
+  description: 'jq, curl, wget, tree, bat, fd, ripgrep, htop',
+  items,
+  defaultItems: items.map((item) => item.id),
+  async detect(selectedItems) {
+    return detectFormulas(selectedItems);
   },
-  async install(opts) {
-    const formulas = (opts.profile.config.core?.formulas as string[] | undefined) ?? defaultFormulas;
-    await ensureHomebrew(opts.dryRun);
-    await installFormulas(formulas, opts);
+  async install(selectedItems, opts) {
+    await installFormulas(selectedItems, opts);
   },
 };

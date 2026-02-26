@@ -1,19 +1,27 @@
-import type { Module } from '../types';
+import type { ModuleV2 } from '../types';
 import { detectCasks, installCasks } from './helpers';
 
-const defaults = ['bitwarden', 'spotify', 'things', 'iina', 'betterzip', 'setapp'];
+const items = [
+  { id: 'bitwarden', label: 'Bitwarden' },
+  { id: 'spotify', label: 'Spotify' },
+  { id: 'iina', label: 'IINA' },
+  { id: 'betterzip', label: 'BetterZip' },
+  { id: 'setapp', label: 'Setapp' },
+  { id: 'dockdoor', label: 'DockDoor' },
+  { id: 'openaudible', label: 'OpenAudible' },
+];
 
-export const productivityModule: Module = {
+export const productivityModule: ModuleV2 = {
   name: 'productivity',
   label: 'Productivity',
-  description: 'Bitwarden, Spotify, Things and related tools',
+  description: 'Personal productivity and media apps',
+  items,
+  defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
-  async detect(opts) {
-    const casks = opts.profile.config.productivity?.casks ?? defaults;
-    return detectCasks(casks);
+  async detect(selectedItems) {
+    return detectCasks(selectedItems);
   },
-  async install(opts) {
-    const casks = opts.profile.config.productivity?.casks ?? defaults;
-    await installCasks(casks, opts);
+  async install(selectedItems, opts) {
+    await installCasks(selectedItems, opts);
   },
 };
