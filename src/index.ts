@@ -84,10 +84,6 @@ function selectionsFromProfile(profile: ProfileConfig): Record<string, string[]>
       if (profile.encryption || legacyIncludes(profile, 'encryption')) {
         items = [...module.defaultItems];
       }
-    } else if (module.name === 'xcode') {
-      if (profile.xcode || legacyIncludes(profile, 'xcode')) {
-        items = [...module.defaultItems];
-      }
     } else if (module.name === 'mas') {
       if (Array.isArray(profile.mas)) {
         items = masItemsFromApps(profile.mas);
@@ -139,11 +135,6 @@ function applySelectionsToProfile(profile: ProfileConfig, selected: Record<strin
 
     if (module.name === 'encryption') {
       profile.encryption = items.length > 0;
-      continue;
-    }
-
-    if (module.name === 'xcode') {
-      profile.xcode = items.length > 0;
       continue;
     }
 
@@ -389,7 +380,7 @@ async function run(): Promise<void> {
 
     const caskModules = new Set(['apps', 'comms', 'productivity', 'media']);
     const formulaModules = new Set(['core', 'ios', 'cloud', 'languages']);
-    const skipModules = new Set(['terminal', 'macos', 'macos_complex', 'encryption', 'xcode', 'cleanup', 'mas']);
+    const skipModules = new Set(['terminal', 'macos', 'macos_complex', 'encryption', 'cleanup', 'mas']);
 
     const installedModules = Object.entries(current.modules)
       .filter(([, record]) => record.installed.length > 0)
@@ -520,7 +511,7 @@ async function run(): Promise<void> {
     for (const module of modules) {
       const installed = current.modules[module.name]?.installed ?? [];
       if (module.name === 'encryption') exported.encryption = installed.length > 0;
-      else if (module.name === 'xcode') exported.xcode = installed.length > 0;
+
       else if (module.name === 'mas') exported.mas = masAppsForItems(installed);
       else if (module.name === 'macos_complex') exported.macos_complex = installed;
       else exportedAny[module.name] = installed;

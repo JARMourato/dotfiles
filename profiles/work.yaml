@@ -4,7 +4,7 @@ description: "Work machine — iOS, Android, Rails (Docker), web dev, AI tools"
 core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
 terminal: [oh-my-zsh, powerline, theme, fonts]
 languages: [python, ruby]
-ios: [swiftlint, swiftformat, cocoapods, fastlane, xcbeautify]
+ios: [xcode, swiftlint, swiftformat, xcbeautify, asc]
 android: [android-studio, openjdk, bundletool, env-vars, sdk-license]
 cloud: [docker, docker-compose]
 apps: [google-chrome, visual-studio-code, sourcetree, proxyman]
@@ -46,7 +46,7 @@ cleanup:
   - Numbers.app
   - Pages.app
 encryption: true
-xcode: true
+
 
 config:
   git:

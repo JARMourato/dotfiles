@@ -16,7 +16,7 @@ import { masModule } from './mas';
 import { mediaModule } from './media';
 import { productivityModule } from './productivity';
 import { terminalModule } from './terminal';
-import { xcodeModule } from './xcode';
+
 
 export const modules: ModuleV2[] = [
   coreModule,
@@ -36,7 +36,6 @@ export const modules: ModuleV2[] = [
   homeserverModule,
   cleanupModule,
   encryptionModule,
-  xcodeModule,
 ];
 
 export function getModuleByName(name: string): ModuleV2 | undefined {
