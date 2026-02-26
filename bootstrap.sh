@@ -55,8 +55,8 @@ fi
 
 # 5. Install deps & build
 echo "🔨 Building..."
-npm install --no-fund --no-audit --silent 2>&1 | tail -1
-npm run build --silent 2>&1 | tail -1
+npm install --no-fund --no-audit
+npm run build
 
 # 6. Run interactive CLI (pass through any args)
 echo ""
