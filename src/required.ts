@@ -5,7 +5,10 @@ import { log, spinner } from '@clack/prompts';
 import type { InstallOptions } from './types';
 import { commandExists, runCommand } from './utils/shell';
 
-const requiredDotfiles = ['.aliases', '.exports', '.zshrc', '.paths', '.gemrc', '.ruby-version'];
+// Core dotfiles that are always safe to symlink (no external dependencies)
+const alwaysSafeDotfiles = ['.aliases', '.exports', '.paths', '.gemrc', '.ruby-version'];
+// Dotfiles that depend on optional modules — only symlink if deps are met or .zshrc is defensive
+const conditionalDotfiles = ['.zshrc'];
 
 async function ensureXcodeCliTools(opts: InstallOptions): Promise<void> {
   const selected = await runCommand('xcode-select', ['-p'], { continueOnError: true });
@@ -82,17 +85,37 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
   }
 }
 
+async function symlinkDotfile(srcDir: string, file: string, dryRun: boolean): Promise<void> {
+  const src = path.join(srcDir, file);
+  const dst = path.join(os.homedir(), file);
+  const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
+  if (!srcExists.ok) return;
+
+  if (dryRun) return;
+
+  // If destination exists and is already a symlink pointing to our source, skip
+  try {
+    const existing = await fs.readlink(dst);
+    if (existing === src) return;
+  } catch {
+    // Not a symlink or doesn't exist — proceed
+  }
+
+  await fs.rm(dst, { recursive: true, force: true });
+  await fs.symlink(src, dst);
+}
+
 async function ensureDotfileSymlinks(opts: InstallOptions): Promise<void> {
   const srcDir = path.join(opts.rootDir, 'dotfiles');
-  for (const file of requiredDotfiles) {
-    const src = path.join(srcDir, file);
-    const dst = path.join(os.homedir(), file);
-    const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
-    if (!srcExists.ok) continue;
 
-    if (opts.dryRun) continue;
-    await fs.rm(dst, { recursive: true, force: true });
-    await fs.symlink(src, dst);
+  // Always symlink safe dotfiles
+  for (const file of alwaysSafeDotfiles) {
+    await symlinkDotfile(srcDir, file, opts.dryRun);
+  }
+
+  // Symlink .zshrc — it's now defensive (checks for commands before using them)
+  for (const file of conditionalDotfiles) {
+    await symlinkDotfile(srcDir, file, opts.dryRun);
   }
 }
 

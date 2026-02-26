@@ -63,26 +63,28 @@ source "$HOME/.paths"
 # Navigate to Workspace folder if trying to open a new window under $HOME (which
 # is the default folder). This works alongside "New tabs open with: Same Working
 # Directory" behavior.
-if [[ $PWD == $HOME ]]; then
+if [[ $PWD == $HOME && -d "$HOME/Workspace" ]]; then
   cd $HOME/Workspace/
 fi
 
-# Run Powerline Shell
-function powerline_precmd() {
-  PS1="$(powerline-shell --shell zsh $?)"
-}
+# Run Powerline Shell (only if installed)
+if command -v powerline-shell &>/dev/null; then
+  function powerline_precmd() {
+    PS1="$(powerline-shell --shell zsh $?)"
+  }
 
-function install_powerline_precmd() {
-  for s in "${precmd_functions[@]}"; do
-    if [ "$s" = "powerline_precmd" ]; then
-      return
-    fi
-  done
-  precmd_functions+=(powerline_precmd)
-}
+  function install_powerline_precmd() {
+    for s in "${precmd_functions[@]}"; do
+      if [ "$s" = "powerline_precmd" ]; then
+        return
+      fi
+    done
+    precmd_functions+=(powerline_precmd)
+  }
 
-if [ "$TERM" != "linux" ]; then
-  install_powerline_precmd
+  if [ "$TERM" != "linux" ]; then
+    install_powerline_precmd
+  fi
 fi
 
 # Initialize rbenv if it's already installed
@@ -116,8 +118,6 @@ source "$HOME/.aliases"
 ################################################################################
 
 SECRETS_FILE="$HOME/.secrets"
-if [ -f $SECRETS_FILE ]; then
-  source $SECRETS_FILE
-else
-  echo "Warning: '$SECRETS_FILE' doesn't exist yet so it wasn't sourced."
+if [ -f "$SECRETS_FILE" ]; then
+  source "$SECRETS_FILE"
 fi
