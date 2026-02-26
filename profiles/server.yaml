@@ -1,65 +1,79 @@
 name: server
-description: Media server optimized setup
+description: "Media server — Plex, Sonarr, Radarr, qBittorrent, and more"
 
-core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+core: [jq, curl, wget, htop]
 terminal: [oh-my-zsh, powerline, theme, fonts]
-languages: []
-ios: []
 cloud: [docker, docker-compose]
-apps: [sublime-text, sourcetree]
-comms: []
-productivity: [iina]
-ai: []
-mas: []
-macos: [dock, finder, keyboard, screenshots, terminal]
-macos_complex: []
-cleanup: [GarageBand.app, iMovie.app, Keynote.app, Numbers.app, Pages.app]
-encryption: false
-xcode: false
+ai: [claude-code, codex]
+media: [iina]
+homeserver:
+  - hostname
+  - plex
+  - automounter
+  - volumes
+  - plex-symlink
+  - decrypt-env
+  - docker-start
+  - backup-scripts
+macos:
+  - dock
+  - finder
+  - keyboard
+  - trackpad
+  - power
+  - screenshots
+  - menu-bar
+  - hot-corners
+macos_complex:
+  - spotlight
+  - bluetooth-audio
+cleanup:
+  - GarageBand.app
+  - iMovie.app
+  - Keynote.app
+  - Numbers.app
+  - Pages.app
+encryption: true
 
 config:
   git:
-    user_name: JARMourato
-    user_email: joao.armourato@gmail.com
-  python_versions: ["3.12"]
-  apps:
-    casks:
-      - iina
-      - sublime-text
-      - sourcetree
-  cloud:
-    formulas:
-      - docker-compose
-    casks:
-      - docker
-  cleanup:
-    remove:
-      - GarageBand.app
-      - iMovie.app
-      - Keynote.app
-      - Numbers.app
-      - Pages.app
+    user_name: "JARMourato"
+    user_email: "joao.armourato@gmail.com"
   macos:
     dock:
       autohide: false
       tile_size: 40
+      large_size: 64
       magnification: true
+      show_process_indicators: true
       disable_recent_apps: true
       disable_rearrange_spaces: true
     finder:
-      new_window_target: home
-      show_hidden_files: false
       show_status_bar: true
       show_path_bar: true
+      sort_folders_first: true
       preferred_view: column
+      show_external_drives: true
+      show_hard_drives: true
     keyboard:
       disable_auto_capitalization: true
       disable_smart_dashes: true
+      disable_smart_quotes: true
       disable_auto_correct: true
       key_repeat_rate: 2
       initial_key_repeat: 35
-    screen:
+      disable_press_and_hold: true
+    trackpad:
+      tap_to_click: true
+    power:
+      sleep_on_power: 0
+      disable_power_nap: true
+    screenshots:
       screenshot_location: ~/Pictures/Screenshots
       screenshot_format: png
-    terminal:
-      secure_keyboard_entry: true
+    menu_bar:
+      show_full_date_time: true
+    hot_corners:
+      top_left: 4
+      top_right: 3
+      bottom_right: 2

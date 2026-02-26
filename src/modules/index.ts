@@ -7,6 +7,7 @@ import { cloudModule } from './cloud';
 import { commsModule } from './comms';
 import { coreModule } from './core';
 import { encryptionModule } from './encryption';
+import { homeserverModule } from './homeserver';
 import { iosModule } from './ios';
 import { languagesModule } from './languages';
 import { macosModule } from './macos';
@@ -32,6 +33,7 @@ export const modules: ModuleV2[] = [
   masModule,
   macosModule,
   macosComplexModule,
+  homeserverModule,
   cleanupModule,
   encryptionModule,
   xcodeModule,
