@@ -1,0 +1,69 @@
+name: server
+description: Media server optimized setup
+modules:
+  - core
+  - terminal
+  - shell
+  - macos
+  - cloud
+  - apps
+  - git
+  - ssh
+  - cleanup
+
+config:
+  git:
+    user_name: JARMourato
+    user_email: joao.armourato@gmail.com
+  node:
+    version: lts
+  python:
+    versions: ["3.12"]
+  apps:
+    casks:
+      - plex-media-server
+      - docker
+      - iina
+      - sublime-text
+      - sourcetree
+  cloud:
+    formulas:
+      - docker-compose
+      - ansible
+      - kubernetes-cli
+      - awscli
+      - terraform
+    casks:
+      - docker
+  cleanup:
+    remove:
+      - GarageBand.app
+      - iMovie.app
+      - Keynote.app
+      - Numbers.app
+      - Pages.app
+  macos:
+    dock:
+      autohide: false
+      tile_size: 40
+      magnification: true
+      disable_recent_apps: true
+      disable_rearrange_spaces: true
+    finder:
+      new_window_target: home
+      show_hidden_files: false
+      show_status_bar: true
+      show_path_bar: true
+      preferred_view: column
+    keyboard:
+      disable_auto_capitalization: true
+      disable_smart_dashes: true
+      disable_auto_correct: true
+      key_repeat_rate: 2
+      initial_key_repeat: 35
+      disable_press_and_hold: true
+    screen:
+      screenshot_location: ~/Pictures/Screenshots
+      screenshot_format: png
+    terminal:
+      secure_keyboard_entry: true

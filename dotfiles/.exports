@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Optimized for Apple Silicon Macs only
+
+# Prevent oh-my-zsh from overriding the ~/.zshrc file.
+export KEEP_ZSHRC='yes'
+
+# Preferred editor for local and remote sessions
+export EDITOR='nano'
+
+# Prefer US English and use UTF-8.
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+
+export DOTFILES_DIR="$HOME/.dotfiles"
+
+export NVM_DIR="$HOME/.nvm"
+
+export JAVA_HOME=/Applications/Android\ Studio.app/Contents/jre/Contents/Home
+
+# pyenv root directory. Consumed by pyenv only.
+export PYENV_ROOT="$HOME/.pyenv"
+
+# Source machine-specific configuration if it exists
+if [ -f "$HOME/.dotfiles/.dotfiles.config" ]; then
+    source "$HOME/.dotfiles/.dotfiles.config"
+fi

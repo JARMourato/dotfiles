@@ -1,0 +1,175 @@
+#!/bin/bash
+
+################################################################################
+### Configure System-Wide Aliases
+################################################################################
+
+
+# Opens a Sourcetree window using the given path, if needed.
+# Example: `sourcetree .` opens a new Sourcetree window for the current directory
+#          or focuses on the open one if there's one open already.
+function sourcetree() {
+  open -a Sourcetree "$1"
+}
+
+function doit() {
+  sourcetree "$1"
+  txt "$1"
+}
+
+function txt() {
+  "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" "$1"
+}
+
+function commit() {
+  ~/.dotfiles/Scripts/git_commit.sh "$1"
+}
+
+function dotfiles_sync() {
+  ~/.dotfiles/Scripts/dotfiles_sync_with_remote.sh "$@"
+}
+
+function dotfiles_check() {
+  ~/.dotfiles/bin/yaml_sync.sh check
+}
+
+function dotfiles_pull() {
+  ~/.dotfiles/bin/yaml_sync.sh pull
+}
+
+function dotfiles_push() {
+  ~/.dotfiles/bin/yaml_sync.sh push
+}
+
+function dotfiles_status() {
+  ~/.dotfiles/bin/yaml_sync.sh status
+}
+
+function dotfiles_push_changes() {
+  ~/.dotfiles/Scripts/dotfiles_save_changes.sh "$@"
+}
+
+function dotfiles_profile() {
+  if [ -z "$1" ]; then
+    # No argument - show current profile and available profiles
+    echo "Current profile: $(grep 'MACHINE_PROFILE=' ~/.dotfiles/.dotfiles.config 2>/dev/null | cut -d'"' -f2 || echo 'unknown')"
+    echo ""
+    echo "Available profiles:"
+    for file in ~/.dotfiles/.dotfiles.*.yaml; do
+      if [ -f "$file" ]; then
+        profile=$(basename "$file" | sed 's/.dotfiles.\(.*\).yaml/\1/')
+        echo "  - $profile"
+      fi
+    done
+    echo ""
+    echo "Usage: dotfiles_profile <profile_name>"
+  else
+    # Profile specified - switch to it
+    profile="$1"
+    if [ -f ~/.dotfiles/.dotfiles."$profile".yaml ]; then
+      echo "Switching to profile: $profile"
+      cd ~/.dotfiles && ./bootstrap.sh --profile="$profile"
+    else
+      echo "Error: Profile '$profile' not found"
+      echo "Available profiles:"
+      for file in ~/.dotfiles/.dotfiles.*.yaml; do
+        if [ -f "$file" ]; then
+          available=$(basename "$file" | sed 's/.dotfiles.\(.*\).yaml/\1/')
+          echo "  - $available"
+        fi
+      done
+      return 1
+    fi
+  fi
+}
+
+# Dotfiles sync shortcuts
+alias dots='dotfiles_status'        # What's my dotfiles status?
+alias dotcheck='dotfiles_check'     # Any remote changes?
+alias dotpull='dotfiles_pull'       # Get latest config
+alias dotpush='dotfiles_push'       # Push my config changes
+alias dotsync='dotfiles_sync'       # Full system sync
+alias dotforce='dotfiles_sync --force'  # Force full sync
+
+# Even shorter for frequent use
+alias ds='dotfiles_status'
+alias dc='dotfiles_check'
+
+function reposetup() {
+  ~/.dotfiles/Scripts/git_repo_setup.sh "$1"
+}
+
+function swiftpackage() {
+  ~/.dotfiles/Scripts/create_spm_package.sh "$1"
+}
+
+function spmcachereset() {
+  rm -rf ~/Library/Caches/org.swift.swiftpm
+  rm -rf ~/Library/org.swift.swiftpm
+}
+
+function xcodeSetup() {
+  ~/.dotfiles/Xcode/set_up_xcode.sh
+}
+
+function updateXcode() {
+  xcodes install --latest --experimental-unxip
+}
+
+function tagsreset() {
+  git tag -l | xargs git tag -d
+  git fetch --tags
+}
+
+function backupMyGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --user JARMourato "$1"
+}
+
+function backupOrgGit() {
+  ~/.dotfiles/Scripts/backup-github.sh --org "$1" "$2"
+}
+
+# This command kills and relaunches several audio and bluetooth related processes,
+# fixing issues bluetooth headsets malfunctioning.
+function killaudio() {
+  sudo kill `pgrep coreaudiod`
+  sudo kill `pgrep bluetoothd`
+  sudo kextunload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+  sudo kextload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+  sudo kextunload -b com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport
+}
+
+function bluetoothreset() {
+  sudo pkill bluetoothd
+}
+
+function dotedit() {
+  txt ~/.dotfiles
+}
+
+function dotgit() {
+  sourcetree ~/.dotfiles
+}
+
+# Bootstrap
+function bootstrap() {
+    git clone git@github.com:JARMourato/"$1"-bootstrap.git ~/Workspace/Temp/"$1"-bootstrap
+    ~/Workspace/Temp/"$1"-bootstrap/bootstrap.sh
+    rm -rf ~/Workspace/Temp
+}
+
+function switchdbi() {
+  python3 ~/.dotfiles/bin/dbi/dbibackend
+}
+
+# gpg-agent eventually dies, randomly, failing to sign commits. This command kills existing gpg-agent process and relaunches it.
+alias killgpg="pkill gpg-agent && gpg-agent --daemon"
+
+# Opens the Google Play Store console (beta view), ready to publish a new version of the app
+alias playstore="open -a safari https://play.google.com/console/u/1/developers/6280656057399977520/app-list"
+
+# Prints the PATH env var in a user-friendly way
+alias path="tr ':' '\n' <<< \"$PATH\""
+
+# Update all dependencies based on current dotfiles profile
+alias update-dependencies="~/.dotfiles/Scripts/update_dependencies.sh"

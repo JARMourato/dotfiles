@@ -1,0 +1,13 @@
+# Optimized for Apple Silicon Macs only
+
+export PATH="$HOME/.rbenv/shims:$PATH"
+export PATH="$HOME/.rbenv/bin:$PATH"
+
+# Homebrew (Apple Silicon path)
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Enable use of `gmake` aliased as `make` (Apple Silicon path)
+export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
+
+# llvm (Apple Silicon path)
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
