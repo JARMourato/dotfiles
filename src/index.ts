@@ -364,8 +364,14 @@ async function run(): Promise<void> {
       return;
     }
 
-    intro(chalk.cyan('macsetup — uninstall'));
+    const dryRun = Boolean(options.dryRun);
+
+    intro(chalk.cyan(dryRun ? 'macsetup — uninstall (dry run)' : 'macsetup — uninstall'));
     log.info(`Last run: ${current.lastRun}\nProfile: ${current.profile}`);
+
+    const caskModules = new Set(['apps', 'comms', 'productivity']);
+    const formulaModules = new Set(['core', 'ios', 'cloud', 'languages']);
+    const skipModules = new Set(['terminal', 'macos', 'macos_complex', 'encryption', 'xcode', 'cleanup', 'mas']);
 
     const installedModules = Object.entries(current.modules)
       .filter(([, record]) => record.installed.length > 0)
@@ -379,13 +385,35 @@ async function run(): Promise<void> {
       return;
     }
 
+    // Show detailed preview
+    log.step(chalk.bold('Will uninstall:'));
     for (const mod of installedModules) {
-      log.info(`${mod.label}: ${mod.items.join(', ')}`);
+      if (skipModules.has(mod.name)) {
+        log.info(chalk.dim(`  ⏭  ${mod.label}: skipped (not reversible)`));
+      } else if (caskModules.has(mod.name)) {
+        log.info(`  🗑  ${mod.label}: brew uninstall --cask ${mod.items.join(', ')}`);
+      } else if (formulaModules.has(mod.name)) {
+        log.info(`  🗑  ${mod.label}: brew uninstall ${mod.items.join(', ')}`);
+      } else if (mod.name === 'ai') {
+        const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
+        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
+        const parts: string[] = [];
+        if (casks.length > 0) parts.push(`brew uninstall --cask ${casks.join(', ')}`);
+        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'claude-code' ? '@anthropic-ai/claude-code' : p).join(', ')}`);
+        log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
+      } else {
+        log.info(`  🗑  ${mod.label}: ${mod.items.join(', ')}`);
+      }
+    }
+
+    if (dryRun) {
+      outro('Dry run complete — nothing was removed.');
+      return;
     }
 
     const shouldUninstall = handleCancelled(
       await confirm({
-        message: `Uninstall all ${installedModules.length} modules? This will brew uninstall formulas/casks.`,
+        message: `Proceed with uninstall?`,
         initialValue: false,
       }),
     );
@@ -397,35 +425,25 @@ async function run(): Promise<void> {
 
     const { uninstallFormulas, uninstallCasks } = await import('./modules/helpers');
     const { runCommand } = await import('./utils/shell');
+    const uninstallOpts: InstallOptions = { dryRun: false, verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir };
 
     for (const mod of installedModules) {
-      const module = modules.find((m) => m.name === mod.name);
-      if (!module) continue;
+      if (skipModules.has(mod.name)) continue;
 
       log.step(`Uninstalling ${mod.label}...`);
 
-      // Determine if items are casks or formulas based on module type
-      const caskModules = new Set(['apps', 'comms', 'productivity']);
-      const formulaModules = new Set(['core', 'ios', 'cloud', 'languages']);
-
       if (caskModules.has(mod.name)) {
-        await uninstallCasks(mod.items, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+        await uninstallCasks(mod.items, uninstallOpts);
       } else if (formulaModules.has(mod.name)) {
-        await uninstallFormulas(mod.items, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+        await uninstallFormulas(mod.items, uninstallOpts);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
         const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
-        if (casks.length > 0) await uninstallCasks(casks, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+        if (casks.length > 0) await uninstallCasks(casks, uninstallOpts);
         for (const pkg of npms) {
           const npmName = pkg === 'claude-code' ? '@anthropic-ai/claude-code' : pkg;
-          await runCommand('npm', ['uninstall', '-g', npmName], { dryRun: Boolean(options.dryRun), continueOnError: true });
+          await runCommand('npm', ['uninstall', '-g', npmName], { continueOnError: true });
         }
-      } else if (mod.name === 'terminal') {
-        log.info('Terminal settings (oh-my-zsh, theme, fonts) — skipped (manual removal recommended)');
-      } else if (mod.name === 'macos' || mod.name === 'macos_complex') {
-        log.info(`${mod.label} — defaults cannot be automatically reverted`);
-      } else if (mod.name === 'encryption' || mod.name === 'xcode' || mod.name === 'cleanup' || mod.name === 'mas') {
-        log.info(`${mod.label} — skipped (not safely reversible)`);
       }
     }
 
