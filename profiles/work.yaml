@@ -11,7 +11,7 @@ apps: [google-chrome, visual-studio-code, sourcetree, proxyman]
 comms: [slack, zoom, telegram]
 productivity: [bitwarden, setapp]
 media: [spotify, iina]
-ai: [claude, chatgpt, claude-code]
+ai: [claude, chatgpt, claude-code, codex]
 macos:
   - dock
   - finder

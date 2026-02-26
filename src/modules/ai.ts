@@ -6,6 +6,7 @@ const items = [
   { id: 'claude', label: 'Claude app' },
   { id: 'chatgpt', label: 'ChatGPT app' },
   { id: 'claude-code', label: 'Claude Code CLI' },
+  { id: 'codex', label: 'Codex CLI (OpenAI)' },
   { id: 'openclaw', label: 'OpenClaw CLI' },
 ];
 
@@ -19,8 +20,8 @@ export const aiModule: ModuleV2 = {
   async detect(selectedItems) {
     const casks = selectedItems.filter((item) => item === 'claude' || item === 'chatgpt');
     const commands = selectedItems
-      .filter((item) => item === 'claude-code' || item === 'openclaw')
-      .map((item) => (item === 'claude-code' ? 'claude' : 'openclaw'));
+      .filter((item) => item === 'claude-code' || item === 'codex' || item === 'openclaw')
+      .map((item) => (item === 'claude-code' ? 'claude' : item === 'codex' ? 'codex' : 'openclaw'));
 
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
@@ -29,8 +30,9 @@ export const aiModule: ModuleV2 = {
       ? await detectCommands(commands)
       : { installed: [], missing: [], partial: false };
 
-    const installedCliItems = commandDetect.installed.map((cmd) => (cmd === 'claude' ? 'claude-code' : cmd));
-    const missingCliItems = commandDetect.missing.map((cmd) => (cmd === 'claude' ? 'claude-code' : cmd));
+    const cliMap = (cmd: string) => cmd === 'claude' ? 'claude-code' : cmd;
+    const installedCliItems = commandDetect.installed.map(cliMap);
+    const missingCliItems = commandDetect.missing.map(cliMap);
 
     return {
       installed: [...caskDetect.installed, ...installedCliItems],
@@ -46,6 +48,13 @@ export const aiModule: ModuleV2 = {
 
     if (selectedItems.includes('claude-code')) {
       await runCommand('npm', ['install', '-g', '@anthropic-ai/claude-code'], {
+        dryRun: opts.dryRun,
+        continueOnError: true,
+      });
+    }
+
+    if (selectedItems.includes('codex')) {
+      await runCommand('npm', ['install', '-g', '@openai/codex'], {
         dryRun: opts.dryRun,
         continueOnError: true,
       });
