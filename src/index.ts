@@ -33,6 +33,7 @@ program
   .option('--diff', 'show diff since last run')
   .option('--export', 'export current state as profile YAML')
   .option('--verbose', 'verbose output')
+  .option('--uninstall', 'uninstall everything from last state')
   .parse(process.argv);
 
 const options = program.opts<{
@@ -42,6 +43,7 @@ const options = program.opts<{
   diff?: boolean;
   export?: boolean;
   verbose?: boolean;
+  uninstall?: boolean;
 }>();
 
 function handleCancelled<T>(value: T): T {
@@ -173,19 +175,40 @@ async function promptModuleItems(
 
     const initial = prefill[module.name]?.length ? prefill[module.name] : module.defaultItems;
 
+    // If only one item (single toggle modules like encryption/xcode), skip drill-down
+    if (module.items.length === 1) {
+      selected[module.name] = [...module.defaultItems];
+      continue;
+    }
+
+    const allIds = module.items.map((item) => item.id);
+
     const items = handleCancelled(
       await multiselect({
-        message: `${module.label} - select items`,
-        options: module.items.map((item) => ({
-          value: item.id,
-          label: item.label,
-          hint: item.description,
-          selected: initial.includes(item.id),
-        })),
+        message: `${module.label} - select items (first two options toggle all)`,
+        options: [
+          { value: '__select_all__', label: '✅ Select All', hint: 'Toggle all items on' },
+          { value: '__select_none__', label: '☐  Select None', hint: 'Toggle all items off' },
+          ...module.items.map((item) => ({
+            value: item.id,
+            label: item.label,
+            hint: item.description,
+            selected: initial.includes(item.id),
+          })),
+        ],
       }),
     ) as string[];
 
-    selected[module.name] = sanitizeItems(module, items);
+    let finalItems: string[];
+    if (items.includes('__select_all__')) {
+      finalItems = allIds;
+    } else if (items.includes('__select_none__')) {
+      finalItems = [];
+    } else {
+      finalItems = items.filter((item) => !item.startsWith('__'));
+    }
+
+    selected[module.name] = sanitizeItems(module, finalItems);
   }
 
   return selected;
@@ -333,6 +356,91 @@ function summaryLines(selected: Record<string, string[]>): string[] {
 async function run(): Promise<void> {
   const rootDir = process.cwd();
   const state = new JsonStateManager();
+
+  if (options.uninstall) {
+    const current = await state.load();
+    if (!current) {
+      console.log('No state file found — nothing to uninstall.');
+      return;
+    }
+
+    intro(chalk.cyan('macsetup — uninstall'));
+    log.info(`Last run: ${current.lastRun}\nProfile: ${current.profile}`);
+
+    const installedModules = Object.entries(current.modules)
+      .filter(([, record]) => record.installed.length > 0)
+      .map(([name, record]) => {
+        const module = modules.find((m) => m.name === name);
+        return { name, label: module?.label ?? name, items: record.installed };
+      });
+
+    if (installedModules.length === 0) {
+      outro('Nothing installed to remove.');
+      return;
+    }
+
+    for (const mod of installedModules) {
+      log.info(`${mod.label}: ${mod.items.join(', ')}`);
+    }
+
+    const shouldUninstall = handleCancelled(
+      await confirm({
+        message: `Uninstall all ${installedModules.length} modules? This will brew uninstall formulas/casks.`,
+        initialValue: false,
+      }),
+    );
+
+    if (!shouldUninstall) {
+      outro('Cancelled.');
+      return;
+    }
+
+    const { uninstallFormulas, uninstallCasks } = await import('./modules/helpers');
+    const { runCommand } = await import('./utils/shell');
+
+    for (const mod of installedModules) {
+      const module = modules.find((m) => m.name === mod.name);
+      if (!module) continue;
+
+      log.step(`Uninstalling ${mod.label}...`);
+
+      // Determine if items are casks or formulas based on module type
+      const caskModules = new Set(['apps', 'comms', 'productivity']);
+      const formulaModules = new Set(['core', 'ios', 'cloud', 'languages']);
+
+      if (caskModules.has(mod.name)) {
+        await uninstallCasks(mod.items, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+      } else if (formulaModules.has(mod.name)) {
+        await uninstallFormulas(mod.items, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+      } else if (mod.name === 'ai') {
+        const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
+        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
+        if (casks.length > 0) await uninstallCasks(casks, { dryRun: Boolean(options.dryRun), verbose: Boolean(options.verbose), profile: { name: '', description: '', config: {} }, state, rootDir });
+        for (const pkg of npms) {
+          const npmName = pkg === 'claude-code' ? '@anthropic-ai/claude-code' : pkg;
+          await runCommand('npm', ['uninstall', '-g', npmName], { dryRun: Boolean(options.dryRun), continueOnError: true });
+        }
+      } else if (mod.name === 'terminal') {
+        log.info('Terminal settings (oh-my-zsh, theme, fonts) — skipped (manual removal recommended)');
+      } else if (mod.name === 'macos' || mod.name === 'macos_complex') {
+        log.info(`${mod.label} — defaults cannot be automatically reverted`);
+      } else if (mod.name === 'encryption' || mod.name === 'xcode' || mod.name === 'cleanup' || mod.name === 'mas') {
+        log.info(`${mod.label} — skipped (not safely reversible)`);
+      }
+    }
+
+    // Clear state
+    const emptyState = {
+      lastRun: new Date().toISOString(),
+      profile: 'uninstalled',
+      modules: {},
+      machine: current.machine,
+    };
+    await state.save(emptyState);
+
+    outro('Uninstall complete.');
+    return;
+  }
 
   if (options.diff) {
     const current = await state.load();

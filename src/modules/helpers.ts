@@ -70,3 +70,19 @@ export async function installMasApps(ids: number[], opts: InstallOptions): Promi
     }
   }
 }
+
+export async function uninstallFormulas(formulas: string[], opts: InstallOptions): Promise<void> {
+  for (const formula of formulas) {
+    if (await brewFormulaInstalled(formula)) {
+      await runCommand('brew', ['uninstall', formula], { dryRun: opts.dryRun, continueOnError: true });
+    }
+  }
+}
+
+export async function uninstallCasks(casks: string[], opts: InstallOptions): Promise<void> {
+  for (const cask of casks) {
+    if (await brewCaskInstalled(cask)) {
+      await runCommand('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true });
+    }
+  }
+}
