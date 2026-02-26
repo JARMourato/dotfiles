@@ -66,7 +66,6 @@ const MANAGED_CASKS = new Set([
 ]);
 const NPM_GLOBALS = [
   { label: 'claude-code', packageName: '@anthropic-ai/claude-code' },
-  { label: 'openclaw', packageName: 'openclaw' },
 ];
 const MACOS_BASELINE: Record<string, BaselineCheck[]> = {
   dock: [
