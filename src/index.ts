@@ -369,7 +369,7 @@ async function run(): Promise<void> {
     intro(chalk.cyan(dryRun ? 'macsetup — uninstall (dry run)' : 'macsetup — uninstall'));
     log.info(`Last run: ${current.lastRun}\nProfile: ${current.profile}`);
 
-    const caskModules = new Set(['apps', 'comms', 'productivity']);
+    const caskModules = new Set(['apps', 'comms', 'productivity', 'media']);
     const formulaModules = new Set(['core', 'ios', 'cloud', 'languages']);
     const skipModules = new Set(['terminal', 'macos', 'macos_complex', 'encryption', 'xcode', 'cleanup', 'mas']);
 
@@ -394,6 +394,14 @@ async function run(): Promise<void> {
         log.info(`  🗑  ${mod.label}: brew uninstall --cask ${mod.items.join(', ')}`);
       } else if (formulaModules.has(mod.name)) {
         log.info(`  🗑  ${mod.label}: brew uninstall ${mod.items.join(', ')}`);
+      } else if (mod.name === 'android') {
+        const casks = mod.items.filter((i) => i === 'android-studio');
+        const formulas = mod.items.filter((i) => i === 'openjdk' || i === 'bundletool');
+        const parts: string[] = [];
+        if (casks.length > 0) parts.push(`brew uninstall --cask ${casks.join(', ')}`);
+        if (formulas.length > 0) parts.push(`brew uninstall ${formulas.join(', ')}`);
+        if (mod.items.includes('env-vars')) parts.push('remove ANDROID_HOME from .exports');
+        log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
         const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
@@ -436,6 +444,11 @@ async function run(): Promise<void> {
         await uninstallCasks(mod.items, uninstallOpts);
       } else if (formulaModules.has(mod.name)) {
         await uninstallFormulas(mod.items, uninstallOpts);
+      } else if (mod.name === 'android') {
+        const casks = mod.items.filter((i) => i === 'android-studio');
+        const formulas = mod.items.filter((i) => i === 'openjdk' || i === 'bundletool');
+        if (casks.length > 0) await uninstallCasks(casks, uninstallOpts);
+        if (formulas.length > 0) await uninstallFormulas(formulas, uninstallOpts);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
         const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');

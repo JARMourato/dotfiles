@@ -35,11 +35,13 @@ export interface ProfileConfig {
   terminal?: string[];
   languages?: string[];
   ios?: string[];
+  android?: string[];
   cloud?: string[];
   apps?: string[];
   comms?: string[];
   productivity?: string[];
   ai?: string[];
+  media?: string[];
   mas?: MasAppSelection[];
   macos?: string[];
   macos_complex?: string[];

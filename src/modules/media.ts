@@ -2,17 +2,14 @@ import type { ModuleV2 } from '../types';
 import { detectCasks, installCasks } from './helpers';
 
 const items = [
-  { id: 'bitwarden', label: 'Bitwarden' },
-  { id: 'betterzip', label: 'BetterZip' },
-  { id: 'setapp', label: 'Setapp' },
-  { id: 'dockdoor', label: 'DockDoor' },
-  { id: 'openaudible', label: 'OpenAudible' },
+  { id: 'spotify', label: 'Spotify' },
+  { id: 'iina', label: 'IINA' },
 ];
 
-export const productivityModule: ModuleV2 = {
-  name: 'productivity',
-  label: 'Productivity',
-  description: 'Personal productivity and media apps',
+export const mediaModule: ModuleV2 = {
+  name: 'media',
+  label: 'Media',
+  description: 'Music and video apps',
   items,
   defaultItems: items.map((item) => item.id),
   dependencies: ['core'],

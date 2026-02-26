@@ -1,5 +1,6 @@
 import type { ModuleV2 } from '../types';
 import { aiModule } from './ai';
+import { androidModule } from './android';
 import { appsModule } from './apps';
 import { cleanupModule } from './cleanup';
 import { cloudModule } from './cloud';
@@ -11,6 +12,7 @@ import { languagesModule } from './languages';
 import { macosModule } from './macos';
 import { macosComplexModule } from './macos-complex';
 import { masModule } from './mas';
+import { mediaModule } from './media';
 import { productivityModule } from './productivity';
 import { terminalModule } from './terminal';
 import { xcodeModule } from './xcode';
@@ -20,10 +22,12 @@ export const modules: ModuleV2[] = [
   terminalModule,
   languagesModule,
   iosModule,
+  androidModule,
   cloudModule,
   appsModule,
   commsModule,
   productivityModule,
+  mediaModule,
   aiModule,
   masModule,
   macosModule,
