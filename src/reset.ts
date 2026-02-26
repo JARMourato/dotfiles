@@ -119,7 +119,7 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   log.info('1) Restore macOS defaults from ~/.macsetup-defaults-backup.json');
   log.info(`2) Uninstall formulas: ${MANAGED_FORMULAS.join(', ')}`);
   log.info(`3) Uninstall casks: ${MANAGED_CASKS.join(', ')}`);
-  log.info('4) Uninstall npm globals: @anthropic-ai/claude-code, openclaw');
+  log.info('4) Uninstall npm globals: @anthropic-ai/claude-code, @openai/codex');
   log.info(`5) Remove dotfile symlinks: ${DOTFILES.join(', ')}`);
   log.info('6) Remove ~/.oh-my-zsh and ~/.config/powerline-shell');
   log.info('7) Remove ANDROID_HOME lines from ~/.exports');
@@ -160,7 +160,7 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   await uninstallFormulas(MANAGED_FORMULAS, installOpts);
   await uninstallCasks(MANAGED_CASKS, installOpts);
   await runCommand('npm', ['uninstall', '-g', '@anthropic-ai/claude-code'], { continueOnError: true });
-  await runCommand('npm', ['uninstall', '-g', 'openclaw'], { continueOnError: true });
+  await runCommand('npm', ['uninstall', '-g', '@openai/codex'], { continueOnError: true });
   await removeDotfileSymlinks(rootDir, false);
   await runCommand('rm', ['-rf', path.join(os.homedir(), '.oh-my-zsh')], { continueOnError: true });
   await runCommand('rm', ['-rf', path.join(os.homedir(), '.config', 'powerline-shell')], { continueOnError: true });

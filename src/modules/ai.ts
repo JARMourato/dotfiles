@@ -7,7 +7,7 @@ const items = [
   { id: 'chatgpt', label: 'ChatGPT app' },
   { id: 'claude-code', label: 'Claude Code CLI' },
   { id: 'codex', label: 'Codex CLI (OpenAI)' },
-  { id: 'openclaw', label: 'OpenClaw CLI' },
+
 ];
 
 export const aiModule: ModuleV2 = {
@@ -20,8 +20,8 @@ export const aiModule: ModuleV2 = {
   async detect(selectedItems) {
     const casks = selectedItems.filter((item) => item === 'claude' || item === 'chatgpt');
     const commands = selectedItems
-      .filter((item) => item === 'claude-code' || item === 'codex' || item === 'openclaw')
-      .map((item) => (item === 'claude-code' ? 'claude' : item === 'codex' ? 'codex' : 'openclaw'));
+      .filter((item) => item === 'claude-code' || item === 'codex')
+      .map((item) => (item === 'claude-code' ? 'claude' : 'codex'));
 
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
@@ -60,11 +60,5 @@ export const aiModule: ModuleV2 = {
       });
     }
 
-    if (selectedItems.includes('openclaw')) {
-      await runCommand('npm', ['install', '-g', 'openclaw'], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-      });
-    }
   },
 };

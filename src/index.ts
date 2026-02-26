@@ -422,10 +422,10 @@ async function run(): Promise<void> {
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
+        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
         const parts: string[] = [];
         if (casks.length > 0) parts.push(`brew uninstall --cask ${casks.join(', ')}`);
-        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'claude-code' ? '@anthropic-ai/claude-code' : p).join(', ')}`);
+        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'claude-code' ? '@anthropic-ai/claude-code' : p === 'codex' ? '@openai/codex' : p).join(', ')}`);
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else {
         log.info(`  🗑  ${mod.label}: ${mod.items.join(', ')}`);
@@ -469,10 +469,10 @@ async function run(): Promise<void> {
         if (formulas.length > 0) await uninstallFormulas(formulas, uninstallOpts);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'openclaw');
+        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
         if (casks.length > 0) await uninstallCasks(casks, uninstallOpts);
         for (const pkg of npms) {
-          const npmName = pkg === 'claude-code' ? '@anthropic-ai/claude-code' : pkg;
+          const npmName = pkg === 'claude-code' ? '@anthropic-ai/claude-code' : pkg === 'codex' ? '@openai/codex' : pkg;
           await runCommand('npm', ['uninstall', '-g', npmName], { continueOnError: true });
         }
       }

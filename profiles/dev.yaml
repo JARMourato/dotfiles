@@ -9,7 +9,7 @@ cloud: [docker, docker-compose, terraform, ansible, awscli, kubernetes-cli]
 apps: [google-chrome, visual-studio-code, sublime-text, sourcetree, proxyman, charles, postman, cursor, sf-symbols]
 comms: [slack, zoom, whatsapp, telegram]
 productivity: [bitwarden, spotify, iina, betterzip, setapp, dockdoor, openaudible]
-ai: [claude, chatgpt, claude-code, openclaw]
+ai: [claude, chatgpt, claude-code, codex]
 mas:
   - { id: 472226235, name: LanScan }
   - { id: 904280696, name: "Things 3" }
@@ -58,7 +58,6 @@ config:
       - claude
     npm:
       - "@anthropic-ai/claude-code"
-      - openclaw
   ios:
     formulas:
       - swiftlint
