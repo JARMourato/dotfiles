@@ -1,6 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
+import { backupDefault } from '../defaults-backup';
 import { runCommand } from '../utils/shell';
 
 type MacosConfig = Record<string, any>;
@@ -61,10 +62,25 @@ async function defaultsWrite(
   value: unknown,
   dryRun: boolean,
 ): Promise<void> {
+  if (!dryRun) {
+    await backupDefault(domain, key);
+  }
   const type = toDefaultsType(value);
   const flag = `-${type}`;
   const normalized = typeof value === 'boolean' ? String(value) : asString(value);
   await runCommand('defaults', ['write', domain, key, flag, normalized], { dryRun, continueOnError: true });
+}
+
+async function defaultsWriteWithArgs(
+  domain: string,
+  key: string,
+  args: string[],
+  dryRun: boolean,
+): Promise<void> {
+  if (!dryRun) {
+    await backupDefault(domain, key);
+  }
+  await runCommand('defaults', args, { dryRun, continueOnError: true });
 }
 
 export const macosModule: ModuleV2 = {
@@ -188,10 +204,12 @@ export const macosModule: ModuleV2 = {
         });
       }
       if (asBool(finder.expand_info_panes)) {
-        await runCommand('defaults', ['write', 'com.apple.finder', 'FXInfoPanesExpanded', '-dict', 'General', '-bool', 'true', 'OpenWith', '-bool', 'true', 'Privileges', '-bool', 'true'], {
-          dryRun: opts.dryRun,
-          continueOnError: true,
-        });
+        await defaultsWriteWithArgs(
+          'com.apple.finder',
+          'FXInfoPanesExpanded',
+          ['write', 'com.apple.finder', 'FXInfoPanesExpanded', '-dict', 'General', '-bool', 'true', 'OpenWith', '-bool', 'true', 'Privileges', '-bool', 'true'],
+          opts.dryRun,
+        );
       }
     }
 
@@ -214,24 +232,30 @@ export const macosModule: ModuleV2 = {
       if (keyboard.key_repeat_rate !== undefined) await defaultsWrite('-g', 'KeyRepeat', keyboard.key_repeat_rate, opts.dryRun);
       if (keyboard.initial_key_repeat !== undefined) await defaultsWrite('-g', 'InitialKeyRepeat', keyboard.initial_key_repeat, opts.dryRun);
       if (asBool(keyboard.enable_tab_navigation)) {
-        await runCommand('defaults', ['write', '-g', 'NSUserKeyEquivalents', '-dict-add', 'Show Next Tab', '@~\\U2192'], {
-          dryRun: opts.dryRun,
-          continueOnError: true,
-        });
-        await runCommand('defaults', ['write', '-g', 'NSUserKeyEquivalents', '-dict-add', 'Show Previous Tab', '@~\\U2190'], {
-          dryRun: opts.dryRun,
-          continueOnError: true,
-        });
+        await defaultsWriteWithArgs(
+          '-g',
+          'NSUserKeyEquivalents',
+          ['write', '-g', 'NSUserKeyEquivalents', '-dict-add', 'Show Next Tab', '@~\\U2192'],
+          opts.dryRun,
+        );
+        await defaultsWriteWithArgs(
+          '-g',
+          'NSUserKeyEquivalents',
+          ['write', '-g', 'NSUserKeyEquivalents', '-dict-add', 'Show Previous Tab', '@~\\U2190'],
+          opts.dryRun,
+        );
       }
     }
 
     const lang = cfg.language_region ?? {};
     if (has('language-region')) {
       if (Array.isArray(lang.languages) && lang.languages.length > 0) {
-        await runCommand('defaults', ['write', '-g', 'AppleLanguages', '-array', ...lang.languages.map(String)], {
-          dryRun: opts.dryRun,
-          continueOnError: true,
-        });
+        await defaultsWriteWithArgs(
+          '-g',
+          'AppleLanguages',
+          ['write', '-g', 'AppleLanguages', '-array', ...lang.languages.map(String)],
+          opts.dryRun,
+        );
       }
       if (lang.locale) await defaultsWrite('-g', 'AppleLocale', lang.locale, opts.dryRun);
       if (lang.measurement_units) await defaultsWrite('-g', 'AppleMeasurementUnits', lang.measurement_units, opts.dryRun);

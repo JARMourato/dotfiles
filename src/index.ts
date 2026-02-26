@@ -16,7 +16,9 @@ import { loadProfile, loadUserConfig, saveUserConfig } from './config';
 import { modules } from './modules';
 import { masAppsForItems, masItemsFromApps } from './modules/mas';
 import { runRequiredPhase } from './required';
+import { runReset } from './reset';
 import { runModules } from './runner';
+import { showStatus } from './status';
 import { JsonStateManager } from './state';
 import type { InstallOptions, ModuleV2, ProfileConfig } from './types';
 import { detectMachine } from './utils/detect';
@@ -34,6 +36,8 @@ program
   .option('--export', 'export current state as profile YAML')
   .option('--verbose', 'verbose output')
   .option('--uninstall', 'uninstall everything from last state')
+  .option('--status', 'show machine status vs macsetup managed items')
+  .option('--reset', 'aggressively undo macsetup changes')
   .parse(process.argv);
 
 const options = program.opts<{
@@ -44,6 +48,8 @@ const options = program.opts<{
   export?: boolean;
   verbose?: boolean;
   uninstall?: boolean;
+  status?: boolean;
+  reset?: boolean;
 }>();
 
 function handleCancelled<T>(value: T): T {
@@ -356,6 +362,18 @@ function summaryLines(selected: Record<string, string[]>): string[] {
 async function run(): Promise<void> {
   const rootDir = process.cwd();
   const state = new JsonStateManager();
+
+  if (options.status) {
+    await showStatus(rootDir);
+    return;
+  }
+
+  if (options.reset) {
+    intro(chalk.cyan(Boolean(options.dryRun) ? 'macsetup — reset (dry run)' : 'macsetup — reset'));
+    await runReset(rootDir, Boolean(options.dryRun));
+    outro(Boolean(options.dryRun) ? 'Dry run complete.' : 'Reset complete.');
+    return;
+  }
 
   if (options.uninstall) {
     const current = await state.load();
