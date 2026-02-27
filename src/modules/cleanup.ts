@@ -20,9 +20,17 @@ export const cleanupModule: ModuleV2 = {
     const missing: string[] = [];
 
     for (const app of selectedItems) {
-      const check = await runCommand('test', ['-d', `/Applications/${app}`], { continueOnError: true });
-      if (check.ok) missing.push(app);   // app exists → still needs removal
-      else installed.push(app);            // app gone → cleanup already done
+      const appName = app.replace('.app', '');
+      const appExists = await runCommand('test', ['-d', `/Applications/${app}`], { continueOnError: true });
+      // Check if still in Dock (stale shortcut)
+      const dockCheck = await runCommand('dockutil', ['--find', appName], { continueOnError: true });
+      const inDock = dockCheck.ok && dockCheck.stdout.includes('was found');
+
+      if (appExists.ok || inDock) {
+        missing.push(app);   // app exists or Dock stale → still needs work
+      } else {
+        installed.push(app);  // app gone + not in Dock → fully clean
+      }
     }
 
     return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
