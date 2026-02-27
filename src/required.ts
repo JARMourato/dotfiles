@@ -107,33 +107,47 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
   }
 }
 
-async function copyDotfile(srcDir: string, file: string, dryRun: boolean): Promise<void> {
-  const src = path.join(srcDir, file);
-  const dst = path.join(realHome(), file);
-  const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
-  if (!srcExists.ok) return;
-
-  if (dryRun) return;
-
-  // Remove existing (could be a stale symlink or old file)
-  await fs.rm(dst, { recursive: true, force: true });
-  await fs.copyFile(src, dst);
-  // Ensure the real user owns the file (not root when running under sudo)
-  const sudoUser = process.env.SUDO_USER;
-  if (sudoUser && process.getuid?.() === 0) {
-    await runCommand('chown', [sudoUser, dst], { continueOnError: true });
-  }
-}
-
 async function ensureDotfiles(opts: InstallOptions): Promise<void> {
   const srcDir = path.join(opts.rootDir, 'dotfiles');
+  const home = realHome();
+  const dotfilesDir = path.join(home, '.dotfiles');
+  const sudoUser = process.env.SUDO_USER;
 
-  for (const file of alwaysSafeDotfiles) {
-    await copyDotfile(srcDir, file, opts.dryRun);
+  if (opts.dryRun) return;
+
+  // Copy dotfiles/ to ~/.dotfiles (persistent location)
+  await fs.mkdir(dotfilesDir, { recursive: true });
+  const allFiles = [...alwaysSafeDotfiles, ...conditionalDotfiles];
+  for (const file of allFiles) {
+    const src = path.join(srcDir, file);
+    const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
+    if (!srcExists.ok) continue;
+    await fs.copyFile(src, path.join(dotfilesDir, file));
   }
 
-  for (const file of conditionalDotfiles) {
-    await copyDotfile(srcDir, file, opts.dryRun);
+  // Ensure real user owns ~/.dotfiles
+  if (sudoUser && process.getuid?.() === 0) {
+    await runCommand('chown', ['-R', sudoUser, dotfilesDir], { continueOnError: true });
+  }
+
+  // Symlink ~/.<file> → ~/.dotfiles/<file>
+  for (const file of allFiles) {
+    const src = path.join(dotfilesDir, file);
+    const dst = path.join(home, file);
+    const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
+    if (!srcExists.ok) continue;
+
+    // Skip if already pointing to the right place
+    try {
+      const existing = await fs.readlink(dst);
+      if (existing === src) continue;
+    } catch { /* not a symlink or doesn't exist */ }
+
+    await fs.rm(dst, { recursive: true, force: true });
+    await fs.symlink(src, dst);
+    if (sudoUser && process.getuid?.() === 0) {
+      await runCommand('chown', ['-h', sudoUser, dst], { continueOnError: true });
+    }
   }
 }
 
