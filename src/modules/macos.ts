@@ -88,18 +88,10 @@ export const macosModule: ModuleV2 = {
   description: 'Dock, Finder, keyboard, trackpad, power, screenshots, clock and more',
   items: macosItems,
   defaultItems: macosItems.map((item) => item.id),
-  async detect(selectedItems, opts) {
-    const cfg = (opts.profile.config.macos ?? {}) as MacosConfig;
-    const installed: string[] = [];
-    const missing: string[] = [];
-
-    for (const item of selectedItems) {
-      const section = sectionKeyByItem[item];
-      if (section && cfg[section] !== undefined) installed.push(item);
-      else missing.push(item);
-    }
-
-    return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
+  async detect(selectedItems, _opts) {
+    // defaults writes are idempotent — always re-apply to ensure they stick
+    // (especially after restarts or if previously run under wrong user context)
+    return { installed: [], missing: [...selectedItems], partial: false };
   },
   async install(selectedItems, opts) {
     const cfg = (opts.profile.config.macos ?? {}) as MacosConfig;
