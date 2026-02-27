@@ -1,10 +1,76 @@
 import { execa } from 'execa';
+import { spawn } from 'node:child_process';
 
 export interface CommandOptions {
   dryRun?: boolean;
   cwd?: string;
   continueOnError?: boolean;
   env?: NodeJS.ProcessEnv;
+}
+
+export interface StreamCommandOptions extends CommandOptions {
+  /** Called with the latest line from stdout/stderr for progress updates */
+  onProgress?: (line: string) => void;
+}
+
+/**
+ * Run a command with streaming output, calling onProgress with each line.
+ * Useful for long-running installs (brew, mas) where we want live progress.
+ */
+export async function runStreamedCommand(
+  cmd: string,
+  args: string[] = [],
+  opts: StreamCommandOptions = {},
+): Promise<{ ok: boolean; stdout: string; stderr: string }> {
+  if (opts.dryRun) {
+    return { ok: true, stdout: `[dry-run] ${cmd} ${args.join(' ')}`.trim(), stderr: '' };
+  }
+
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, {
+      cwd: opts.cwd,
+      env: { ...process.env, ...opts.env },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    const processLine = (line: string): void => {
+      const trimmed = line.trim();
+      if (trimmed && opts.onProgress) opts.onProgress(trimmed);
+    };
+
+    child.stdout?.on('data', (data: Buffer) => {
+      const text = data.toString();
+      stdout += text;
+      for (const line of text.split('\n')) processLine(line);
+    });
+
+    child.stderr?.on('data', (data: Buffer) => {
+      const text = data.toString();
+      stderr += text;
+      for (const line of text.split('\n')) processLine(line);
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ ok: true, stdout, stderr });
+      } else if (opts.continueOnError) {
+        resolve({ ok: false, stdout, stderr });
+      } else {
+        resolve({ ok: false, stdout, stderr });
+      }
+    });
+
+    child.on('error', (err) => {
+      if (opts.continueOnError) {
+        resolve({ ok: false, stdout: '', stderr: err.message });
+      } else {
+        resolve({ ok: false, stdout: '', stderr: err.message });
+      }
+    });
+  });
 }
 
 export async function runCommand(

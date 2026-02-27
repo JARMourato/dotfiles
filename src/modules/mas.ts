@@ -1,5 +1,5 @@
 import type { MasAppSelection, ModuleV2 } from '../types';
-import { detectMasApps, installMasApps } from './helpers';
+import { detectMasApps, installMasApp, installMasApps } from './helpers';
 
 const masItems: Array<{ id: string; label: string; app: MasAppSelection }> = [
   { id: 'lanscan', label: 'LanScan', app: { id: 472226235, name: 'LanScan' } },
@@ -49,5 +49,9 @@ export const masModule: ModuleV2 = {
   async install(selectedItems, opts) {
     const ids = idsForItems(selectedItems);
     await installMasApps(ids, opts);
+  },
+  async installItem(item, opts) {
+    const entry = byItem.get(item);
+    if (entry) await installMasApp(entry.app.id, opts);
   },
 };

@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { detectFormulas, installFormulas } from './helpers';
+import { detectFormulas, installFormula, installFormulas } from './helpers';
 
 const items = [
   { id: 'jq', label: 'jq' },
@@ -23,5 +23,8 @@ export const coreModule: ModuleV2 = {
   },
   async install(selectedItems, opts) {
     await installFormulas(selectedItems, opts);
+  },
+  async installItem(item, opts) {
+    await installFormula(item, opts);
   },
 };

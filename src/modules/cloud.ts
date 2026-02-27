@@ -2,7 +2,7 @@ import type { ModuleV2 } from '../types';
 import { detectCasks, detectFormulas, installCasks, installFormulas } from './helpers';
 
 const items = [
-  { id: 'docker', label: 'Docker' },
+  { id: 'docker', label: 'Docker', critical: true },
   { id: 'docker-compose', label: 'docker-compose' },
   { id: 'terraform', label: 'terraform' },
   { id: 'ansible', label: 'ansible' },

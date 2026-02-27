@@ -98,6 +98,8 @@ export interface ModuleItem {
   id: string;
   label: string;
   description?: string;
+  /** If true, installation failure is a hard error (not silently skipped) */
+  critical?: boolean;
 }
 
 export interface ModuleV2 {
@@ -109,4 +111,6 @@ export interface ModuleV2 {
   dependencies?: string[];
   detect(items: string[], opts: InstallOptions): Promise<DetectResult>;
   install(items: string[], opts: InstallOptions): Promise<void>;
+  /** Optional per-item installer for granular progress reporting */
+  installItem?(item: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void>;
 }

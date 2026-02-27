@@ -21,14 +21,20 @@ export const cleanupModule: ModuleV2 = {
 
     for (const app of selectedItems) {
       const check = await runCommand('test', ['-d', `/Applications/${app}`], { continueOnError: true });
-      if (check.ok) installed.push(app);
-      else missing.push(app);
+      if (check.ok) missing.push(app);   // app exists → still needs removal
+      else installed.push(app);            // app gone → cleanup already done
     }
 
     return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
   },
   async install(selectedItems, opts) {
     for (const app of selectedItems) {
+      // Check if sudo is available without password to avoid hanging
+      const sudoCheck = await runCommand('sudo', ['-n', 'true'], { continueOnError: true });
+      if (!sudoCheck.ok) {
+        console.warn(`⚠️  Skipping ${app} — needs sudo. Run: sudo rm -rf /Applications/${app}`);
+        continue;
+      }
       await runCommand('sudo', ['rm', '-rf', `/Applications/${app}`], { dryRun: opts.dryRun, continueOnError: true });
     }
   },

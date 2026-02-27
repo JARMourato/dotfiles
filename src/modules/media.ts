@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { detectCasks, installCasks } from './helpers';
+import { detectCasks, installCask, installCasks } from './helpers';
 
 const items = [
   { id: 'spotify', label: 'Spotify' },
@@ -18,5 +18,8 @@ export const mediaModule: ModuleV2 = {
   },
   async install(selectedItems, opts) {
     await installCasks(selectedItems, opts);
+  },
+  async installItem(item, opts) {
+    await installCask(item, opts);
   },
 };

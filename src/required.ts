@@ -12,9 +12,32 @@ const conditionalDotfiles = ['.zshrc'];
 
 async function ensureXcodeCliTools(opts: InstallOptions): Promise<void> {
   const selected = await runCommand('xcode-select', ['-p'], { continueOnError: true });
-  if (!selected.ok) {
-    await runCommand('xcode-select', ['--install'], { dryRun: opts.dryRun, continueOnError: true });
+  if (selected.ok) return;
+
+  if (opts.dryRun) {
+    log.info('[dry-run] xcode-select --install');
+    return;
   }
+
+  // Trigger the install dialog
+  await runCommand('xcode-select', ['--install'], { continueOnError: true });
+
+  // Wait for it to actually complete (GUI installer runs in background)
+  log.info('Waiting for Xcode Command Line Tools installation...');
+  const maxWaitMs = 30 * 60 * 1000; // 30 minutes max
+  const pollMs = 5000;
+  const start = Date.now();
+
+  while (Date.now() - start < maxWaitMs) {
+    const check = await runCommand('xcode-select', ['-p'], { continueOnError: true });
+    if (check.ok) {
+      log.info('Xcode Command Line Tools installed.');
+      return;
+    }
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+
+  throw new Error('Xcode Command Line Tools installation timed out after 30 minutes.');
 }
 
 async function ensureHomebrew(opts: InstallOptions): Promise<void> {

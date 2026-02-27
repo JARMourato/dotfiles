@@ -586,7 +586,21 @@ async function run(): Promise<void> {
     return;
   }
 
-  outro('Setup complete.');
+  log.info('🔄 Some system changes require a restart to take full effect.');
+  const shouldRestart = handleCancelled(
+    await confirm({
+      message: 'Restart now?',
+      initialValue: false,
+    }),
+  );
+
+  if (shouldRestart) {
+    outro('Restarting...');
+    const { runCommand: execCmd } = await import('./utils/shell');
+    await execCmd('sudo', ['shutdown', '-r', 'now'], { continueOnError: true });
+  } else {
+    outro('Setup complete. Please restart when convenient.');
+  }
 }
 
 run().catch((error) => {

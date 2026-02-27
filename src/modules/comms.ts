@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { detectCasks, installCasks } from './helpers';
+import { detectCasks, installCask, installCasks } from './helpers';
 
 const items = [
   { id: 'slack', label: 'Slack' },
@@ -20,5 +20,8 @@ export const commsModule: ModuleV2 = {
   },
   async install(selectedItems, opts) {
     await installCasks(selectedItems, opts);
+  },
+  async installItem(item, opts) {
+    await installCask(item, opts);
   },
 };

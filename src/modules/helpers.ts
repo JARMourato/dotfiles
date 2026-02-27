@@ -5,6 +5,7 @@ import {
   commandExists,
   masAppInstalled,
   runCommand,
+  runStreamedCommand,
 } from '../utils/shell';
 
 export async function detectFormulas(formulas: string[]): Promise<DetectResult> {
@@ -25,6 +26,13 @@ export async function installFormulas(formulas: string[], opts: InstallOptions):
   }
 }
 
+export async function installFormula(formula: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
+  if (!(await brewFormulaInstalled(formula))) {
+    const run = opts.onProgress ? runStreamedCommand : runCommand;
+    await run('brew', ['install', formula], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
+  }
+}
+
 export async function detectCasks(casks: string[]): Promise<DetectResult> {
   const installed: string[] = [];
   const missing: string[] = [];
@@ -40,6 +48,13 @@ export async function installCasks(casks: string[], opts: InstallOptions): Promi
     if (!(await brewCaskInstalled(cask))) {
       await runCommand('brew', ['install', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true });
     }
+  }
+}
+
+export async function installCask(cask: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
+  if (!(await brewCaskInstalled(cask))) {
+    const run = opts.onProgress ? runStreamedCommand : runCommand;
+    await run('brew', ['install', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
   }
 }
 
@@ -68,6 +83,13 @@ export async function installMasApps(ids: number[], opts: InstallOptions): Promi
     if (!(await masAppInstalled(id))) {
       await runCommand('mas', ['install', String(id)], { dryRun: opts.dryRun, continueOnError: true });
     }
+  }
+}
+
+export async function installMasApp(id: number, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
+  if (!(await masAppInstalled(id))) {
+    const run = opts.onProgress ? runStreamedCommand : runCommand;
+    await run('mas', ['install', String(id)], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
   }
 }
 

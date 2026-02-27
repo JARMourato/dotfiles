@@ -53,14 +53,59 @@ export async function runModules(
     s.start(`Running module: ${module.label}`);
     try {
       const detect = await module.detect(selectedItems, opts);
-      if (detect.missing.length === 0 && detect.installed.length > 0) {
-        s.stop(`${module.label}: already installed`);
+      const totalItems = selectedItems.length;
+      const alreadyDone = detect.installed.length;
+      const toInstall = detect.missing;
+
+      if (toInstall.length === 0 && alreadyDone > 0) {
+        s.stop(`${module.label}: already installed (${alreadyDone}/${totalItems})`);
       } else {
-        await module.install(selectedItems, opts);
-        s.stop(`${module.label}: complete`);
+        // Show what needs to be done
+        if (alreadyDone > 0) {
+          s.message(`${module.label}: ${alreadyDone}/${totalItems} already done, installing ${toInstall.length} remaining...`);
+        } else {
+          s.message(`${module.label}: installing ${toInstall.length} item${toInstall.length === 1 ? '' : 's'}...`);
+        }
+
+        // Install with per-item progress if module supports it
+        if (module.installItem) {
+          for (let i = 0; i < toInstall.length; i++) {
+            const item = toInstall[i];
+            const itemLabel = module.items.find((it) => it.id === item)?.label ?? item;
+            const prefix = `${module.label}: [${alreadyDone + i + 1}/${totalItems}] ${itemLabel}`;
+            s.message(prefix);
+            await module.installItem(item, {
+              ...opts,
+              onProgress(line) {
+                // Show download/install progress inline with the spinner
+                const short = line.length > 60 ? `${line.slice(0, 57)}...` : line;
+                s.message(`${prefix} — ${short}`);
+              },
+            });
+          }
+        } else {
+          await module.install(selectedItems, opts);
+        }
+
+        // Verify critical items actually installed
+        const criticalItems = toInstall.filter((id) => module.items.find((it) => it.id === id)?.critical);
+        if (criticalItems.length > 0) {
+          const verify = await module.detect(criticalItems, opts);
+          if (verify.missing.length > 0) {
+            const failedLabels = verify.missing
+              .map((id) => module.items.find((it) => it.id === id)?.label ?? id)
+              .join(', ');
+            throw new Error(`Critical item(s) failed to install: ${failedLabels}`);
+          }
+        }
+
+        s.stop(`${module.label}: complete (${totalItems}/${totalItems})`);
       }
+
+      // Track what actually installed (re-detect to be accurate)
+      const finalDetect = await module.detect(selectedItems, opts);
       nextState.modules[module.name] = {
-        installed: selectedItems,
+        installed: finalDetect.installed,
         version: '2.0.0',
       };
     } catch (error) {

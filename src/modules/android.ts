@@ -6,8 +6,8 @@ import { detectCasks, installCasks, detectFormulas, installFormulas } from './he
 import { commandExists, runCommand } from '../utils/shell';
 
 const items = [
-  { id: 'android-studio', label: 'Android Studio' },
-  { id: 'openjdk', label: 'OpenJDK (Gradle)' },
+  { id: 'android-studio', label: 'Android Studio', critical: true },
+  { id: 'openjdk', label: 'OpenJDK (Gradle)', critical: true },
   { id: 'bundletool', label: 'bundletool' },
   { id: 'env-vars', label: 'ANDROID_HOME + PATH setup' },
   { id: 'sdk-license', label: 'Accept SDK licenses' },
