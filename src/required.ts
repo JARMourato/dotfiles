@@ -1,9 +1,8 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { log, spinner } from '@clack/prompts';
 import type { InstallOptions } from './types';
-import { commandExists, runCommand } from './utils/shell';
+import { commandExists, realHome, runCommand } from './utils/shell';
 
 // Core dotfiles that are always safe to symlink (no external dependencies)
 const alwaysSafeDotfiles = ['.aliases', '.exports', '.paths', '.gemrc', '.ruby-version'];
@@ -64,7 +63,7 @@ async function ensureNode(opts: InstallOptions): Promise<void> {
 }
 
 async function ensureSshKey(opts: InstallOptions): Promise<void> {
-  const sshDir = path.join(os.homedir(), '.ssh');
+  const sshDir = path.join(realHome(), '.ssh');
   const pubPath = path.join(sshDir, 'id_rsa.pub');
   const pubExists = await runCommand('test', ['-f', pubPath], { continueOnError: true });
   if (pubExists.ok) return;
@@ -110,7 +109,7 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
 
 async function symlinkDotfile(srcDir: string, file: string, dryRun: boolean): Promise<void> {
   const src = path.join(srcDir, file);
-  const dst = path.join(os.homedir(), file);
+  const dst = path.join(realHome(), file);
   const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
   if (!srcExists.ok) return;
 

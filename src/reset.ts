@@ -1,12 +1,12 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
+
 import path from 'node:path';
 import { confirm, isCancel, log } from '@clack/prompts';
 import chalk from 'chalk';
 import type { InstallOptions } from './types';
 import { clearDefaultsBackup, restoreAllDefaults } from './defaults-backup';
 import { PREVIOUS_STATE_PATH, STATE_PATH } from './state';
-import { runCommand } from './utils/shell';
+import { realHome, runCommand } from './utils/shell';
 import { uninstallCasks, uninstallFormulas } from './modules/helpers';
 
 const MANAGED_FORMULAS = [
@@ -75,7 +75,7 @@ function handleCancelled<T>(value: T): T {
 }
 
 async function removeAndroidExportsLines(dryRun: boolean): Promise<void> {
-  const exportsPath = path.join(os.homedir(), '.exports');
+  const exportsPath = path.join(realHome(), '.exports');
   let contents = '';
   try {
     contents = await fs.readFile(exportsPath, 'utf8');
@@ -92,7 +92,7 @@ async function removeAndroidExportsLines(dryRun: boolean): Promise<void> {
 async function removeDotfileSymlinks(rootDir: string, dryRun: boolean): Promise<void> {
   void rootDir;
   for (const dotfile of DOTFILES) {
-    const filePath = path.join(os.homedir(), dotfile);
+    const filePath = path.join(realHome(), dotfile);
     try {
       await fs.readlink(filePath);
       if (!dryRun) {
@@ -162,8 +162,8 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   await runCommand('npm', ['uninstall', '-g', '@anthropic-ai/claude-code'], { continueOnError: true });
   await runCommand('npm', ['uninstall', '-g', '@openai/codex'], { continueOnError: true });
   await removeDotfileSymlinks(rootDir, false);
-  await runCommand('rm', ['-rf', path.join(os.homedir(), '.oh-my-zsh')], { continueOnError: true });
-  await runCommand('rm', ['-rf', path.join(os.homedir(), '.config', 'powerline-shell')], { continueOnError: true });
+  await runCommand('rm', ['-rf', path.join(realHome(), '.oh-my-zsh')], { continueOnError: true });
+  await runCommand('rm', ['-rf', path.join(realHome(), '.config', 'powerline-shell')], { continueOnError: true });
   await removeAndroidExportsLines(false);
   await fs.rm(STATE_PATH, { force: true });
   await fs.rm(PREVIOUS_STATE_PATH, { force: true });

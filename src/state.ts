@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
+import { realHome } from './utils/shell';
 import path from 'node:path';
 import type { StateFile, StateManager } from './types';
 
-const STATE_PATH = path.join(os.homedir(), '.macsetup-state.json');
-const PREVIOUS_STATE_PATH = path.join(os.homedir(), '.macsetup-state.previous.json');
+const STATE_PATH = path.join(realHome(), '.macsetup-state.json');
+const PREVIOUS_STATE_PATH = path.join(realHome(), '.macsetup-state.previous.json');
 
 export class JsonStateManager implements StateManager {
   async load(): Promise<StateFile | null> {

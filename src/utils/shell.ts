@@ -1,5 +1,20 @@
 import { execa } from 'execa';
+import os from 'node:os';
 import { spawn } from 'node:child_process';
+
+/**
+ * Get the real user's home directory, even when running under sudo.
+ * When `sudo node ...` is used, os.homedir() returns /var/root.
+ * This checks SUDO_USER to resolve the actual user's home.
+ */
+export function realHome(): string {
+  const sudoUser = process.env.SUDO_USER;
+  if (sudoUser && process.getuid?.() === 0) {
+    // On macOS, home dirs are under /Users/<username>
+    return `/Users/${sudoUser}`;
+  }
+  return os.homedir();
+}
 
 export interface CommandOptions {
   dryRun?: boolean;

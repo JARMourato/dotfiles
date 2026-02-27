@@ -1,8 +1,7 @@
-import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
 import { backupDefault } from '../defaults-backup';
-import { runCommand } from '../utils/shell';
+import { realHome, runCommand } from '../utils/shell';
 
 type MacosConfig = Record<string, any>;
 
@@ -158,11 +157,11 @@ export const macosModule: ModuleV2 = {
     if (has('finder')) {
       if (finder.new_window_target === 'home') {
         await defaultsWrite('com.apple.finder', 'NewWindowTarget', 'PfLo', opts.dryRun);
-        await defaultsWrite('com.apple.finder', 'NewWindowTargetPath', `file://${os.homedir()}`, opts.dryRun);
+        await defaultsWrite('com.apple.finder', 'NewWindowTargetPath', `file://${realHome()}`, opts.dryRun);
       }
       if (finder.new_window_target === 'desktop') {
         await defaultsWrite('com.apple.finder', 'NewWindowTarget', 'PfDe', opts.dryRun);
-        await defaultsWrite('com.apple.finder', 'NewWindowTargetPath', `file://${path.join(os.homedir(), 'Desktop')}/`, opts.dryRun);
+        await defaultsWrite('com.apple.finder', 'NewWindowTargetPath', `file://${path.join(realHome(), 'Desktop')}/`, opts.dryRun);
       }
       const finderMap: Array<[string, string]> = [
         ['show_external_drives', 'ShowExternalHardDrivesOnDesktop'],
@@ -189,7 +188,7 @@ export const macosModule: ModuleV2 = {
         await defaultsWrite('com.apple.finder', 'FXPreferredViewStyle', map[finder.preferred_view] ?? 'clmv', opts.dryRun);
       }
       if (asBool(finder.snap_to_grid)) {
-        const finderPrefs = path.join(os.homedir(), 'Library/Preferences/com.apple.finder.plist');
+        const finderPrefs = path.join(realHome(), 'Library/Preferences/com.apple.finder.plist');
         await runCommand('/usr/libexec/PlistBuddy', ['-c', 'Set :DesktopViewSettings:IconViewSettings:arrangeBy grid', finderPrefs], {
           dryRun: opts.dryRun,
           continueOnError: true,
@@ -328,7 +327,7 @@ export const macosModule: ModuleV2 = {
         });
       }
       if (screen.screenshot_location) {
-        const location = asString(screen.screenshot_location).replace(/^~\//, `${os.homedir()}/`);
+        const location = asString(screen.screenshot_location).replace(/^~\//, `${realHome()}/`);
         await runCommand('mkdir', ['-p', location], { dryRun: opts.dryRun, continueOnError: true });
         await defaultsWrite('com.apple.screencapture', 'location', location, opts.dryRun);
       }

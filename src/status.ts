@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
+
 import path from 'node:path';
 import { log } from '@clack/prompts';
 import chalk from 'chalk';
 import { JsonStateManager } from './state';
-import { runCommand } from './utils/shell';
+import { realHome, runCommand } from './utils/shell';
 
 type BaselineCheck = { domain: string; key: string; factory: string | number | boolean };
 
@@ -156,12 +156,12 @@ export async function showStatus(rootDir: string): Promise<void> {
 
   log.info(chalk.bold(chalk.cyan('Status: Dotfile Symlinks')));
   for (const dotfile of DOTFILES) {
-    const filePath = path.join(os.homedir(), dotfile);
+    const filePath = path.join(realHome(), dotfile);
     try {
       const target = await fs.readlink(filePath);
       const candidateTargets = [
         path.join(rootDir, 'dotfiles', dotfile),
-        path.join(os.homedir(), '.macsetup', 'dotfiles', dotfile),
+        path.join(realHome(), '.macsetup', 'dotfiles', dotfile),
       ];
       const resolvedTarget = path.resolve(path.dirname(filePath), target);
       const managed = candidateTargets.some((expected) => path.resolve(expected) === resolvedTarget);
@@ -173,7 +173,7 @@ export async function showStatus(rootDir: string): Promise<void> {
   }
 
   log.info(chalk.bold(chalk.cyan('Status: Shell Tools')));
-  const hasOhMyZsh = await runCommand('test', ['-d', path.join(os.homedir(), '.oh-my-zsh')], { continueOnError: true });
+  const hasOhMyZsh = await runCommand('test', ['-d', path.join(realHome(), '.oh-my-zsh')], { continueOnError: true });
   const hasPowerline = await runCommand('which', ['powerline-shell'], { continueOnError: true });
   const hasFonts = await runCommand('bash', ['-lc', 'ls ~/Library/Fonts/Meslo* >/dev/null 2>&1'], { continueOnError: true });
   if (hasOhMyZsh.ok) line(chalk.green('✅'), 'oh-my-zsh');
@@ -198,11 +198,11 @@ export async function showStatus(rootDir: string): Promise<void> {
 
   log.info(chalk.bold(chalk.cyan('Status: Environment')));
   const hasAndroidHomeEnv = Boolean(process.env.ANDROID_HOME?.trim());
-  const exportsPath = path.join(os.homedir(), '.exports');
+  const exportsPath = path.join(realHome(), '.exports');
   const exportsContents = await fs.readFile(exportsPath, 'utf8').catch(() => '');
   const hasAndroidHomeFile = exportsContents.includes('ANDROID_HOME');
-  const hasSshKey = (await runCommand('test', ['-f', path.join(os.homedir(), '.ssh', 'id_rsa.pub')], { continueOnError: true })).ok
-    || (await runCommand('test', ['-f', path.join(os.homedir(), '.ssh', 'id_ed25519.pub')], { continueOnError: true })).ok;
+  const hasSshKey = (await runCommand('test', ['-f', path.join(realHome(), '.ssh', 'id_rsa.pub')], { continueOnError: true })).ok
+    || (await runCommand('test', ['-f', path.join(realHome(), '.ssh', 'id_ed25519.pub')], { continueOnError: true })).ok;
   if (hasAndroidHomeEnv || hasAndroidHomeFile) line(chalk.green('✅'), 'ANDROID_HOME', '(present)');
   else line('☐', 'ANDROID_HOME', '(not set)');
   if (hasSshKey) line(chalk.green('✅'), 'SSH public key');

@@ -1,9 +1,8 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
-import { brewFormulaInstalled, commandExists, runCommand, runStreamedCommand } from '../utils/shell';
+import { brewFormulaInstalled, commandExists, realHome, runCommand, runStreamedCommand } from '../utils/shell';
 
 const items = [
   { id: 'xcode', label: 'Xcode (via xcodes)', description: 'Full Xcode installation', critical: true },
@@ -54,7 +53,7 @@ async function ensureXcodes(opts: { dryRun?: boolean }): Promise<void> {
 
 async function copyXcodeTemplateMacros(opts: { dryRun?: boolean; rootDir: string }): Promise<void> {
   const source = path.join(opts.rootDir, 'Xcode', 'IDETemplateMacros.plist');
-  const targetDir = path.join(os.homedir(), 'Library', 'Developer', 'Xcode', 'UserData');
+  const targetDir = path.join(realHome(), 'Library', 'Developer', 'Xcode', 'UserData');
   const target = path.join(targetDir, 'IDETemplateMacros.plist');
   const sourceExists = await runCommand('test', ['-f', source], { continueOnError: true });
   if (sourceExists.ok && !opts.dryRun) {

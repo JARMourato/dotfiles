@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
+import { realHome } from './utils/shell';
 import path from 'node:path';
 import { parse, stringify } from 'yaml';
 import type { ProfileConfig } from './types';
 
-const CONFIG_PATH = path.join(os.homedir(), '.macsetup.config.yaml');
+const CONFIG_PATH = path.join(realHome(), '.macsetup.config.yaml');
 
 function normalizeProfile(raw: Partial<ProfileConfig>): ProfileConfig {
   return {

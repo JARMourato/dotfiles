@@ -1,8 +1,7 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
-import { commandExists, runCommand } from '../utils/shell';
+import { commandExists, realHome, runCommand } from '../utils/shell';
 
 const terminalItems = [
   { id: 'oh-my-zsh', label: 'oh-my-zsh' },
@@ -34,7 +33,7 @@ export const terminalModule: ModuleV2 = {
 
     for (const item of selectedItems) {
       if (item === 'oh-my-zsh') {
-        const check = await runCommand('test', ['-d', path.join(os.homedir(), '.oh-my-zsh')], { continueOnError: true });
+        const check = await runCommand('test', ['-d', path.join(realHome(), '.oh-my-zsh')], { continueOnError: true });
         if (check.ok) installed.push(item);
         else missing.push(item);
       }
@@ -81,7 +80,7 @@ export const terminalModule: ModuleV2 = {
         { dryRun: opts.dryRun, continueOnError: true },
       );
 
-      const configDir = path.join(os.homedir(), '.config', 'powerline-shell');
+      const configDir = path.join(realHome(), '.config', 'powerline-shell');
       const configSrc = path.join(opts.rootDir, 'Terminal', 'powerline-shell-config.json');
       const configDst = path.join(configDir, 'config.json');
       if (!opts.dryRun) {

@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
+import { realHome } from './utils/shell';
 import path from 'node:path';
 import { runCommand } from './utils/shell';
 
-const BACKUP_PATH = path.join(os.homedir(), '.macsetup-defaults-backup.json');
+const BACKUP_PATH = path.join(realHome(), '.macsetup-defaults-backup.json');
 const NOT_SET = '__NOT_SET__';
 
 type Primitive = string | number | boolean;

@@ -1,7 +1,6 @@
-import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
-import { commandExists, runCommand } from '../utils/shell';
+import { commandExists, realHome, runCommand } from '../utils/shell';
 import { installFormulas } from './helpers';
 
 const languageItems = [
@@ -86,7 +85,7 @@ export const languagesModule: ModuleV2 = {
 
     if (selectedItems.includes('ruby')) {
       await installFormulas(['rbenv', 'ruby-build'], opts);
-      const versionFile = path.join(os.homedir(), '.ruby-version');
+      const versionFile = path.join(realHome(), '.ruby-version');
       let version = rubyVersionFromProfile(opts.profile.config);
       const read = await runCommand('cat', [versionFile], { continueOnError: true });
       if (read.ok && read.stdout.trim()) {

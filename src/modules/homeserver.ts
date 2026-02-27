@@ -1,10 +1,9 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { confirm, isCancel, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { installCasks } from './helpers';
-import { commandExists, runCommand } from '../utils/shell';
+import { commandExists, realHome, runCommand } from '../utils/shell';
 import { getKeychainPassword } from '../utils/keychain';
 
 const items = [
@@ -18,7 +17,7 @@ const items = [
   { id: 'backup-scripts', label: 'Install backup/restore scripts' },
 ];
 
-const HOMESERVER_DIR = path.join(os.homedir(), 'Workspace', 'Git', 'homeserver');
+const HOMESERVER_DIR = path.join(realHome(), 'Workspace', 'Git', 'homeserver');
 
 function handleCancelled<T>(value: T): T {
   if (isCancel(value)) {
@@ -58,7 +57,7 @@ export const homeserverModule: ModuleV2 = {
     }
 
     if (selectedItems.includes('plex-symlink')) {
-      const plexLocal = path.join(os.homedir(), 'Library', 'Application Support', 'Plex Media Server');
+      const plexLocal = path.join(realHome(), 'Library', 'Application Support', 'Plex Media Server');
       const isSymlink = await runCommand('test', ['-L', plexLocal], { continueOnError: true });
       if (isSymlink.ok) installed.push('plex-symlink');
       else missing.push('plex-symlink');
@@ -139,7 +138,7 @@ export const homeserverModule: ModuleV2 = {
 
     // Plex data symlink
     if (selectedItems.includes('plex-symlink')) {
-      const plexLocal = path.join(os.homedir(), 'Library', 'Application Support', 'Plex Media Server');
+      const plexLocal = path.join(realHome(), 'Library', 'Application Support', 'Plex Media Server');
       const plexExternal = '/Volumes/4TB/Plex Media Server';
       const isSymlink = await runCommand('test', ['-L', plexLocal], { continueOnError: true });
 

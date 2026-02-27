@@ -1,9 +1,8 @@
 import { promises as fs } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
 import { detectCasks, installCasks, detectFormulas, installFormulas } from './helpers';
-import { commandExists, runCommand } from '../utils/shell';
+import { commandExists, realHome, runCommand } from '../utils/shell';
 
 const items = [
   { id: 'android-studio', label: 'Android Studio', critical: true },
@@ -54,7 +53,7 @@ export const androidModule: ModuleV2 = {
     }
 
     if (selectedItems.includes('env-vars')) {
-      const exportsFile = path.join(os.homedir(), '.exports');
+      const exportsFile = path.join(realHome(), '.exports');
       try {
         const contents = await fs.readFile(exportsFile, 'utf8');
         if (contents.includes(ANDROID_ENV_MARKER)) installed.push('env-vars');
@@ -65,7 +64,7 @@ export const androidModule: ModuleV2 = {
     }
 
     if (selectedItems.includes('sdk-license')) {
-      const licensePath = path.join(os.homedir(), 'Library', 'Android', 'sdk', 'licenses', 'android-sdk-license');
+      const licensePath = path.join(realHome(), 'Library', 'Android', 'sdk', 'licenses', 'android-sdk-license');
       const exists = await runCommand('test', ['-f', licensePath], { continueOnError: true });
       if (exists.ok) installed.push('sdk-license');
       else missing.push('sdk-license');
@@ -95,7 +94,7 @@ export const androidModule: ModuleV2 = {
 
     if (selectedItems.includes('env-vars')) {
       // Append ANDROID_HOME to .exports if not already there
-      const exportsPath = path.join(os.homedir(), '.exports');
+      const exportsPath = path.join(realHome(), '.exports');
       if (!opts.dryRun) {
         try {
           const contents = await fs.readFile(exportsPath, 'utf8');
@@ -111,7 +110,7 @@ export const androidModule: ModuleV2 = {
 
     if (selectedItems.includes('sdk-license')) {
       // Accept licenses — needs SDK to be installed first (usually after first Android Studio launch)
-      const sdkManager = path.join(os.homedir(), 'Library', 'Android', 'sdk', 'cmdline-tools', 'latest', 'bin', 'sdkmanager');
+      const sdkManager = path.join(realHome(), 'Library', 'Android', 'sdk', 'cmdline-tools', 'latest', 'bin', 'sdkmanager');
       const exists = await runCommand('test', ['-f', sdkManager], { continueOnError: true });
       if (exists.ok) {
         await runCommand('bash', ['-c', `yes | ${sdkManager} --licenses`], {
