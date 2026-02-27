@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { log, spinner } from '@clack/prompts';
+import { isCancel, log, spinner, text } from '@clack/prompts';
 import type { InstallOptions } from './types';
 import { commandExists, realHome, runCommand } from './utils/shell';
 
@@ -151,6 +151,24 @@ async function ensureDotfiles(opts: InstallOptions): Promise<void> {
   }
 }
 
+async function ensureHostname(opts: InstallOptions): Promise<void> {
+  const current = await runCommand('scutil', ['--get', 'ComputerName'], { continueOnError: true });
+  const currentName = current.ok ? current.stdout.trim() : 'unknown';
+
+  const name = await text({
+    message: `Set machine name (current: ${currentName})`,
+    placeholder: currentName,
+    defaultValue: currentName,
+  });
+
+  if (isCancel(name) || !name || name === currentName) return;
+  if (opts.dryRun) return;
+
+  await runCommand('scutil', ['--set', 'ComputerName', name], { continueOnError: true });
+  await runCommand('scutil', ['--set', 'LocalHostName', name], { continueOnError: true });
+  await runCommand('scutil', ['--set', 'HostName', name], { continueOnError: true });
+}
+
 async function acquireSudo(dryRun: boolean): Promise<void> {
   if (dryRun) return;
   // Request sudo upfront and validate — some modules need it (openjdk symlink, pmset, app removal)
@@ -171,6 +189,7 @@ export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
     await ensureSshKey(opts);
     await ensureGitConfig(opts);
     await ensureDotfiles(opts);
+    await ensureHostname(opts);
     s.stop('Required phase complete');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
