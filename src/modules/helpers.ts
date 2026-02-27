@@ -22,15 +22,14 @@ export async function detectFormulas(formulas: string[]): Promise<DetectResult> 
 export async function installFormulas(formulas: string[], opts: InstallOptions): Promise<void> {
   for (const formula of formulas) {
     if (!(await brewFormulaInstalled(formula))) {
-      await runCommand('brew', ['install', formula], { dryRun: opts.dryRun, continueOnError: true });
+      await runAsUser('brew', ['install', formula], { dryRun: opts.dryRun });
     }
   }
 }
 
 export async function installFormula(formula: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
   if (!(await brewFormulaInstalled(formula))) {
-    const run = opts.onProgress ? runStreamedCommand : runCommand;
-    await run('brew', ['install', formula], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
+    await runAsUser('brew', ['install', formula], { dryRun: opts.dryRun });
   }
 }
 
@@ -47,15 +46,14 @@ export async function detectCasks(casks: string[]): Promise<DetectResult> {
 export async function installCasks(casks: string[], opts: InstallOptions): Promise<void> {
   for (const cask of casks) {
     if (!(await brewCaskInstalled(cask))) {
-      await runCommand('brew', ['install', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true });
+      await runAsUser('brew', ['install', '--cask', cask], { dryRun: opts.dryRun });
     }
   }
 }
 
 export async function installCask(cask: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
   if (!(await brewCaskInstalled(cask))) {
-    const run = opts.onProgress ? runStreamedCommand : runCommand;
-    await run('brew', ['install', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
+    await runAsUser('brew', ['install', '--cask', cask], { dryRun: opts.dryRun });
   }
 }
 
@@ -82,22 +80,21 @@ export async function detectMasApps(ids: number[]): Promise<DetectResult> {
 export async function installMasApps(ids: number[], opts: InstallOptions): Promise<void> {
   for (const id of ids) {
     if (!(await masAppInstalled(id))) {
-      await runCommand('mas', ['install', String(id)], { dryRun: opts.dryRun, continueOnError: true });
+      await runAsUser('mas', ['install', String(id)], { dryRun: opts.dryRun });
     }
   }
 }
 
 export async function installMasApp(id: number, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
   if (!(await masAppInstalled(id))) {
-    const run = opts.onProgress ? runStreamedCommand : runCommand;
-    await run('mas', ['install', String(id)], { dryRun: opts.dryRun, continueOnError: true, onProgress: opts.onProgress });
+    await runAsUser('mas', ['install', String(id)], { dryRun: opts.dryRun });
   }
 }
 
 export async function uninstallFormulas(formulas: string[], opts: InstallOptions): Promise<void> {
   for (const formula of formulas) {
     if (await brewFormulaInstalled(formula)) {
-      await runCommand('brew', ['uninstall', formula], { dryRun: opts.dryRun, continueOnError: true });
+      await runAsUser('brew', ['uninstall', formula], { dryRun: opts.dryRun });
     }
   }
 }
@@ -105,7 +102,7 @@ export async function uninstallFormulas(formulas: string[], opts: InstallOptions
 export async function uninstallCasks(casks: string[], opts: InstallOptions): Promise<void> {
   for (const cask of casks) {
     if (await brewCaskInstalled(cask)) {
-      await runCommand('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true });
+      await runAsUser('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun });
     }
   }
 }

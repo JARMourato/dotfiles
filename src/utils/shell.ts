@@ -143,22 +143,22 @@ export async function runCapture(cmd: string, args: string[] = [], cwd?: string)
 }
 
 export async function commandExists(name: string): Promise<boolean> {
-  const result = await runCommand('which', [name], { continueOnError: true });
+  const result = await runAsUser('which', [name], { continueOnError: true });
   return result.ok;
 }
 
 export async function brewFormulaInstalled(name: string): Promise<boolean> {
-  const result = await runCommand('brew', ['list', name], { continueOnError: true });
+  const result = await runAsUser('brew', ['list', name], { continueOnError: true });
   return result.ok;
 }
 
 export async function brewCaskInstalled(name: string): Promise<boolean> {
-  const result = await runCommand('brew', ['list', '--cask', name], { continueOnError: true });
+  const result = await runAsUser('brew', ['list', '--cask', name], { continueOnError: true });
   return result.ok;
 }
 
 export async function masAppInstalled(id: number): Promise<boolean> {
-  const result = await runCommand('mas', ['list'], { continueOnError: true });
+  const result = await runAsUser('mas', ['list'], { continueOnError: true });
   if (!result.ok) return false;
   return result.stdout
     .split('\n')
