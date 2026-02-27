@@ -80,8 +80,10 @@ export const androidModule: ModuleV2 = {
 
     if (selectedItems.includes('openjdk')) {
       await installFormulas(['openjdk'], opts);
-      // Symlink so system java wrappers find it
-      await runCommand('sudo', ['ln', '-sfn', '/opt/homebrew/opt/openjdk/libexec/openjdk.jdk', '/Library/Java/JavaVirtualMachines/openjdk.jdk'], {
+      // Symlink so system java wrappers find it (use ln directly if already root)
+      const isRoot = process.getuid?.() === 0;
+      const lnArgs = ['-sfn', '/opt/homebrew/opt/openjdk/libexec/openjdk.jdk', '/Library/Java/JavaVirtualMachines/openjdk.jdk'];
+      await runCommand(isRoot ? 'ln' : 'sudo', isRoot ? lnArgs : ['ln', ...lnArgs], {
         dryRun: opts.dryRun,
         continueOnError: true,
       });
