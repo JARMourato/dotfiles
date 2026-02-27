@@ -4,6 +4,7 @@ import {
   brewFormulaInstalled,
   commandExists,
   masAppInstalled,
+  runAsUser,
   runCommand,
   runStreamedCommand,
 } from '../utils/shell';

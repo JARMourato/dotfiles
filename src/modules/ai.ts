@@ -1,6 +1,6 @@
 import type { ModuleV2 } from '../types';
 import { detectCasks, detectCommands, installCasks } from './helpers';
-import { runCommand } from '../utils/shell';
+import { runAsUser, runCommand } from '../utils/shell';
 
 const items = [
   { id: 'claude', label: 'Claude app' },
@@ -26,9 +26,15 @@ export const aiModule: ModuleV2 = {
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
       : { installed: [], missing: [], partial: false };
-    const commandDetect = commands.length > 0
-      ? await detectCommands(commands)
-      : { installed: [], missing: [], partial: false };
+    // Detect CLI commands as real user (root PATH doesn't have user's npm globals)
+    const commandInstalled: string[] = [];
+    const commandMissing: string[] = [];
+    for (const cmd of commands) {
+      const check = await runAsUser('which', [cmd], { continueOnError: true });
+      if (check.ok) commandInstalled.push(cmd);
+      else commandMissing.push(cmd);
+    }
+    const commandDetect = { installed: commandInstalled, missing: commandMissing, partial: commandInstalled.length > 0 && commandMissing.length > 0 };
 
     const cliMap = (cmd: string) => cmd === 'claude' ? 'claude-code' : cmd;
     const installedCliItems = commandDetect.installed.map(cliMap);
@@ -47,17 +53,11 @@ export const aiModule: ModuleV2 = {
     }
 
     if (selectedItems.includes('claude-code')) {
-      await runCommand('npm', ['install', '-g', '@anthropic-ai/claude-code'], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-      });
+      await runAsUser('npm', ['install', '-g', '@anthropic-ai/claude-code'], { dryRun: opts.dryRun });
     }
 
     if (selectedItems.includes('codex')) {
-      await runCommand('npm', ['install', '-g', '@openai/codex'], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-      });
+      await runAsUser('npm', ['install', '-g', '@openai/codex'], { dryRun: opts.dryRun });
     }
 
   },
