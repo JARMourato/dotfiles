@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { runCommand } from '../utils/shell';
+import { realHome, runAsUser, runCommand } from '../utils/shell';
 
 type Operation = { cmd: string; args: string[] };
 
@@ -35,7 +35,7 @@ const commandsBySection: Record<string, Operation[]> = {
     { cmd: 'defaults', args: ['-currentHost', 'write', 'com.apple.Spotlight', 'MenuItemHidden', '-int', '1'] },
     {
       cmd: 'defaults',
-      args: ['write', `${process.env.HOME}/Library/Preferences/com.apple.controlcenter.plist`, 'NSStatusItem Visible Battery', '-bool', 'false'],
+      args: ['write', `${realHome()}/Library/Preferences/com.apple.controlcenter.plist`, 'NSStatusItem Visible Battery', '-bool', 'false'],
     },
   ],
   'bluetooth-audio': [{ cmd: 'defaults', args: ['write', 'com.apple.BluetoothAudioAgent', 'Apple Bitpool Min (editable)', '-int', '40'] }],
@@ -93,7 +93,14 @@ export const macosComplexModule: ModuleV2 = {
       }
 
       for (const operation of commandsBySection[section] ?? []) {
-        await runCommand(operation.cmd, operation.args, { dryRun: opts.dryRun, continueOnError: true });
+        if (operation.cmd === 'defaults') {
+          await runAsUser('defaults', operation.args, { dryRun: opts.dryRun });
+        } else if (operation.cmd === 'sudo' && operation.args[0] === 'defaults') {
+          // System-level defaults (e.g. /Library/...) — run as-is with sudo
+          await runCommand('defaults', operation.args.slice(1), { dryRun: opts.dryRun, continueOnError: true });
+        } else {
+          await runCommand(operation.cmd, operation.args, { dryRun: opts.dryRun, continueOnError: true });
+        }
       }
     }
   },

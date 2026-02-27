@@ -1,7 +1,11 @@
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
 import { backupDefault } from '../defaults-backup';
-import { realHome, runCommand } from '../utils/shell';
+import { realHome, runAsUser, runCommand } from '../utils/shell';
+
+async function runDefaults(args: string[], opts: { dryRun: boolean }): Promise<void> {
+  await runAsUser('defaults', args, { dryRun: opts.dryRun });
+}
 
 type MacosConfig = Record<string, any>;
 
@@ -67,7 +71,7 @@ async function defaultsWrite(
   const type = toDefaultsType(value);
   const flag = `-${type}`;
   const normalized = typeof value === 'boolean' ? String(value) : asString(value);
-  await runCommand('defaults', ['write', domain, key, flag, normalized], { dryRun, continueOnError: true });
+  await runDefaults(['write', domain, key, flag, normalized], { dryRun });
 }
 
 async function defaultsWriteWithArgs(
@@ -79,7 +83,7 @@ async function defaultsWriteWithArgs(
   if (!dryRun) {
     await backupDefault(domain, key);
   }
-  await runCommand('defaults', args, { dryRun, continueOnError: true });
+  await runDefaults(args, { dryRun });
 }
 
 export const macosModule: ModuleV2 = {

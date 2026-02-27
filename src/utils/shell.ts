@@ -10,10 +10,34 @@ import { spawn } from 'node:child_process';
 export function realHome(): string {
   const sudoUser = process.env.SUDO_USER;
   if (sudoUser && process.getuid?.() === 0) {
-    // On macOS, home dirs are under /Users/<username>
     return `/Users/${sudoUser}`;
   }
   return os.homedir();
+}
+
+/**
+ * Get the real (non-root) username when running under sudo.
+ */
+export function realUser(): string | undefined {
+  return process.env.SUDO_USER;
+}
+
+/**
+ * Run a command as the real user (not root) when under sudo.
+ * For commands like `defaults` that target user-level preferences.
+ */
+export async function runAsUser(
+  cmd: string,
+  args: string[],
+  opts: { dryRun?: boolean; continueOnError?: boolean } = {},
+): Promise<{ ok: boolean; stdout: string; stderr: string }> {
+  const sudoUser = process.env.SUDO_USER;
+  if (sudoUser && process.getuid?.() === 0) {
+    const escaped = args.map(a => a.replace(/'/g, "'\\''"));
+    const fullCmd = `${cmd} ${escaped.map(a => `'${a}'`).join(' ')}`;
+    return runCommand('su', ['-l', sudoUser, '-c', fullCmd], { ...opts, continueOnError: opts.continueOnError ?? true });
+  }
+  return runCommand(cmd, args, { ...opts, continueOnError: opts.continueOnError ?? true });
 }
 
 export interface CommandOptions {

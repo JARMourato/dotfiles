@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { ModuleV2 } from '../types';
-import { commandExists, realHome, runCommand } from '../utils/shell';
+import { commandExists, realHome, runAsUser, runCommand } from '../utils/shell';
 
 const terminalItems = [
   { id: 'oh-my-zsh', label: 'oh-my-zsh' },
@@ -16,7 +16,7 @@ async function hasMesloFonts(): Promise<boolean> {
 }
 
 async function hasHighwayTheme(): Promise<boolean> {
-  const read = await runCommand('defaults', ['read', 'com.apple.Terminal', 'Default Window Settings'], { continueOnError: true });
+  const read = await runAsUser('defaults', ['read', 'com.apple.Terminal', 'Default Window Settings'], { continueOnError: true });
   return read.ok && read.stdout.includes('Highway');
 }
 
@@ -95,14 +95,8 @@ export const terminalModule: ModuleV2 = {
         dryRun: opts.dryRun,
         continueOnError: true,
       });
-      await runCommand('defaults', ['write', 'com.apple.Terminal', 'Default Window Settings', '-string', 'Highway'], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-      });
-      await runCommand('defaults', ['write', 'com.apple.Terminal', 'Startup Window Settings', '-string', 'Highway'], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-      });
+      await runAsUser('defaults', ['write', 'com.apple.Terminal', 'Default Window Settings', '-string', 'Highway'], { dryRun: opts.dryRun });
+      await runAsUser('defaults', ['write', 'com.apple.Terminal', 'Startup Window Settings', '-string', 'Highway'], { dryRun: opts.dryRun });
     }
   },
 };

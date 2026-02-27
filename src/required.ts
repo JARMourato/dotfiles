@@ -107,7 +107,7 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
   }
 }
 
-async function symlinkDotfile(srcDir: string, file: string, dryRun: boolean): Promise<void> {
+async function copyDotfile(srcDir: string, file: string, dryRun: boolean): Promise<void> {
   const src = path.join(srcDir, file);
   const dst = path.join(realHome(), file);
   const srcExists = await runCommand('test', ['-e', src], { continueOnError: true });
@@ -115,29 +115,25 @@ async function symlinkDotfile(srcDir: string, file: string, dryRun: boolean): Pr
 
   if (dryRun) return;
 
-  // If destination exists and is already a symlink pointing to our source, skip
-  try {
-    const existing = await fs.readlink(dst);
-    if (existing === src) return;
-  } catch {
-    // Not a symlink or doesn't exist — proceed
-  }
-
+  // Remove existing (could be a stale symlink or old file)
   await fs.rm(dst, { recursive: true, force: true });
-  await fs.symlink(src, dst);
+  await fs.copyFile(src, dst);
+  // Ensure the real user owns the file (not root when running under sudo)
+  const sudoUser = process.env.SUDO_USER;
+  if (sudoUser && process.getuid?.() === 0) {
+    await runCommand('chown', [sudoUser, dst], { continueOnError: true });
+  }
 }
 
-async function ensureDotfileSymlinks(opts: InstallOptions): Promise<void> {
+async function ensureDotfiles(opts: InstallOptions): Promise<void> {
   const srcDir = path.join(opts.rootDir, 'dotfiles');
 
-  // Always symlink safe dotfiles
   for (const file of alwaysSafeDotfiles) {
-    await symlinkDotfile(srcDir, file, opts.dryRun);
+    await copyDotfile(srcDir, file, opts.dryRun);
   }
 
-  // Symlink .zshrc — it's now defensive (checks for commands before using them)
   for (const file of conditionalDotfiles) {
-    await symlinkDotfile(srcDir, file, opts.dryRun);
+    await copyDotfile(srcDir, file, opts.dryRun);
   }
 }
 
@@ -160,7 +156,7 @@ export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
     await ensureNode(opts);
     await ensureSshKey(opts);
     await ensureGitConfig(opts);
-    await ensureDotfileSymlinks(opts);
+    await ensureDotfiles(opts);
     s.stop('Required phase complete');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
