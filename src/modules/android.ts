@@ -33,13 +33,17 @@ export const androidModule: ModuleV2 = {
 
     if (selectedItems.includes('android-studio')) {
       const caskDetect = await detectCasks(['android-studio']);
-      if (caskDetect.installed.length > 0) installed.push('android-studio');
+      // Also check /Applications in case installed outside brew (JetBrains Toolbox, .dmg, etc)
+      const appExists = await runCommand('test', ['-d', '/Applications/Android Studio.app'], { continueOnError: true });
+      if (caskDetect.installed.length > 0 || appExists.ok) installed.push('android-studio');
       else missing.push('android-studio');
     }
 
     if (selectedItems.includes('openjdk')) {
       const formulaDetect = await detectFormulas(['openjdk']);
-      if (formulaDetect.installed.length > 0) installed.push('openjdk');
+      // Also check if java is available on PATH (installed outside brew)
+      const javaExists = await commandExists('java');
+      if (formulaDetect.installed.length > 0 || javaExists) installed.push('openjdk');
       else missing.push('openjdk');
     }
 
