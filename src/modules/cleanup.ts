@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { runCommand } from '../utils/shell';
+import { brewFormulaInstalled, commandExists, runCommand } from '../utils/shell';
 
 const items = [
   { id: 'GarageBand.app', label: 'GarageBand.app' },
@@ -19,12 +19,16 @@ export const cleanupModule: ModuleV2 = {
     const installed: string[] = [];
     const missing: string[] = [];
 
+    const hasDockutil = await commandExists('dockutil');
     for (const app of selectedItems) {
       const appName = app.replace('.app', '');
       const appExists = await runCommand('test', ['-d', `/Applications/${app}`], { continueOnError: true });
       // Check if still in Dock (stale shortcut)
-      const dockCheck = await runCommand('dockutil', ['--find', appName], { continueOnError: true });
-      const inDock = dockCheck.ok && dockCheck.stdout.includes('was found');
+      let inDock = false;
+      if (hasDockutil) {
+        const dockCheck = await runCommand('dockutil', ['--find', appName], { continueOnError: true });
+        inDock = dockCheck.ok && dockCheck.stdout.includes('was found');
+      }
 
       if (appExists.ok || inDock) {
         missing.push(app);   // app exists or Dock stale → still needs work
@@ -37,8 +41,8 @@ export const cleanupModule: ModuleV2 = {
   },
   async install(selectedItems, opts) {
     // Ensure dockutil is available for Dock icon removal
-    const hasDockutil = await runCommand('command', ['-v', 'dockutil'], { continueOnError: true });
-    if (!hasDockutil.ok) {
+    const hasDockutil = await commandExists('dockutil');
+    if (!hasDockutil) {
       await runCommand('brew', ['install', 'dockutil'], { dryRun: opts.dryRun, continueOnError: true });
     }
 
