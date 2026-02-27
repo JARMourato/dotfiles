@@ -2,7 +2,7 @@ import type { ModuleV2 } from '../types';
 import { detectCasks, detectFormulas, installCasks, installFormulas } from './helpers';
 
 const items = [
-  { id: 'docker', label: 'Docker', critical: true },
+  { id: 'docker-desktop', label: 'Docker', critical: true },
   { id: 'docker-compose', label: 'docker-compose' },
   { id: 'terraform', label: 'terraform' },
   { id: 'ansible', label: 'ansible' },
@@ -10,7 +10,7 @@ const items = [
   { id: 'kubernetes-cli', label: 'kubernetes-cli' },
 ];
 
-const caskItems = new Set(['docker']);
+const caskItems = new Set(['docker-desktop']);
 
 export const cloudModule: ModuleV2 = {
   name: 'cloud',
