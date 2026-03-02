@@ -73,11 +73,19 @@ export const iosModule: ModuleV2 = {
     const installed: string[] = [];
     const missing: string[] = [];
 
-    // Xcode detection
+    // Xcode detection — check both Xcode.app and versioned names (e.g. Xcode-26.3.0.app)
     if (selectedItems.includes('xcode')) {
-      const exists = await runCommand('test', ['-d', '/Applications/Xcode.app'], { continueOnError: true });
-      if (exists.ok) installed.push('xcode');
-      else missing.push('xcode');
+      const exact = await runCommand('test', ['-d', '/Applications/Xcode.app'], { continueOnError: true });
+      if (exact.ok) {
+        installed.push('xcode');
+      } else {
+        const glob = await runCommand('bash', ['-c', 'ls -d /Applications/Xcode*.app 2>/dev/null | head -1'], { continueOnError: true });
+        if (glob.ok && glob.stdout.trim()) {
+          installed.push('xcode');
+        } else {
+          missing.push('xcode');
+        }
+      }
     }
 
     // Brew formulas
