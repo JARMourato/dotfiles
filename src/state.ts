@@ -1,10 +1,7 @@
 import { promises as fs } from 'node:fs';
-import { realHome } from './utils/shell';
 import path from 'node:path';
 import type { StateFile, StateManager } from './types';
-
-const STATE_PATH = path.join(realHome(), '.macsetup-state.json');
-const PREVIOUS_STATE_PATH = path.join(realHome(), '.macsetup-state.previous.json');
+import { CONFIG_DIR, PREVIOUS_STATE_PATH, STATE_PATH } from './paths';
 
 export class JsonStateManager implements StateManager {
   async load(): Promise<StateFile | null> {
@@ -17,6 +14,9 @@ export class JsonStateManager implements StateManager {
   }
 
   async save(state: StateFile): Promise<void> {
+    // Ensure config directory exists
+    await fs.mkdir(CONFIG_DIR, { recursive: true });
+
     const current = await this.load();
     if (current) {
       await fs.writeFile(PREVIOUS_STATE_PATH, JSON.stringify(current, null, 2), 'utf8');
@@ -69,4 +69,4 @@ export class JsonStateManager implements StateManager {
   }
 }
 
-export { PREVIOUS_STATE_PATH, STATE_PATH };
+export { CONFIG_DIR, PREVIOUS_STATE_PATH, STATE_PATH };

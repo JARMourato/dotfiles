@@ -1,9 +1,7 @@
 import { promises as fs } from 'node:fs';
-import { realHome } from './utils/shell';
-import path from 'node:path';
 import { runCommand } from './utils/shell';
+import { BACKUP_PATH, CONFIG_DIR } from './paths';
 
-const BACKUP_PATH = path.join(realHome(), '.macsetup-defaults-backup.json');
 const NOT_SET = '__NOT_SET__';
 
 type Primitive = string | number | boolean;
@@ -74,6 +72,7 @@ export async function loadDefaultsBackup(): Promise<DefaultsBackup | null> {
 }
 
 export async function saveDefaultsBackup(backup: DefaultsBackup): Promise<void> {
+  await fs.mkdir(CONFIG_DIR, { recursive: true });
   await fs.writeFile(BACKUP_PATH, JSON.stringify(backup, null, 2), 'utf8');
 }
 

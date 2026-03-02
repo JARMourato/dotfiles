@@ -212,9 +212,9 @@ export async function showStatus(rootDir: string): Promise<void> {
   const state = new JsonStateManager();
   const current = await state.load();
   if (!current) {
-    line('☐', '~/.macsetup-state.json', '(not found)');
+    line('☐', '~/.dotfiles/config/state.json', '(not found)');
     return;
   }
 
-  line(chalk.green('✅'), '~/.macsetup-state.json', `(lastRun ${current.lastRun}, profile ${current.profile})`);
+  line(chalk.green('✅'), '~/.dotfiles/config/state.json', `(lastRun ${current.lastRun}, profile ${current.profile})`);
 }

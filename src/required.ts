@@ -110,12 +110,42 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
 async function ensureDotfiles(opts: InstallOptions): Promise<void> {
   const srcDir = path.join(opts.rootDir, 'dotfiles');
   const home = realHome();
-  const dotfilesDir = path.join(home, '.dotfiles');
+  const { DOTFILES_DIR: dotfilesDir } = await import('./paths');
   const sudoUser = process.env.SUDO_USER;
 
   if (opts.dryRun) return;
 
-  // Copy dotfiles/ to ~/.dotfiles (persistent location)
+  // Migrate old files from ~/ to ~/.dotfiles/config/ if they exist
+  const { CONFIG_DIR } = await import('./paths');
+  await fs.mkdir(CONFIG_DIR, { recursive: true });
+  for (const oldFile of ['.macsetup-state.json', '.macsetup-state.previous.json', '.macsetup-defaults-backup.json']) {
+    const oldPath = path.join(home, oldFile);
+    const newName = oldFile.replace('.macsetup-', '').replace('.macsetup-defaults-', 'defaults-');
+    const newPath = path.join(CONFIG_DIR, oldFile === '.macsetup-state.json' ? 'state.json' : oldFile === '.macsetup-state.previous.json' ? 'state.previous.json' : 'defaults-backup.json');
+    try {
+      await fs.access(oldPath);
+      await fs.rename(oldPath, newPath);
+    } catch { /* doesn't exist, skip */ }
+  }
+
+  // Migrate old ~/.dotfiles flat files to ~/.dotfiles/files/
+  const oldDotfiles = path.join(home, '.dotfiles');
+  try {
+    const stat = await fs.lstat(path.join(oldDotfiles, '.zshrc'));
+    if (stat.isFile()) {
+      // Old layout — files directly in ~/.dotfiles/, move to ~/.dotfiles/files/
+      await fs.mkdir(dotfilesDir, { recursive: true });
+      for (const file of [...alwaysSafeDotfiles, ...conditionalDotfiles]) {
+        const src = path.join(oldDotfiles, file);
+        try {
+          await fs.access(src);
+          await fs.rename(src, path.join(dotfilesDir, file));
+        } catch { /* skip */ }
+      }
+    }
+  } catch { /* no old layout */ }
+
+  // Copy dotfiles/ to ~/.dotfiles/files/ (persistent location)
   await fs.mkdir(dotfilesDir, { recursive: true });
   const allFiles = [...alwaysSafeDotfiles, ...conditionalDotfiles];
   for (const file of allFiles) {
@@ -126,11 +156,12 @@ async function ensureDotfiles(opts: InstallOptions): Promise<void> {
   }
 
   // Ensure real user owns ~/.dotfiles
+  const { DOTFILES_ROOT } = await import('./paths');
   if (sudoUser && process.getuid?.() === 0) {
-    await runCommand('chown', ['-R', sudoUser, dotfilesDir], { continueOnError: true });
+    await runCommand('chown', ['-R', sudoUser, DOTFILES_ROOT], { continueOnError: true });
   }
 
-  // Symlink ~/.<file> → ~/.dotfiles/<file>
+  // Symlink ~/.<file> → ~/.dotfiles/files/<file>
   for (const file of allFiles) {
     const src = path.join(dotfilesDir, file);
     const dst = path.join(home, file);

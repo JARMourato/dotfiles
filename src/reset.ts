@@ -5,7 +5,7 @@ import { confirm, isCancel, log } from '@clack/prompts';
 import chalk from 'chalk';
 import type { InstallOptions } from './types';
 import { clearDefaultsBackup, restoreAllDefaults } from './defaults-backup';
-import { PREVIOUS_STATE_PATH, STATE_PATH } from './state';
+import { DOTFILES_ROOT, PREVIOUS_STATE_PATH, STATE_PATH } from './paths';
 import { commandExists, realHome, runAsUser, runCommand } from './utils/shell';
 import { uninstallCasks, uninstallFormulas } from './modules/helpers';
 
@@ -120,8 +120,8 @@ async function removeDotfileSymlinks(dryRun: boolean): Promise<void> {
     }
   }
 
-  // Remove the ~/.dotfiles/ staging directory
-  const dotfilesDir = path.join(realHome(), '.dotfiles');
+  // Remove the entire ~/.dotfiles/ directory (files, config, everything)
+  const dotfilesDir = DOTFILES_ROOT;
   try {
     await fs.access(dotfilesDir);
     if (!dryRun) {
@@ -223,12 +223,12 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   log.info(chalk.bold(chalk.red('Reset mode (aggressive): this will remove most macsetup-managed changes.')));
   log.info(chalk.yellow('Safety: SSH keys, git config, and machine name are intentionally skipped.'));
   log.step(chalk.bold('Preview'));
-  log.info('1) Restore macOS defaults from ~/.macsetup-defaults-backup.json');
+  log.info('1) Restore macOS defaults from ~/.dotfiles/config/defaults-backup.json');
   log.info(`2) Uninstall formulas: ${MANAGED_FORMULAS.join(', ')}`);
   log.info(`3) Uninstall casks: ${MANAGED_CASKS.join(', ')}`);
   log.info(`4) Uninstall Mac App Store apps: ${MANAGED_MAS_APPS.map((a) => a.name).join(', ')}`);
   log.info(`5) Uninstall npm globals: ${NPM_GLOBALS.join(', ')}`);
-  log.info(`6) Remove dotfile symlinks + ~/.dotfiles/: ${DOTFILES.join(', ')}`);
+  log.info(`6) Remove dotfile symlinks + ~/.dotfiles/ directory: ${DOTFILES.join(', ')}`);
   log.info('7) Remove ~/.oh-my-zsh and ~/.config/powerline-shell');
   log.info('8) Uninstall powerline-shell (pip3)');
   log.info('9) Remove Meslo LG fonts from ~/Library/Fonts');
@@ -237,9 +237,8 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   log.info('12) Skip SSH keys (safety)');
   log.info('13) Skip git config (safety)');
   log.info('14) Skip machine name (safety)');
-  log.info('15) Clear ~/.macsetup-state.json and ~/.macsetup-state.previous.json');
-  log.info('16) Clear ~/.macsetup-defaults-backup.json');
-  log.info('17) Optionally remove Homebrew (extra prompt)');
+  log.info('15) Clear state files (inside ~/.dotfiles/config/)');
+  log.info('16) Optionally remove Homebrew (extra prompt)');
 
   if (dryRun) {
     log.info(chalk.cyan('Dry run enabled: preview only, no changes were applied.'));
@@ -328,11 +327,16 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   await removeAndroidExportsLines(false);
   await removeHomeserverArtifacts(false);
 
-  // 11) Clear state files
+  // 11) Clear state files (new + legacy locations)
   progress('Clearing state files');
   await fs.rm(STATE_PATH, { force: true });
   await fs.rm(PREVIOUS_STATE_PATH, { force: true });
   await clearDefaultsBackup(false);
+  // Clean legacy locations from before ~/.dotfiles consolidation
+  const home = realHome();
+  for (const legacy of ['.macsetup-state.json', '.macsetup-state.previous.json', '.macsetup-defaults-backup.json']) {
+    await fs.rm(path.join(home, legacy), { force: true });
+  }
 
   log.success(chalk.green('Reset complete.'));
 
