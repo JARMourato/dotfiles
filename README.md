@@ -7,40 +7,37 @@ Interactive macOS setup CLI for provisioning machines from scratch. One command 
 ```bash
 # Run directly from GitHub (no clone needed)
 npx github:JARMourato/dotfiles --profile work
-
-# Or with a specific profile
-npx github:JARMourato/dotfiles --profile minimal
 ```
 
 ## Commands
 
+All commands use `npx github:JARMourato/dotfiles` (or just `dotfiles` if installed globally via `npm install -g`).
+
 ```bash
 # Install a profile
-dotfiles --profile work
+npx github:JARMourato/dotfiles --profile work
 
 # Check what's installed vs what a profile expects
-dotfiles --status
+npx github:JARMourato/dotfiles --status
 
 # Create or edit a profile interactively
-dotfiles --edit
+npx github:JARMourato/dotfiles --edit
 
-# Full reset — undo everything macsetup installed
-dotfiles --reset
+# Full reset — undo everything
+npx github:JARMourato/dotfiles --reset
 
-# Reset preview (no changes)
-dotfiles --reset --dry-run
-
-# Install preview
-dotfiles --profile work --dry-run
+# Dry run (preview, no changes)
+npx github:JARMourato/dotfiles --profile work --dry-run
+npx github:JARMourato/dotfiles --reset --dry-run
 
 # Run a single module
-dotfiles --module terminal
+npx github:JARMourato/dotfiles --module terminal
 
 # Show diff from previous run
-dotfiles --diff
+npx github:JARMourato/dotfiles --diff
 
 # Export current state as profile YAML
-dotfiles --export
+npx github:JARMourato/dotfiles --export
 ```
 
 ## Profiles
@@ -58,7 +55,7 @@ Custom profiles saved via `--edit` go to `~/.dotfiles/profiles/` and are automat
 ### Create Your Own
 
 ```bash
-dotfiles --edit
+npx github:JARMourato/dotfiles --edit
 ```
 
 Walk through an interactive wizard:
@@ -101,12 +98,12 @@ Walk through an interactive wizard:
   profiles/       # Custom profiles from --edit
 ```
 
-dotfiles keeps everything in `~/.dotfiles/`. Home directory stays clean.
+Everything stays in `~/.dotfiles/`. Home directory stays clean.
 
 ## Reset
 
 ```bash
-dotfiles --reset
+npx github:JARMourato/dotfiles --reset
 ```
 
 Undoes everything:
