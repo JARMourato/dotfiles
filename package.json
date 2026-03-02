@@ -1,11 +1,11 @@
 {
-  "name": "@jarmourato/macsetup",
+  "name": "@jarmourato/dotfiles",
   "version": "1.0.0",
   "description": "Interactive macOS setup CLI for dotfiles and system provisioning",
   "license": "MIT",
   "type": "commonjs",
   "bin": {
-    "macsetup": "./dist/index.js"
+    "dotfiles": "./dist/index.js"
   },
   "files": [
     "dist",

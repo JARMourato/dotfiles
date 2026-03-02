@@ -220,7 +220,7 @@ async function removeHomebrew(dryRun: boolean): Promise<void> {
 }
 
 export async function runReset(rootDir: string, dryRun: boolean): Promise<void> {
-  log.info(chalk.bold(chalk.red('Reset mode (aggressive): this will remove most macsetup-managed changes.')));
+  log.info(chalk.bold(chalk.red('Reset mode (aggressive): this will remove most dotfiles-managed changes.')));
   log.info(chalk.yellow('Safety: SSH keys, git config, and machine name are intentionally skipped.'));
   log.step(chalk.bold('Preview'));
   log.info('1) Restore macOS defaults from ~/.dotfiles/config/defaults-backup.json');

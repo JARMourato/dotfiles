@@ -1,13 +1,13 @@
 import path from 'node:path';
 import { realHome } from './utils/shell';
 
-/** Single directory for all macsetup-managed files */
+/** Single directory for all dotfiles-managed files */
 const DOTFILES_HOME = path.join(realHome(), '.dotfiles');
 
 /** Staging copies of dotfiles (symlinked from ~/) */
 export const DOTFILES_DIR = path.join(DOTFILES_HOME, 'files');
 
-/** macsetup config/state directory */
+/** dotfiles config/state directory */
 export const CONFIG_DIR = path.join(DOTFILES_HOME, 'config');
 
 /** State file tracking last install */

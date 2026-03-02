@@ -373,7 +373,7 @@ async function stepPreviewAndSave(rootDir: string, state: EditorState): Promise<
     const savePath = path.join(userProfileDir, `${state.profileName}.yaml`);
     await fs.writeFile(savePath, yaml, 'utf8');
     outro(chalk.green(`Profile saved to ${savePath}`));
-    log.info(`\nRun it with: ${chalk.cyan(`npx macsetup --profile ${state.profileName}`)}`);
+    log.info(`\nRun it with: ${chalk.cyan(`npx dotfiles --profile ${state.profileName}`)}`);
   } else {
     // Share mode — print YAML and PR instructions
     outro(chalk.green('Profile ready to share!'));
@@ -398,7 +398,7 @@ async function stepPreviewAndSave(rootDir: string, state: EditorState): Promise<
       const savePath = path.join(userProfileDir, `${state.profileName}.yaml`);
       await fs.writeFile(savePath, yaml, 'utf8');
       log.success(`Also saved to ${savePath}`);
-      log.info(`Run it with: ${chalk.cyan(`npx macsetup --profile ${state.profileName}`)}`);
+      log.info(`Run it with: ${chalk.cyan(`npx dotfiles --profile ${state.profileName}`)}`);
     }
   }
 
@@ -408,7 +408,7 @@ async function stepPreviewAndSave(rootDir: string, state: EditorState): Promise<
 // ── Main editor loop ────────────────────────────────────────────
 
 export async function runEditor(rootDir: string): Promise<void> {
-  intro(chalk.bold('macsetup — Profile Editor'));
+  intro(chalk.bold('dotfiles — Profile Editor'));
 
   const state = freshState();
 

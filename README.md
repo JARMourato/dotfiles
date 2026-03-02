@@ -1,4 +1,4 @@
-# @jarmourato/macsetup
+# @jarmourato/dotfiles
 
 Interactive macOS setup CLI for provisioning machines from scratch. One command to install dev tools, configure defaults, and get productive.
 
@@ -16,31 +16,31 @@ npx github:ultronservant/dotfiles#feat/npx-cli --profile minimal
 
 ```bash
 # Install a profile
-macsetup --profile work
+dotfiles --profile work
 
 # Check what's installed vs what a profile expects
-macsetup --status
+dotfiles --status
 
 # Create or edit a profile interactively
-macsetup --edit
+dotfiles --edit
 
 # Full reset — undo everything macsetup installed
-macsetup --reset
+dotfiles --reset
 
 # Reset preview (no changes)
-macsetup --reset --dry-run
+dotfiles --reset --dry-run
 
 # Install preview
-macsetup --profile work --dry-run
+dotfiles --profile work --dry-run
 
 # Run a single module
-macsetup --module terminal
+dotfiles --module terminal
 
 # Show diff from previous run
-macsetup --diff
+dotfiles --diff
 
 # Export current state as profile YAML
-macsetup --export
+dotfiles --export
 ```
 
 ## Profiles
@@ -58,7 +58,7 @@ Custom profiles saved via `--edit` go to `~/.dotfiles/profiles/` and are automat
 ### Create Your Own
 
 ```bash
-macsetup --edit
+dotfiles --edit
 ```
 
 Walk through an interactive wizard:
@@ -101,12 +101,12 @@ Walk through an interactive wizard:
   profiles/       # Custom profiles from --edit
 ```
 
-macsetup keeps everything in `~/.dotfiles/`. Home directory stays clean.
+dotfiles keeps everything in `~/.dotfiles/`. Home directory stays clean.
 
 ## Reset
 
 ```bash
-macsetup --reset
+dotfiles --reset
 ```
 
 Undoes everything:

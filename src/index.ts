@@ -28,7 +28,7 @@ import { getKeychainPassword, setKeychainPassword } from './utils/keychain';
 const program = new Command();
 
 program
-  .name('macsetup')
+  .name('dotfiles')
   .description('Interactive macOS setup CLI for dotfiles and machine provisioning')
   .option('--profile <name>', 'profile to use (dev/server/minimal)')
   .option('--dry-run', 'preview commands without executing')
@@ -37,8 +37,8 @@ program
   .option('--export', 'export current state as profile YAML')
   .option('--verbose', 'verbose output')
   .option('--uninstall', 'uninstall everything from last state')
-  .option('--status', 'show machine status vs macsetup managed items')
-  .option('--reset', 'aggressively undo macsetup changes')
+  .option('--status', 'show machine status vs dotfiles managed items')
+  .option('--reset', 'aggressively undo dotfiles changes')
   .option('--edit', 'create or edit a profile interactively')
   .parse(process.argv);
 
@@ -251,7 +251,7 @@ async function resolveProfile(rootDir: string): Promise<{ profile: ProfileConfig
   const lastConfig = await loadUserConfig();
   const machine = await detectMachine();
 
-  intro(chalk.cyan('macsetup'));
+  intro(chalk.cyan('dotfiles'));
   log.info(`Machine: ${machine.chip} • ${machine.ram} • ${machine.os}`);
 
   const setupKind = handleCancelled(
@@ -369,7 +369,7 @@ async function run(): Promise<void> {
   }
 
   if (options.reset) {
-    intro(chalk.cyan(Boolean(options.dryRun) ? 'macsetup — reset (dry run)' : 'macsetup — reset'));
+    intro(chalk.cyan(Boolean(options.dryRun) ? 'dotfiles — reset (dry run)' : 'dotfiles — reset'));
     await runReset(rootDir, Boolean(options.dryRun));
     outro(Boolean(options.dryRun) ? 'Dry run complete.' : 'Reset complete.');
     return;
@@ -384,7 +384,7 @@ async function run(): Promise<void> {
 
     const dryRun = Boolean(options.dryRun);
 
-    intro(chalk.cyan(dryRun ? 'macsetup — uninstall (dry run)' : 'macsetup — uninstall'));
+    intro(chalk.cyan(dryRun ? 'dotfiles — uninstall (dry run)' : 'dotfiles — uninstall'));
     log.info(`Last run: ${current.lastRun}\nProfile: ${current.profile}`);
 
     const caskModules = new Set(['apps', 'comms', 'productivity', 'media']);
