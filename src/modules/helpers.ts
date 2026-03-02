@@ -94,7 +94,10 @@ export async function installMasApp(id: number, opts: InstallOptions & { onProgr
 export async function uninstallFormulas(formulas: string[], opts: InstallOptions): Promise<void> {
   for (const formula of formulas) {
     if (await brewFormulaInstalled(formula)) {
+      console.log(`    ✕ ${formula}`);
       await runAsUser('brew', ['uninstall', formula], { dryRun: opts.dryRun });
+    } else {
+      console.log(`    · ${formula} (not installed)`);
     }
   }
 }
@@ -102,7 +105,10 @@ export async function uninstallFormulas(formulas: string[], opts: InstallOptions
 export async function uninstallCasks(casks: string[], opts: InstallOptions): Promise<void> {
   for (const cask of casks) {
     if (await brewCaskInstalled(cask)) {
+      console.log(`    ✕ ${cask}`);
       await runAsUser('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun });
+    } else {
+      console.log(`    · ${cask} (not installed)`);
     }
   }
 }

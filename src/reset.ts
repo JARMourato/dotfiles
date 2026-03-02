@@ -242,41 +242,57 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
     rootDir,
   };
 
+  const total = 11;
+  let step = 0;
+  const progress = (label: string) => {
+    step++;
+    log.step(chalk.cyan(`[${step}/${total}]`) + ` ${label}`);
+  };
+
   // 1) Restore macOS defaults
+  progress('Restoring macOS defaults');
   await restoreAllDefaults(false);
 
-  // 2-3) Uninstall brew formulas and casks (uses runAsUser internally)
+  // 2) Uninstall brew formulas
+  progress('Uninstalling brew formulas');
   await uninstallFormulas(MANAGED_FORMULAS, installOpts);
+
+  // 3) Uninstall brew casks
+  progress('Uninstalling brew casks');
   await uninstallCasks(MANAGED_CASKS, installOpts);
 
   // 4) Uninstall Mac App Store apps
+  progress('Uninstalling Mac App Store apps');
   await uninstallMasApps(false);
 
-  // 5) Uninstall npm globals (via runAsUser to match install behavior)
+  // 5) Uninstall npm globals
+  progress('Uninstalling npm globals');
   for (const pkg of NPM_GLOBALS) {
+    log.info(chalk.dim(`  → ${pkg}`));
     await runAsUser('npm', ['uninstall', '-g', pkg], { continueOnError: true });
   }
 
   // 6) Remove dotfile symlinks + ~/.dotfiles/
+  progress('Removing dotfile symlinks');
   await removeDotfileSymlinks(false);
 
-  // 7) Remove oh-my-zsh and powerline-shell config
+  // 7-8) Remove oh-my-zsh, powerline-shell
+  progress('Removing oh-my-zsh & powerline-shell');
   await runCommand('rm', ['-rf', path.join(realHome(), '.oh-my-zsh')], { continueOnError: true });
   await runCommand('rm', ['-rf', path.join(realHome(), '.config', 'powerline-shell')], { continueOnError: true });
-
-  // 8) Uninstall powerline-shell binary
   await uninstallPowerlineShell(false);
 
   // 9) Remove Meslo LG fonts
+  progress('Removing Meslo LG fonts');
   await removeMesloFonts(false);
 
-  // 10) Remove ANDROID_HOME lines
+  // 10) Remove ANDROID_HOME lines + homeserver artifacts
+  progress('Cleaning up environment & homeserver artifacts');
   await removeAndroidExportsLines(false);
-
-  // 11) Remove homeserver artifacts
   await removeHomeserverArtifacts(false);
 
-  // 15-16) Clear state files
+  // 11) Clear state files
+  progress('Clearing state files');
   await fs.rm(STATE_PATH, { force: true });
   await fs.rm(PREVIOUS_STATE_PATH, { force: true });
   await clearDefaultsBackup(false);
