@@ -215,11 +215,6 @@ async function stepModules(state: EditorState): Promise<true | typeof BACK> {
         ? prevSelected
         : currentItems.filter((id) => mod.items.some((it) => it.id === id));
 
-      // For multiselect, we add a hint about going back
-      if (i > 0) {
-        log.info(chalk.dim('  Tip: deselect all and confirm to skip. Submit empty to go back.'));
-      }
-
       const selected = handleCancelled(
         await multiselect({
           message: `${mod.label} — ${mod.description}`,
@@ -229,19 +224,27 @@ async function stepModules(state: EditorState): Promise<true | typeof BACK> {
         }),
       ) as string[];
 
-      // Empty selection on a module that had items = go back (only if not first)
-      if (selected.length === 0 && preSelected.length > 0 && i > 0) {
-        // They might genuinely want to skip — ask
-        const goBack = handleCancelled(
-          await confirm({ message: 'Skip this module, or go back?', active: 'Skip', inactive: 'Go back', initialValue: true }),
-        );
-        if (!goBack) { i--; continue; }
-      }
-
       if (selected.length > 0) {
         state.selectedModules[mod.name] = selected;
       } else {
         delete state.selectedModules[mod.name];
+      }
+
+      // After each module, offer navigation
+      if (i > 0) {
+        const nav = handleCancelled(
+          await select({
+            message: chalk.dim('Next?'),
+            options: [
+              { value: 'next', label: 'Continue' },
+              { value: 'redo', label: `Redo ${mod.label}` },
+              { value: 'back', label: '← Previous module' },
+            ],
+            initialValue: 'next',
+          }),
+        ) as string;
+        if (nav === 'redo') continue;
+        if (nav === 'back') { i--; continue; }
       }
     }
 
