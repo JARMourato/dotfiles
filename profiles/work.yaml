@@ -53,7 +53,7 @@ config:
     user_name: "JARMourato"
     user_email: "joao.armourato@gmail.com"
   python_versions: ["3.12"]
-  ruby_version: "3.4.1"
+  ruby_version: "3.4.8"
   macos:
     activity_monitor:
       open_main_window: true

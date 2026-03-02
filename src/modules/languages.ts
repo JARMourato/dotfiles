@@ -33,7 +33,7 @@ function rubyVersionFromProfile(config: Record<string, unknown>): string {
     return legacy.version.trim();
   }
 
-  return '3.4.1';
+  return '3.4.8';
 }
 
 export const languagesModule: ModuleV2 = {
