@@ -29,7 +29,7 @@ export function realUser(): string | undefined {
 export async function runAsUser(
   cmd: string,
   args: string[],
-  opts: { dryRun?: boolean; continueOnError?: boolean } = {},
+  opts: { dryRun?: boolean; continueOnError?: boolean; timeoutMs?: number } = {},
 ): Promise<{ ok: boolean; stdout: string; stderr: string }> {
   const sudoUser = process.env.SUDO_USER;
   if (sudoUser && process.getuid?.() === 0) {
@@ -45,6 +45,7 @@ export interface CommandOptions {
   cwd?: string;
   continueOnError?: boolean;
   env?: NodeJS.ProcessEnv;
+  timeoutMs?: number;
 }
 
 export interface StreamCommandOptions extends CommandOptions {
@@ -126,6 +127,7 @@ export async function runCommand(
       cwd: opts.cwd,
       env: opts.env,
       shell: false,
+      ...(opts.timeoutMs ? { timeout: opts.timeoutMs } : {}),
     });
     return { ok: true, stdout: result.stdout, stderr: result.stderr };
   } catch (error) {

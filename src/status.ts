@@ -162,6 +162,8 @@ export async function showStatus(rootDir: string): Promise<void> {
       const candidateTargets = [
         path.join(rootDir, 'dotfiles', dotfile),
         path.join(realHome(), '.macsetup', 'dotfiles', dotfile),
+        path.join(realHome(), '.dotfiles', dotfile),
+        path.join(realHome(), '.dotfiles', 'files', dotfile),
       ];
       const resolvedTarget = path.resolve(path.dirname(filePath), target);
       const managed = candidateTargets.some((expected) => path.resolve(expected) === resolvedTarget);

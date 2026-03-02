@@ -53,11 +53,19 @@ export const aiModule: ModuleV2 = {
     }
 
     if (selectedItems.includes('claude-code')) {
-      await runAsUser('npm', ['install', '-g', '@anthropic-ai/claude-code'], { dryRun: opts.dryRun });
+      console.log('    installing @anthropic-ai/claude-code...');
+      const result = await runAsUser('npm', ['install', '-g', '@anthropic-ai/claude-code'], { dryRun: opts.dryRun, continueOnError: true, timeoutMs: 120_000 });
+      if (!result.ok) {
+        console.error(`    ⚠ claude-code install failed: ${result.stderr.slice(0, 200)}`);
+      }
     }
 
     if (selectedItems.includes('codex')) {
-      await runAsUser('npm', ['install', '-g', '@openai/codex'], { dryRun: opts.dryRun });
+      console.log('    installing @openai/codex...');
+      const result = await runAsUser('npm', ['install', '-g', '@openai/codex'], { dryRun: opts.dryRun, continueOnError: true, timeoutMs: 120_000 });
+      if (!result.ok) {
+        console.error(`    ⚠ codex install failed: ${result.stderr.slice(0, 200)}`);
+      }
     }
 
   },
