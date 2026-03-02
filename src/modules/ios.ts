@@ -93,10 +93,14 @@ export const iosModule: ModuleV2 = {
   async install(selectedItems, opts) {
     if (selectedItems.includes('xcode')) {
       await ensureXcodes(opts);
-      await runCommand('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      const result = await runCommand('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
         continueOnError: true,
       });
+      if (!result.ok) {
+        const output = (result.stderr || result.stdout).trim();
+        console.error(`  ⚠ xcodes install failed: ${output || 'unknown error'}`);
+      }
       await copyXcodeTemplateMacros(opts);
     }
 
@@ -109,11 +113,15 @@ export const iosModule: ModuleV2 = {
     if (item === 'xcode') {
       const run = opts.onProgress ? runStreamedCommand : runCommand;
       await ensureXcodes(opts);
-      await run('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      const result = await run('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
         continueOnError: true,
         onProgress: opts.onProgress,
       });
+      if (!result.ok) {
+        const output = (result.stderr || result.stdout).trim();
+        console.error(`  ⚠ xcodes install failed: ${output || 'unknown error'}`);
+      }
       await copyXcodeTemplateMacros(opts);
     } else {
       await installFormula(item, opts);
