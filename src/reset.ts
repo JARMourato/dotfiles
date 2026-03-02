@@ -151,16 +151,24 @@ async function removeMesloFonts(dryRun: boolean): Promise<void> {
 }
 
 async function uninstallPowerlineShell(dryRun: boolean): Promise<void> {
+  if (!(await commandExists('powerline-shell'))) return;
+
+  const sudo = (args: string[]) =>
+    process.getuid?.() === 0
+      ? runCommand(args[0], args.slice(1), { dryRun, continueOnError: true })
+      : runCommand('sudo', args, { dryRun, continueOnError: true });
+
+  // Try pip3 uninstall first (works if installed via pip)
+  await sudo(['pip3', 'uninstall', '-y', 'powerline-shell']);
+  await runAsUser('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+
+  // If still present, it was installed via setup.py (egg-based) — remove files directly
   if (await commandExists('powerline-shell')) {
-    // Installed system-wide via setup.py into /Library/Python — needs sudo
-    const isRoot = process.getuid?.() === 0;
-    if (isRoot) {
-      await runCommand('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
-    } else {
-      await runCommand('sudo', ['pip3', 'uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
-    }
-    // Also try as user in case it was installed per-user
-    await runAsUser('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+    log.info(chalk.dim('  pip3 could not remove it — removing files directly'));
+    await sudo(['rm', '-f', '/usr/local/bin/powerline-shell']);
+    // Remove egg from all Python site-packages
+    await sudo(['bash', '-c', 'rm -rf /Library/Python/*/site-packages/powerline_shell* /Library/Python/*/site-packages/powerline-shell*']);
+    await runAsUser('bash', ['-c', 'rm -rf ~/Library/Python/*/lib/python/site-packages/powerline_shell* ~/Library/Python/*/lib/python/site-packages/powerline-shell*'], { dryRun, continueOnError: true });
   }
 }
 
