@@ -81,6 +81,47 @@ async function ensureSshKey(opts: InstallOptions): Promise<void> {
     dryRun: opts.dryRun,
     continueOnError: true,
   });
+
+  // Add SSH key to GitHub if gh CLI is available
+  await addSshKeyToGitHub(pubPath, opts);
+}
+
+async function addSshKeyToGitHub(pubPath: string, opts: InstallOptions): Promise<void> {
+  const hasGh = await commandExists('gh');
+  if (!hasGh) return;
+
+  // Check if gh is authenticated
+  const authStatus = await runCommand('gh', ['auth', 'status'], { continueOnError: true });
+  if (!authStatus.ok) {
+    log.info('gh CLI not authenticated — skipping GitHub SSH key upload. Run `gh auth login` to set up.');
+    return;
+  }
+
+  // Check if this key is already on GitHub
+  const existingKeys = await runCommand('gh', ['ssh-key', 'list'], { continueOnError: true });
+  if (existingKeys.ok) {
+    const pubKey = (await fs.readFile(pubPath, 'utf8')).trim();
+    const keyFingerprint = pubKey.split(' ')[1] ?? '';
+    if (keyFingerprint && existingKeys.stdout.includes(keyFingerprint)) {
+      return; // already registered
+    }
+  }
+
+  // Get hostname for the key title
+  const hostname = await runCommand('scutil', ['--get', 'ComputerName'], { continueOnError: true });
+  const keyTitle = hostname.ok ? hostname.stdout.trim() : 'macsetup';
+
+  if (opts.dryRun) {
+    log.info(`[dry-run] gh ssh-key add ${pubPath} --title "${keyTitle}"`);
+    return;
+  }
+
+  const result = await runCommand('gh', ['ssh-key', 'add', pubPath, '--title', keyTitle], { continueOnError: true });
+  if (result.ok) {
+    log.info(`SSH key added to GitHub as "${keyTitle}"`);
+  } else {
+    log.warn('Could not add SSH key to GitHub. Add it manually: gh ssh-key add ~/.ssh/id_rsa.pub');
+  }
 }
 
 async function ensureGitConfig(opts: InstallOptions): Promise<void> {
