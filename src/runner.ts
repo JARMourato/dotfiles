@@ -50,7 +50,10 @@ export async function runModules(
     if (selectedItems.length === 0) continue;
 
     const s = spinner();
+    let spinnerActive = false;
     s.start(`Running module: ${module.label}`);
+    spinnerActive = true;
+
     try {
       const detect = await module.detect(selectedItems, opts);
       const totalItems = selectedItems.length;
@@ -59,16 +62,10 @@ export async function runModules(
 
       if (toInstall.length === 0 && alreadyDone > 0) {
         s.stop(`${module.label}: already installed (${alreadyDone}/${totalItems})`);
+        spinnerActive = false;
       } else {
-        // Show what needs to be done
-        if (alreadyDone > 0) {
-          s.message(`${module.label}: ${alreadyDone}/${totalItems} already done, installing ${toInstall.length} remaining...`);
-        } else {
-          s.message(`${module.label}: installing ${toInstall.length} item${toInstall.length === 1 ? '' : 's'}...`);
-        }
-
         // Install with per-item progress if module supports it
-        if (module.installItem) {
+        if (module.installItem && toInstall.length > 0) {
           for (let i = 0; i < toInstall.length; i++) {
             const item = toInstall[i];
             const itemLabel = module.items.find((it) => it.id === item)?.label ?? item;
@@ -77,14 +74,23 @@ export async function runModules(
             await module.installItem(item, {
               ...opts,
               onProgress(line) {
-                // Show download/install progress inline with the spinner
                 const short = line.length > 60 ? `${line.slice(0, 57)}...` : line;
                 s.message(`${prefix} — ${short}`);
               },
             });
           }
+          s.stop(`${module.label}: complete (${totalItems}/${totalItems})`);
+          spinnerActive = false;
         } else {
+          // No per-item support — stop spinner, show items, run bulk
+          s.stop(`${module.label}: installing ${toInstall.length} item${toInstall.length === 1 ? '' : 's'}...`);
+          spinnerActive = false;
+          for (const item of toInstall) {
+            const itemLabel = module.items.find((it) => it.id === item)?.label ?? item;
+            log.info(`  → ${itemLabel}`);
+          }
           await module.install(selectedItems, opts);
+          log.success(`${module.label}: complete (${totalItems}/${totalItems})`);
         }
 
         // Verify critical items actually installed
@@ -98,8 +104,6 @@ export async function runModules(
             throw new Error(`Critical item(s) failed to install: ${failedLabels}`);
           }
         }
-
-        s.stop(`${module.label}: complete (${totalItems}/${totalItems})`);
       }
 
       // Track what actually installed (re-detect to be accurate)
@@ -111,7 +115,11 @@ export async function runModules(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${module.name}: ${message}`);
-      s.stop(`${module.label}: failed`);
+      if (spinnerActive) {
+        s.stop(`${module.label}: failed`);
+      } else {
+        log.error(`${module.label}: failed`);
+      }
       log.error(`${module.name} failed: ${message}`);
     }
   }
