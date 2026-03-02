@@ -1,5 +1,5 @@
 import type { ModuleV2 } from '../types';
-import { detectCasks, detectCommands, installCasks } from './helpers';
+import { detectCasks, installCask, installCasks } from './helpers';
 import { runAsUser, runCommand } from '../utils/shell';
 
 const items = [
@@ -7,8 +7,13 @@ const items = [
   { id: 'chatgpt', label: 'ChatGPT app' },
   { id: 'claude-code', label: 'Claude Code CLI' },
   { id: 'codex', label: 'Codex CLI (OpenAI)' },
-
 ];
+
+const CASK_IDS = new Set(['claude', 'chatgpt']);
+const NPM_PACKAGES: Record<string, string> = {
+  'claude-code': '@anthropic-ai/claude-code',
+  'codex': '@openai/codex',
+};
 
 export const aiModule: ModuleV2 = {
   name: 'ai',
@@ -18,55 +23,51 @@ export const aiModule: ModuleV2 = {
   defaultItems: items.map((item) => item.id),
   dependencies: ['core'],
   async detect(selectedItems) {
-    const casks = selectedItems.filter((item) => item === 'claude' || item === 'chatgpt');
-    const commands = selectedItems
-      .filter((item) => item === 'claude-code' || item === 'codex')
-      .map((item) => (item === 'claude-code' ? 'claude' : 'codex'));
+    const casks = selectedItems.filter((item) => CASK_IDS.has(item));
+    const cliItems = selectedItems.filter((item) => item in NPM_PACKAGES);
 
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
       : { installed: [], missing: [], partial: false };
-    // Detect CLI commands as real user (root PATH doesn't have user's npm globals)
+
     const commandInstalled: string[] = [];
     const commandMissing: string[] = [];
-    for (const cmd of commands) {
-      const check = await runAsUser('which', [cmd], { continueOnError: true });
-      if (check.ok) commandInstalled.push(cmd);
-      else commandMissing.push(cmd);
+    for (const item of cliItems) {
+      const bin = item === 'claude-code' ? 'claude' : 'codex';
+      const check = await runAsUser('which', [bin], { continueOnError: true });
+      if (check.ok) commandInstalled.push(item);
+      else commandMissing.push(item);
     }
-    const commandDetect = { installed: commandInstalled, missing: commandMissing, partial: commandInstalled.length > 0 && commandMissing.length > 0 };
-
-    const cliMap = (cmd: string) => cmd === 'claude' ? 'claude-code' : cmd;
-    const installedCliItems = commandDetect.installed.map(cliMap);
-    const missingCliItems = commandDetect.missing.map(cliMap);
 
     return {
-      installed: [...caskDetect.installed, ...installedCliItems],
-      missing: [...caskDetect.missing, ...missingCliItems],
-      partial: caskDetect.partial || commandDetect.partial,
+      installed: [...caskDetect.installed, ...commandInstalled],
+      missing: [...caskDetect.missing, ...commandMissing],
+      partial: (caskDetect.installed.length + commandInstalled.length) > 0 &&
+               (caskDetect.missing.length + commandMissing.length) > 0,
     };
   },
   async install(selectedItems, opts) {
-    const casks = selectedItems.filter((item) => item === 'claude' || item === 'chatgpt');
-    if (casks.length > 0) {
-      await installCasks(casks, opts);
+    for (const item of selectedItems) {
+      await aiModule.installItem!(item, opts);
+    }
+  },
+  async installItem(item, opts) {
+    if (CASK_IDS.has(item)) {
+      await installCask(item, opts);
+      return;
     }
 
-    if (selectedItems.includes('claude-code')) {
-      console.log('    installing @anthropic-ai/claude-code...');
-      const result = await runAsUser('npm', ['install', '-g', '@anthropic-ai/claude-code'], { dryRun: opts.dryRun, continueOnError: true, timeoutMs: 120_000 });
+    const pkg = NPM_PACKAGES[item];
+    if (pkg) {
+      const result = await runAsUser('npm', ['install', '-g', pkg], {
+        dryRun: opts.dryRun,
+        continueOnError: true,
+        timeoutMs: 180_000,
+      });
       if (!result.ok) {
-        console.error(`    ⚠ claude-code install failed: ${result.stderr.slice(0, 200)}`);
+        const err = (result.stderr || result.stdout).trim().slice(0, 300);
+        throw new Error(`npm install -g ${pkg} failed: ${err || 'timed out after 3 minutes'}`);
       }
     }
-
-    if (selectedItems.includes('codex')) {
-      console.log('    installing @openai/codex...');
-      const result = await runAsUser('npm', ['install', '-g', '@openai/codex'], { dryRun: opts.dryRun, continueOnError: true, timeoutMs: 120_000 });
-      if (!result.ok) {
-        console.error(`    ⚠ codex install failed: ${result.stderr.slice(0, 200)}`);
-      }
-    }
-
   },
 };

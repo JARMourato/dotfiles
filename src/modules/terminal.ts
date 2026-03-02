@@ -57,7 +57,12 @@ export const terminalModule: ModuleV2 = {
     return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
   },
   async install(selectedItems, opts) {
-    if (selectedItems.includes('oh-my-zsh')) {
+    for (const item of selectedItems) {
+      await terminalModule.installItem!(item, opts);
+    }
+  },
+  async installItem(item, opts) {
+    if (item === 'oh-my-zsh') {
       await runCommand(
         'bash',
         ['-lc', 'if [ ! -d "$HOME/.oh-my-zsh" ]; then sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended; fi'],
@@ -65,7 +70,7 @@ export const terminalModule: ModuleV2 = {
       );
     }
 
-    if (selectedItems.includes('fonts')) {
+    if (item === 'fonts') {
       await runCommand(
         'bash',
         ['-lc', 'if ! ls ~/Library/Fonts/Meslo* >/dev/null 2>&1; then git clone https://github.com/powerline/fonts.git --depth=1 && cd fonts && ./install.sh "Meslo LG" && cd .. && rm -rf fonts; fi'],
@@ -73,7 +78,7 @@ export const terminalModule: ModuleV2 = {
       );
     }
 
-    if (selectedItems.includes('powerline')) {
+    if (item === 'powerline') {
       await runCommand(
         'bash',
         ['-lc', 'if ! command -v powerline-shell >/dev/null 2>&1; then git clone https://github.com/b-ryan/powerline-shell.git --depth=1 && cd powerline-shell && python3 setup.py install && cd .. && rm -rf powerline-shell; fi'],
@@ -89,7 +94,7 @@ export const terminalModule: ModuleV2 = {
       }
     }
 
-    if (selectedItems.includes('theme')) {
+    if (item === 'theme') {
       const terminalDir = path.join(opts.rootDir, 'Terminal');
       await runCommand('open', [path.join(terminalDir, 'Highway.terminal')], {
         dryRun: opts.dryRun,

@@ -66,7 +66,12 @@ export const languagesModule: ModuleV2 = {
     return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
   },
   async install(selectedItems, opts) {
-    if (selectedItems.includes('python')) {
+    for (const item of selectedItems) {
+      await languagesModule.installItem!(item, opts);
+    }
+  },
+  async installItem(item, opts) {
+    if (item === 'python') {
       await installFormulas(['pyenv', 'python'], opts);
       const versions = pythonVersionsFromProfile(opts.profile.config);
       for (const version of versions) {
@@ -83,7 +88,7 @@ export const languagesModule: ModuleV2 = {
       });
     }
 
-    if (selectedItems.includes('ruby')) {
+    if (item === 'ruby') {
       await installFormulas(['rbenv', 'ruby-build'], opts);
       const versionFile = path.join(realHome(), '.ruby-version');
       let version = rubyVersionFromProfile(opts.profile.config);
