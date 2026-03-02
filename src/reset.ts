@@ -9,6 +9,16 @@ import { PREVIOUS_STATE_PATH, STATE_PATH } from './state';
 import { commandExists, realHome, runAsUser, runCommand } from './utils/shell';
 import { uninstallCasks, uninstallFormulas } from './modules/helpers';
 
+async function acquireSudo(dryRun: boolean): Promise<void> {
+  if (dryRun) return;
+  if (process.getuid?.() === 0) return; // already root
+  log.info(chalk.yellow('Some operations need admin privileges.'));
+  const check = await runCommand('sudo', ['-v'], { continueOnError: true });
+  if (!check.ok) {
+    log.warn('Could not acquire sudo. Some operations may be skipped.');
+  }
+}
+
 const MANAGED_FORMULAS = [
   'jq',
   'curl',
@@ -142,8 +152,13 @@ async function removeMesloFonts(dryRun: boolean): Promise<void> {
 
 async function uninstallPowerlineShell(dryRun: boolean): Promise<void> {
   if (await commandExists('powerline-shell')) {
-    // Installed system-wide via setup.py into /Library/Python — needs root, not runAsUser
-    await runCommand('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+    // Installed system-wide via setup.py into /Library/Python — needs sudo
+    const isRoot = process.getuid?.() === 0;
+    if (isRoot) {
+      await runCommand('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+    } else {
+      await runCommand('sudo', ['pip3', 'uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+    }
     // Also try as user in case it was installed per-user
     await runAsUser('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
   }
@@ -233,6 +248,8 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
     return;
   }
 
+  await acquireSudo(false);
+
   const installOpts: InstallOptions = {
     dryRun: false,
     verbose: false,
@@ -272,10 +289,15 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   progress('Uninstalling npm globals');
   for (const pkg of NPM_GLOBALS) {
     log.info(chalk.dim(`  → ${pkg}`));
-    // Try as current user first, then as real user (covers both sudo and non-sudo)
-    const r1 = await runCommand('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+    // Try as user first (normal case), then with sudo if it fails (e.g. global prefix owned by root)
+    const r1 = await runAsUser('npm', ['uninstall', '-g', pkg], { continueOnError: true });
     if (!r1.ok) {
-      await runAsUser('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+      const isRoot = process.getuid?.() === 0;
+      if (isRoot) {
+        await runCommand('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+      } else {
+        await runCommand('sudo', ['npm', 'uninstall', '-g', pkg], { continueOnError: true });
+      }
     }
   }
 
