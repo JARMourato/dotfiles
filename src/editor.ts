@@ -382,7 +382,7 @@ async function stepPreviewAndSave(rootDir: string, state: EditorState): Promise<
     console.log(yaml);
     console.log(chalk.bold('── How to submit ──'));
     console.log('');
-    console.log(`1. Fork the repo:      ${chalk.cyan('gh repo fork ultronservant/dotfiles --clone')}`);
+    console.log(`1. Fork the repo:      ${chalk.cyan('gh repo fork JARMourato/dotfiles --clone')}`);
     console.log(`2. Save the profile:   ${chalk.cyan(`cat > profiles/${state.profileName}.yaml << 'EOF'\n${yaml}EOF`)}`);
     console.log(`3. Commit & push:      ${chalk.cyan(`git add profiles/${state.profileName}.yaml && git commit -m "Add ${state.profileName} profile" && git push`)}`);
     console.log(`4. Open a PR:          ${chalk.cyan('gh pr create --title "Add ' + state.profileName + ' profile"')}`);
