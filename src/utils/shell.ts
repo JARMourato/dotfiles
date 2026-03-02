@@ -76,21 +76,26 @@ export async function runStreamedCommand(
     let stdout = '';
     let stderr = '';
 
-    const processLine = (line: string): void => {
-      const trimmed = line.trim();
-      if (trimmed && opts.onProgress) opts.onProgress(trimmed);
+    const processChunk = (text: string): void => {
+      if (!opts.onProgress) return;
+      // Split on both \n and \r to capture download progress bars (which use \r)
+      const lines = text.split(/[\r\n]+/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed) opts.onProgress(trimmed);
+      }
     };
 
     child.stdout?.on('data', (data: Buffer) => {
       const text = data.toString();
       stdout += text;
-      for (const line of text.split('\n')) processLine(line);
+      processChunk(text);
     });
 
     child.stderr?.on('data', (data: Buffer) => {
       const text = data.toString();
       stderr += text;
-      for (const line of text.split('\n')) processLine(line);
+      processChunk(text);
     });
 
     child.on('close', (code) => {
