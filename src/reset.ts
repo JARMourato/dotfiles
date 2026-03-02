@@ -142,6 +142,9 @@ async function removeMesloFonts(dryRun: boolean): Promise<void> {
 
 async function uninstallPowerlineShell(dryRun: boolean): Promise<void> {
   if (await commandExists('powerline-shell')) {
+    // Installed system-wide via setup.py into /Library/Python — needs root, not runAsUser
+    await runCommand('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
+    // Also try as user in case it was installed per-user
     await runAsUser('pip3', ['uninstall', '-y', 'powerline-shell'], { dryRun, continueOnError: true });
   }
 }
@@ -269,7 +272,11 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   progress('Uninstalling npm globals');
   for (const pkg of NPM_GLOBALS) {
     log.info(chalk.dim(`  → ${pkg}`));
-    await runAsUser('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+    // Try as current user first, then as real user (covers both sudo and non-sudo)
+    const r1 = await runCommand('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+    if (!r1.ok) {
+      await runAsUser('npm', ['uninstall', '-g', pkg], { continueOnError: true });
+    }
   }
 
   // 6) Remove dotfile symlinks + ~/.dotfiles/

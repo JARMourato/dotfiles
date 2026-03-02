@@ -95,7 +95,10 @@ export async function uninstallFormulas(formulas: string[], opts: InstallOptions
   for (const formula of formulas) {
     if (await brewFormulaInstalled(formula)) {
       console.log(`    ✕ ${formula}`);
-      await runAsUser('brew', ['uninstall', formula], { dryRun: opts.dryRun });
+      const result = await runAsUser('brew', ['uninstall', '--ignore-dependencies', formula], { dryRun: opts.dryRun, continueOnError: true });
+      if (!result.ok && !opts.dryRun) {
+        console.log(`      ⚠ failed: ${result.stderr.trim()}`);
+      }
     } else {
       console.log(`    · ${formula} (not installed)`);
     }
@@ -106,7 +109,10 @@ export async function uninstallCasks(casks: string[], opts: InstallOptions): Pro
   for (const cask of casks) {
     if (await brewCaskInstalled(cask)) {
       console.log(`    ✕ ${cask}`);
-      await runAsUser('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun });
+      const result = await runAsUser('brew', ['uninstall', '--cask', cask], { dryRun: opts.dryRun, continueOnError: true });
+      if (!result.ok && !opts.dryRun) {
+        console.log(`      ⚠ failed: ${result.stderr.trim()}`);
+      }
     } else {
       console.log(`    · ${cask} (not installed)`);
     }
