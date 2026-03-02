@@ -108,7 +108,16 @@ async function ensureGitConfig(opts: InstallOptions): Promise<void> {
 }
 
 async function ensureDotfiles(opts: InstallOptions): Promise<void> {
-  const srcDir = path.join(opts.rootDir, 'dotfiles');
+  const { REPO_DIR } = await import('./paths');
+  const repoSrc = path.join(REPO_DIR, 'dotfiles');
+  // Prefer repo clone dotfiles if available, else use bundled
+  let srcDir: string;
+  try {
+    await fs.access(repoSrc);
+    srcDir = repoSrc;
+  } catch {
+    srcDir = path.join(opts.rootDir, 'dotfiles');
+  }
   const home = realHome();
   const { DOTFILES_DIR: dotfilesDir } = await import('./paths');
   const sudoUser = process.env.SUDO_USER;
@@ -200,6 +209,15 @@ async function ensureHostname(opts: InstallOptions): Promise<void> {
   await runCommand('scutil', ['--set', 'HostName', name], { continueOnError: true });
 }
 
+async function ensureWorkspace(opts: InstallOptions): Promise<void> {
+  const { WORKSPACE_DIR } = await import('./paths');
+  if (opts.dryRun) {
+    log.info(`[dry-run] mkdir -p ${WORKSPACE_DIR}`);
+    return;
+  }
+  await fs.mkdir(WORKSPACE_DIR, { recursive: true });
+}
+
 async function acquireSudo(dryRun: boolean): Promise<void> {
   if (dryRun) return;
   // Request sudo upfront and validate — some modules need it (openjdk symlink, pmset, app removal)
@@ -221,7 +239,11 @@ export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
     await ensureSshKey(opts);
     await ensureGitConfig(opts);
     await ensureDotfiles(opts);
+    await ensureWorkspace(opts);
     s.stop('Required phase complete');
+    // Clone repo for sync support (after spinner, may need network)
+    const { cloneRepo } = await import('./sync');
+    await cloneRepo(opts.dryRun);
     // Hostname prompt needs visible terminal — run after spinner
     await ensureHostname(opts);
   } catch (error) {
