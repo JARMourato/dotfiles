@@ -6,13 +6,13 @@ import { stringify } from 'yaml';
 import { modules } from './modules';
 import { listProfiles, loadProfile } from './config';
 import type { ProfileConfig } from './types';
-import { CONFIG_DIR, DOTFILES_ROOT } from './paths';
+import { DOTFILES_ROOT } from './paths';
 
-/** Modules that are always required and cannot be deselected */
+/** Modules that are always required — cannot be toggled off */
 const REQUIRED_MODULES = new Set(['core']);
 
-/** Items within modules that are always required */
-const REQUIRED_ITEMS: Record<string, Set<string>> = {};
+/** Modules that are all-or-nothing bundles (yes/no toggle) */
+const BUNDLE_MODULES = new Set(['terminal', 'macos', 'macos_complex']);
 
 function handleCancelled<T>(value: T): T {
   if (isCancel(value)) {
@@ -58,7 +58,6 @@ async function selectBaseProfile(rootDir: string): Promise<{ profile: ProfileCon
   if (source === 'builtin') {
     return { profile: await loadProfile(rootDir, name), name };
   }
-  // user profile
   const raw = await fs.readFile(path.join(userDir, `${name}.yaml`), 'utf8');
   const { parse } = await import('yaml');
   return { profile: parse(raw) as ProfileConfig, name };
@@ -69,6 +68,46 @@ function getProfileItems(profile: ProfileConfig | null, moduleName: string): str
   const value = (profile as unknown as Record<string, unknown>)[moduleName];
   if (Array.isArray(value)) return value.map(String);
   return [];
+}
+
+async function promptCustomAdditions(): Promise<{ formulas: string[]; casks: string[] }> {
+  const formulas: string[] = [];
+  const casks: string[] = [];
+
+  const addExtras = handleCancelled(
+    await confirm({
+      message: 'Add custom brew formulas or casks not in the default modules?',
+      initialValue: false,
+    }),
+  );
+
+  if (!addExtras) return { formulas, casks };
+
+  const formulaInput = handleCancelled(
+    await text({
+      message: 'Extra brew formulas (comma-separated, or leave empty)',
+      placeholder: 'e.g. ffmpeg, imagemagick, gh',
+      defaultValue: '',
+    }),
+  ) as string;
+
+  if (formulaInput.trim()) {
+    formulas.push(...formulaInput.split(',').map((s) => s.trim()).filter(Boolean));
+  }
+
+  const caskInput = handleCancelled(
+    await text({
+      message: 'Extra brew casks (comma-separated, or leave empty)',
+      placeholder: 'e.g. discord, figma, notion',
+      defaultValue: '',
+    }),
+  ) as string;
+
+  if (caskInput.trim()) {
+    casks.push(...caskInput.split(',').map((s) => s.trim()).filter(Boolean));
+  }
+
+  return { formulas, casks };
 }
 
 export async function runEditor(rootDir: string): Promise<void> {
@@ -116,31 +155,44 @@ export async function runEditor(rootDir: string): Promise<void> {
   ) as string;
 
   // Module selection
-  log.step('Select modules and items');
+  log.step('Select what to install');
   const selectedModules: Record<string, string[]> = {};
 
   for (const mod of modules) {
-    const isRequired = REQUIRED_MODULES.has(mod.name);
     const currentItems = getProfileItems(baseProfile, mod.name);
+    const hasItems = mod.items.length > 0;
 
-    if (isRequired) {
-      // Required module — show as locked, use all default items
-      log.info(chalk.green(`✔ ${mod.label}`) + chalk.dim(' (required — always installed)'));
+    // Required modules — always included, not toggleable
+    if (REQUIRED_MODULES.has(mod.name)) {
+      log.info(chalk.green('✔ ' + mod.label) + chalk.dim(' (required — always installed)'));
       selectedModules[mod.name] = mod.defaultItems;
       continue;
     }
 
-    // Skip modules with no selectable items (like encryption which is boolean)
-    if (mod.items.length === 0) continue;
+    if (!hasItems) continue;
 
-    const moduleOptions = mod.items.map((item) => {
-      const isRequiredItem = REQUIRED_ITEMS[mod.name]?.has(item.id);
-      return {
-        value: item.id,
-        label: isRequiredItem ? `${item.label} ${chalk.dim('(required)')}` : item.label,
-        hint: item.description,
-      };
-    });
+    // Bundle modules — all-or-nothing toggle
+    if (BUNDLE_MODULES.has(mod.name)) {
+      const wasEnabled = currentItems.length > 0;
+      const itemList = mod.items.map((i) => i.label).join(', ');
+      const enable = handleCancelled(
+        await confirm({
+          message: `${mod.label}? ${chalk.dim(`(${itemList})`)}`,
+          initialValue: wasEnabled,
+        }),
+      );
+      if (enable) {
+        selectedModules[mod.name] = mod.defaultItems;
+      }
+      continue;
+    }
+
+    // Multiselect modules — pick individual items
+    const moduleOptions = mod.items.map((item) => ({
+      value: item.id,
+      label: item.label,
+      hint: item.description,
+    }));
 
     const preSelected = currentItems.length > 0
       ? currentItems.filter((id) => mod.items.some((it) => it.id === id))
@@ -155,14 +207,6 @@ export async function runEditor(rootDir: string): Promise<void> {
       }),
     ) as string[];
 
-    // Ensure required items are always included
-    const requiredForModule = REQUIRED_ITEMS[mod.name];
-    if (requiredForModule) {
-      for (const req of requiredForModule) {
-        if (!selected.includes(req)) selected.push(req);
-      }
-    }
-
     if (selected.length > 0) {
       selectedModules[mod.name] = selected;
     }
@@ -176,6 +220,10 @@ export async function runEditor(rootDir: string): Promise<void> {
     }),
   );
 
+  // Custom additions
+  log.step('Custom additions');
+  const { formulas: extraFormulas, casks: extraCasks } = await promptCustomAdditions();
+
   // Build profile YAML
   const profile: Record<string, unknown> = {
     name: profileName.trim(),
@@ -188,15 +236,32 @@ export async function runEditor(rootDir: string): Promise<void> {
   }
 
   profile.encryption = enableEncryption;
-  profile.config = {
+
+  const config: Record<string, unknown> = {
     git: {
       user_name: gitName.trim(),
       user_email: gitEmail.trim(),
     },
-    ...(baseProfile?.config ? Object.fromEntries(
-      Object.entries(baseProfile.config).filter(([key]) => key !== 'git')
-    ) : {}),
   };
+
+  // Carry over non-git config from base profile (macos defaults, python versions, etc.)
+  if (baseProfile?.config) {
+    for (const [key, value] of Object.entries(baseProfile.config)) {
+      if (key !== 'git') {
+        config[key] = value;
+      }
+    }
+  }
+
+  // Add custom formulas/casks
+  if (extraFormulas.length > 0) {
+    config.extra_formulas = extraFormulas;
+  }
+  if (extraCasks.length > 0) {
+    config.extra_casks = extraCasks;
+  }
+
+  profile.config = config;
 
   // Preview
   log.step('Preview');
@@ -215,7 +280,7 @@ export async function runEditor(rootDir: string): Promise<void> {
     return;
   }
 
-  // Save location choice
+  // Save location
   const saveLocation = handleCancelled(
     await select({
       message: 'Where to save?',
@@ -238,5 +303,5 @@ export async function runEditor(rootDir: string): Promise<void> {
   await fs.writeFile(savePath, yaml, 'utf8');
   outro(chalk.green(`Profile saved to ${savePath}`));
 
-  log.info(`\nRun it with: ${chalk.cyan(`macsetup --profile ${profileName}`)}`);
+  log.info(`\nRun it with: ${chalk.cyan(`npx macsetup --profile ${profileName}`)}`);
 }
