@@ -29,7 +29,15 @@ export async function installFormulas(formulas: string[], opts: InstallOptions):
 
 export async function installFormula(formula: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
   if (!(await brewFormulaInstalled(formula))) {
-    await runAsUser('brew', ['install', formula], { dryRun: opts.dryRun });
+    if (opts.onProgress) {
+      await runStreamedCommand('brew', ['install', formula], {
+        dryRun: opts.dryRun,
+        continueOnError: true,
+        onProgress: opts.onProgress,
+      });
+    } else {
+      await runAsUser('brew', ['install', formula], { dryRun: opts.dryRun });
+    }
   }
 }
 
@@ -53,7 +61,16 @@ export async function installCasks(casks: string[], opts: InstallOptions): Promi
 
 export async function installCask(cask: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
   if (!(await brewCaskInstalled(cask))) {
-    await runAsUser('brew', ['install', '--cask', cask], { dryRun: opts.dryRun });
+    if (opts.onProgress) {
+      // Use streamed command to pipe download progress to the spinner
+      await runStreamedCommand('brew', ['install', '--cask', cask], {
+        dryRun: opts.dryRun,
+        continueOnError: true,
+        onProgress: opts.onProgress,
+      });
+    } else {
+      await runAsUser('brew', ['install', '--cask', cask], { dryRun: opts.dryRun });
+    }
   }
 }
 
