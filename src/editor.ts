@@ -361,24 +361,46 @@ async function stepPreviewAndSave(rootDir: string, state: EditorState): Promise<
     await select({
       message: 'Where to save?',
       options: [
-        { value: 'user', label: `~/.dotfiles/profiles/${state.profileName}.yaml`, hint: 'personal, persists across runs' },
-        { value: 'repo', label: `profiles/${state.profileName}.yaml`, hint: 'in the repo, shareable' },
+        { value: 'user', label: 'Save locally', hint: `~/.dotfiles/profiles/${state.profileName}.yaml — use immediately` },
+        { value: 'share', label: 'Share with the team', hint: 'outputs YAML + instructions to submit a PR' },
       ],
     }),
   ) as string;
 
-  let savePath: string;
   if (saveLocation === 'user') {
     const userProfileDir = path.join(DOTFILES_ROOT, 'profiles');
     await fs.mkdir(userProfileDir, { recursive: true });
-    savePath = path.join(userProfileDir, `${state.profileName}.yaml`);
+    const savePath = path.join(userProfileDir, `${state.profileName}.yaml`);
+    await fs.writeFile(savePath, yaml, 'utf8');
+    outro(chalk.green(`Profile saved to ${savePath}`));
+    log.info(`\nRun it with: ${chalk.cyan(`npx macsetup --profile ${state.profileName}`)}`);
   } else {
-    savePath = path.join(rootDir, 'profiles', `${state.profileName}.yaml`);
-  }
+    // Share mode — print YAML and PR instructions
+    outro(chalk.green('Profile ready to share!'));
+    console.log('');
+    console.log(chalk.bold(`── ${state.profileName}.yaml ──`));
+    console.log(yaml);
+    console.log(chalk.bold('── How to submit ──'));
+    console.log('');
+    console.log(`1. Fork the repo:      ${chalk.cyan('gh repo fork ultronservant/dotfiles --clone')}`);
+    console.log(`2. Save the profile:   ${chalk.cyan(`cat > profiles/${state.profileName}.yaml << 'EOF'\n${yaml}EOF`)}`);
+    console.log(`3. Commit & push:      ${chalk.cyan(`git add profiles/${state.profileName}.yaml && git commit -m "Add ${state.profileName} profile" && git push`)}`);
+    console.log(`4. Open a PR:          ${chalk.cyan('gh pr create --title "Add ' + state.profileName + ' profile"')}`);
+    console.log('');
 
-  await fs.writeFile(savePath, yaml, 'utf8');
-  outro(chalk.green(`Profile saved to ${savePath}`));
-  log.info(`\nRun it with: ${chalk.cyan(`npx macsetup --profile ${state.profileName}`)}`);
+    // Also offer to save locally as backup
+    const alsoSaveLocal = handleCancelled(
+      await confirm({ message: 'Also save locally so you can use it now?', initialValue: true }),
+    );
+    if (alsoSaveLocal) {
+      const userProfileDir = path.join(DOTFILES_ROOT, 'profiles');
+      await fs.mkdir(userProfileDir, { recursive: true });
+      const savePath = path.join(userProfileDir, `${state.profileName}.yaml`);
+      await fs.writeFile(savePath, yaml, 'utf8');
+      log.success(`Also saved to ${savePath}`);
+      log.info(`Run it with: ${chalk.cyan(`npx macsetup --profile ${state.profileName}`)}`);
+    }
+  }
 
   return true;
 }
