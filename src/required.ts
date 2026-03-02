@@ -210,9 +210,10 @@ async function acquireSudo(dryRun: boolean): Promise<void> {
 }
 
 export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
+  // Acquire sudo before spinner — the password prompt needs visible terminal
+  await acquireSudo(opts.dryRun);
   const s = spinner();
   s.start('Running required setup phase');
-  await acquireSudo(opts.dryRun);
   try {
     await ensureXcodeCliTools(opts);
     await ensureHomebrew(opts);
@@ -220,8 +221,9 @@ export async function runRequiredPhase(opts: InstallOptions): Promise<void> {
     await ensureSshKey(opts);
     await ensureGitConfig(opts);
     await ensureDotfiles(opts);
-    await ensureHostname(opts);
     s.stop('Required phase complete');
+    // Hostname prompt needs visible terminal — run after spinner
+    await ensureHostname(opts);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     s.stop('Required phase failed');
