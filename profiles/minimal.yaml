@@ -1,0 +1,39 @@
+name: minimal
+description: Minimal baseline setup
+
+core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+terminal: [oh-my-zsh, powerline, theme, fonts]
+languages: []
+ios: []
+cloud: []
+apps: []
+comms: []
+productivity: []
+ai: []
+mas: []
+macos: []
+macos_complex: []
+cleanup: []
+encryption: false
+xcode: false
+
+config:
+  git:
+    user_name: JARMourato
+    user_email: joao.armourato@gmail.com
+  macos:
+    dock:
+      autohide: false
+      tile_size: 40
+      magnification: true
+      disable_recent_apps: true
+    finder:
+      new_window_target: home
+      show_status_bar: true
+      show_path_bar: true
+      preferred_view: column
+    keyboard:
+      disable_auto_capitalization: true
+      disable_auto_correct: true
+      key_repeat_rate: 2
+      initial_key_repeat: 35

@@ -1,143 +1,142 @@
-# Bootstrap macOS
+# @jarmourato/dotfiles
 
-A comprehensive dotfiles repository with automated macOS setup scripts, profile-based configuration, and state management.
+Interactive macOS setup CLI for provisioning machines from scratch. One command to install dev tools, configure defaults, and get productive.
 
-Before doing anything, make sure you know what you're doing! Settings applied by this repository are very personal and definitely don't suit everyone's needs. I suggest you create your own set of dotfiles based on this repo.
-
-## Features
-
-- 🚀 **One-line installation** with profile support
-- 🔐 **Secure keychain integration** for encryption passwords
-- 📦 **Declarative package management** with state tracking
-- 🎨 **Beautiful terminal setup** with oh-my-zsh, powerline, and custom theme
-- ⚙️ **Comprehensive macOS defaults** configuration
-- 🤖 **AI tools integration** (Claude, ChatGPT)
-- 🔄 **Profile system** for different machine types (dev, personal, server)
-
-## Requirements
-
-- macOS (tested on latest versions)
-- Internet connection
-- Terminal needs full disk access (System Settings > Privacy & Security > Full Disk Access)
-- Make sure the system is updated before proceeding
-
-## Installation
-
-### Quick Start (Development Profile)
+## Quick Start
 
 ```bash
-bash <(curl -Lks https://raw.githubusercontent.com/JARMourato/dotfiles/main/bootstrap.sh) --profile=dev
+# Run directly from GitHub (no clone needed)
+npx github:ultronservant/dotfiles#feat/npx-cli --profile work
+
+# Or with a specific profile
+npx github:ultronservant/dotfiles#feat/npx-cli --profile minimal
 ```
 
-### Other Options
+## Commands
 
 ```bash
-# Install with default profile (personal)
-bash <(curl -Lks https://raw.githubusercontent.com/JARMourato/dotfiles/main/bootstrap.sh)
+# Install a profile
+dotfiles --profile work
 
-# Set up keychain password for first time
-bash <(curl -Lks https://raw.githubusercontent.com/JARMourato/dotfiles/main/bootstrap.sh) --setup-keychain
+# Check what's installed vs what a profile expects
+dotfiles --status
+
+# Create or edit a profile interactively
+dotfiles --edit
+
+# Full reset — undo everything macsetup installed
+dotfiles --reset
+
+# Reset preview (no changes)
+dotfiles --reset --dry-run
+
+# Install preview
+dotfiles --profile work --dry-run
+
+# Run a single module
+dotfiles --module terminal
+
+# Show diff from previous run
+dotfiles --diff
+
+# Export current state as profile YAML
+dotfiles --export
 ```
+
+## Profiles
+
+Built-in profiles live in `profiles/`:
+
+| Profile | Description |
+|---------|------------|
+| `work` | Full dev setup: iOS, Android, Docker, AI tools, all the apps |
+| `server` | Media/homeserver: Plex, Docker, backup scripts |
+| `minimal` | Core tools + terminal + shell essentials |
+
+Custom profiles saved via `--edit` go to `~/.dotfiles/profiles/` and are automatically picked up by `--profile`.
+
+### Create Your Own
+
+```bash
+dotfiles --edit
+```
+
+Walk through an interactive wizard:
+1. Pick a base profile or start fresh
+2. Toggle modules (bundles like Terminal are yes/no, others are multiselect)
+3. Add custom brew formulas/casks
+4. Preview the YAML
+5. Save locally or get PR instructions to share with the team
 
 ## What Gets Installed
 
-### Development Profile (`--profile=dev`)
+### Required (always)
+- Xcode CLI tools, Homebrew, Node.js, SSH key, Git config, shell dotfiles
 
-#### Command Line Tools
-- Core: git, gh (GitHub CLI), curl, wget, jq, tree, bat, fd, ripgrep
-- iOS/Swift: swiftlint, swiftformat, carthage, cocoapods, fastlane
-- Cloud/DevOps: docker, terraform, ansible, awscli
-- Languages: Ruby (via rbenv), Python 3, Node.js
+### Modules
 
-#### Applications
-- Development: VS Code, Sublime Text, SourceTree, SF Symbols, Proxyman
-- Browsers: Google Chrome
-- Communication: Slack, Zoom, WhatsApp, Telegram
-- Productivity: Bitwarden, Spotify, Things 3
-- AI Tools: Claude, ChatGPT, Claude Code CLI
+| Module | Items |
+|--------|-------|
+| **Core Tools** | jq, curl, wget, tree, bat, fd, ripgrep, htop |
+| **Terminal** | oh-my-zsh, powerline-shell, Highway theme, Meslo fonts |
+| **Languages** | Python (pyenv), Ruby (rbenv + bundler) |
+| **iOS Dev** | Xcode (via xcodes), swiftlint, swiftformat, xcbeautify, ASC CLI |
+| **Android Dev** | Android Studio, OpenJDK, bundletool, env setup, SDK licenses |
+| **Cloud** | Docker Desktop, docker-compose |
+| **Apps** | Chrome, VS Code, SourceTree, Proxyman |
+| **Communication** | Slack, Zoom, Telegram, WhatsApp |
+| **Productivity** | Bitwarden, Setapp |
+| **Media** | Spotify, IINA |
+| **AI Tools** | Claude, ChatGPT, Claude Code CLI, Codex CLI |
+| **Mac App Store** | LanScan, Things 3, Magnet |
+| **macOS Defaults** | Dock, Finder, Keyboard, Trackpad, Mouse, Power, Screenshots, etc. |
+| **Cleanup** | Remove GarageBand, iMovie, Keynote, Numbers, Pages |
 
-#### Terminal Environment
-- oh-my-zsh with plugins (git, bundler, pyenv, z)
-- Powerline shell with custom configuration
-- Custom "Highway" terminal theme
-- Meslo LG powerline fonts
-
-#### macOS Configuration
-- Finder: Show all files, path bar, status bar
-- Dock: Auto-hide, magnification, custom size
-- Keyboard: Fast key repeat, disable auto-correct
-- Screenshots: Save to ~/Pictures/Screenshots
-- Hot corners: Desktop, Mission Control, Application Windows
-- And many more productivity tweaks...
-
-## Project Structure
+## File Layout
 
 ```
-.
-├── bootstrap.sh           # Main entry point
-├── _set_up.sh            # Setup orchestrator
-├── profile-setup.sh      # Profile parser
-├── Scripts/
-│   ├── set_up_dependencies.sh      # Package installations
-│   ├── set_up_symlinks.sh          # Dotfile symlinks
-│   ├── set_up_user_defaults.sh     # macOS preferences
-│   ├── sync_state.sh               # State management
-│   └── ...
-├── Terminal/
-│   ├── set_up_terminal.sh          # Terminal setup
-│   └── Highway.terminal            # Custom theme
-└── .dotfiles.dev.yaml              # Dev profile configuration
+~/.dotfiles/
+  files/          # Dotfile copies (symlinked from ~/)
+  config/         # state.json, defaults-backup.json
+  profiles/       # Custom profiles from --edit
 ```
 
-## Profile System
+dotfiles keeps everything in `~/.dotfiles/`. Home directory stays clean.
 
-Profiles are defined in YAML files (e.g., `.dotfiles.dev.yaml`) and control:
-- Which packages to install (Homebrew formulas and casks)
-- Mac App Store applications
-- System preferences and defaults
-- Terminal customization options
+## Reset
 
-## State Management
-
-The dotfiles use a declarative approach to package management:
-- Tracks what's installed vs. what should be installed
-- Can remove packages not in your current profile
-- Prevents duplicate installations
-- Maintains state between runs
-
-## Customization
-
-1. Fork this repository
-2. Edit `.dotfiles.dev.yaml` or create your own profile
-3. Modify scripts in `Scripts/` to suit your needs
-4. Update `.aliases`, `.exports`, and other dotfiles
-5. Commit and push your changes
-6. Run the installation with your forked repository URL
-
-## Post-Installation
-
-1. Restart your Mac to ensure all changes take effect
-2. Open Terminal to see the new theme and configuration
-3. Some applications may require manual sign-in or additional setup
-
-## Updates
-
-To update your dotfiles after making changes:
 ```bash
-cd ~/.dotfiles
-git pull
-./_set_up.sh
+dotfiles --reset
 ```
 
-## Special Thanks
+Undoes everything:
+- Restores macOS defaults from backup
+- Uninstalls all brew formulas and casks
+- Uninstalls Mac App Store apps, npm globals
+- Removes dotfile symlinks, oh-my-zsh, powerline, fonts
+- Cleans tool data dirs (~/.pyenv, ~/.rbenv, ~/.claude, ~/.gem)
+- Removes homeserver artifacts
+- Prompts for sudo when needed
+- Shows per-item progress throughout
 
-- Felix Krause's dotfiles - https://github.com/KrauseFx/dotfiles - via [@KrauseFx](https://twitter.com/krausefx)
-- Felix's Terminal setup - https://github.com/KrauseFx/what-terminal-is-felix-using - via [@KrauseFx](https://twitter.com/krausefx)
-- Change macOS User Preferences via Command Line - https://pawelgrzybek.com/change-macos-user-preferences-via-command-line/ - via [@pawelgrzybek](https://twitter.com/pawelgrzybek)
-- Mathias's dotfiles - https://github.com/mathiasbynens/dotfiles - via [@mathias](https://twitter.com/mathias)
-- Roger's dotfiles - https://github.com/rogerluan/dotfiles - via [@rogerluan_](https://twitter.com/rogerluan_)
-- Moving to zsh - https://scriptingosx.com/2019/06/moving-to-zsh-part-2-configuration-files/ - via [@scriptingosx](https://twitter.com/scriptingosx)
+Safety skips: SSH keys, git config, machine name. Telegram optionally skipped (control channel).
 
-## License
+## Repo Layout
 
-Feel free to use any part of this setup for your own dotfiles!
+```
+src/            # TypeScript CLI
+profiles/       # Built-in YAML profiles
+dotfiles/       # Source dotfiles (copied to ~/.dotfiles/files/)
+Terminal/       # Terminal theme + powerline config
+Xcode/          # Xcode template macros
+Scripts/        # Legacy bash scripts (reference)
+```
+
+## Development
+
+```bash
+npm install
+npm run build       # Build with tsup
+npm run typecheck   # Type check
+npm run dev         # Watch mode
+```

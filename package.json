@@ -1,0 +1,40 @@
+{
+  "name": "@jarmourato/dotfiles",
+  "version": "1.0.0",
+  "description": "Interactive macOS setup CLI for dotfiles and system provisioning",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "dotfiles": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "profiles",
+    "Scripts",
+    "dotfiles",
+    "Terminal",
+    "Xcode",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepare": "tsup"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.10.1",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.1",
+    "execa": "^9.6.0",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}

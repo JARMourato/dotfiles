@@ -1,0 +1,430 @@
+services:
+  # Core Download Client
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+    volumes:
+      - /Volumes/4TB/DockerContainers/Qbittorrent:/config
+      - /Volumes/Media/Downloads:/downloads
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Sonarr:/config
+      - "/Volumes/Media/Tape/TV Shows/Airing:/tv-airing"
+      - "/Volumes/Media/Tape/TV Shows/Archive:/tv-archive"
+      - /Volumes/Media/Downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Radarr:/config
+      - /Volumes/Media/Tape/Movies:/movies
+      - /Volumes/Media/Downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: unpackerr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - UN_INTERVAL=1m
+      - UN_START_DELAY=1m
+      - UN_RETRY_DELAY=5m
+      - UN_MAX_RETRIES=10
+      - UN_DEBUG=false
+    volumes:
+      - /Volumes/Media/Downloads:/downloads
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+      - radarr
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=${TZ}
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
+  # Request Management
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+    ports:
+      - 5055:5055
+    volumes:
+      - /Volumes/4TB/DockerContainers/Jellyseerr:/app/config
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Subtitle Management
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Bazarr:/config
+      - "/Volumes/Media/Tape/TV Shows:/tv"
+      - /Volumes/Media/Tape/Movies:/movies
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Tautulli:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+
+  # tdarr:
+  #   image: ghcr.io/haveagitgat/tdarr:latest
+  #   container_name: tdarr
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - UMASK_SET=002
+  #     - serverIP=0.0.0.0
+  #     - serverPort=8266
+  #     - webUIPort=8265
+  #   volumes:
+  #     - /Volumes/4TB/DockerContainers/Tdarr/server:/app/server
+  #     - /Volumes/4TB/DockerContainers/Tdarr/configs:/app/configs
+  #     - /Volumes/4TB/DockerContainers/Tdarr/logs:/app/logs
+  #     - /Volumes/4TB/DockerContainers/Tdarr/transcode_cache:/temp
+  #     - "/Volumes/Media/Tape/TV Shows:/tv"
+  #     - /Volumes/Media/Tape/Movies:/movies
+  #   ports:
+  #     - 8265:8265 # webUI port
+  #     - 8266:8266 # server port
+  #   restart: unless-stopped
+
+
+  notifiarr:
+    image: golift/notifiarr:latest
+    container_name: notifiarr
+    environment:
+      - DN_API_KEY=${NOTIFIARR_API_KEY}
+      - DN_SONARR_0_URL=http://sonarr:8989
+      - DN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - DN_RADARR_0_URL=http://radarr:7878
+      - DN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - DN_PROWLARR_0_URL=http://prowlarr:9696
+      - DN_PROWLARR_0_API_KEY=${PROWLARR_API_KEY}
+      - DN_QBIT_0_URL=http://qbittorrent:8080
+      - DN_QBIT_0_USER=${QBIT_USER}
+      - DN_QBIT_0_PASS=${QBIT_PASS}
+      - DN_PLEX_URL=http://host.docker.internal:32400
+      - DN_PLEX_TOKEN=${PLEX_TOKEN}
+      - DN_TAUTULLI_0_URL=http://tautulli:8181
+      - DN_TAUTULLI_0_API_KEY=${TAUTULLI_API_KEY}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Notifiarr:/config
+    ports:
+      - 5454:5454
+    restart: unless-stopped
+
+  # Calibre-Web-Automated - eBook library management
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web-automated
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/CalibreWebAutomated:/config
+      - /Volumes/Media/Downloads/BooksIngest:/cwa-book-ingest
+      - /Volumes/Media/Tape/Books:/calibre-library
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+
+  # COPS - Calibre OPDS PHP Server (lightweight alternative)
+  # cops:
+  #   image: lscr.io/linuxserver/cops:latest
+  #   container_name: cops
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #   volumes:
+  #     - /Volumes/4TB/DockerContainers/COPS:/config
+  #     - /Volumes/Media/Tape/Books:/books
+  #   ports:
+  #     - 8084:80
+  #   restart: unless-stopped
+
+  # Komga - Magazine Management
+  komga:
+    image: gotson/komga:latest
+    container_name: komga
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Komga:/config
+      - /Volumes/Media/Tape/Magazines:/data
+    ports:
+      - 8085:25600
+    restart: unless-stopped
+
+  # Kometa - Plex Meta Manager for automatic collections and metadata
+  kometa:
+    image: kometateam/kometa:latest
+    container_name: kometa
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - KOMETA_CONFIG=/config/config.yml
+      - KOMETA_TIME=03:00
+      - KOMETA_RUN=True
+      - KOMETA_LOG_LEVEL=INFO
+      - KOMETA_RADARR_TOKEN=${RADARR_API_KEY}
+      - KOMETA_SONARR_TOKEN=${SONARR_API_KEY}
+      - KOMETA_TAUTULLI_APIKEY=${TAUTULLI_API_KEY}
+      - KOMETA_TMDB_APIKEY=${TMDB_API_KEY}
+      - KOMETA_OMDB_APIKEY=${OMDB_API_KEY}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Kometa:/config
+    restart: unless-stopped
+
+  # Audiobookshelf - Audiobook and podcast server
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Audiobookshelf:/config
+      - /Volumes/4TB/DockerContainers/Audiobookshelf/metadata:/metadata
+      - /Volumes/Media/Tape/Audiobooks:/audiobooks
+      - /Volumes/Media/Tape/Podcasts:/podcasts
+    ports:
+      - 13378:80
+    restart: unless-stopped
+
+  # Recyclarr - TRaSH Guides Automation
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - RECYCLARR_CREATE_CONFIG=true
+    volumes:
+      - /Volumes/4TB/DockerContainers/Recyclarr:/config
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Dashboard Services  
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Homarr/configs:/app/data/configs
+      - /Volumes/4TB/DockerContainers/Homarr/icons:/app/public/icons
+      - /Volumes/4TB/DockerContainers/Homarr/data:/data
+    ports:
+      - 7575:7575
+    restart: unless-stopped
+
+  dashy:
+    image: lissy93/dashy:latest
+    container_name: dashy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PORT=4000
+    volumes:
+      - /Volumes/4TB/DockerContainers/Dashy:/app/public
+    ports:
+      - 4000:4000
+    restart: unless-stopped
+
+  # User Management
+
+  # Media Processing
+  # tdarr:
+  #   image: ghcr.io/haveagitgat/tdarr:latest
+  #   container_name: tdarr
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
+  #     - UMASK_SET=002
+  #     - serverIP=0.0.0.0
+  #     - serverPort=8266
+  #     - webUIPort=8265
+  #   volumes:
+  #     - /Volumes/4TB/DockerContainers/Tdarr/server:/app/server
+  #     - /Volumes/4TB/DockerContainers/Tdarr/configs:/app/configs
+  #     - /Volumes/4TB/DockerContainers/Tdarr/logs:/app/logs
+  #     - /Volumes/4TB/DockerContainers/Tdarr/transcode_cache:/temp
+  #     - "/Volumes/Media/Tape/TV Shows:/tv"
+  #     - /Volumes/Media/Tape/Movies:/movies
+  #   ports:
+  #     - 8265:8265
+  #     - 8266:8266
+  #   restart: unless-stopped
+
+
+  # Book Downloading Interface (integrates with existing Calibre-Web-Automated)
+  calibre-book-downloader:
+    image: ghcr.io/calibrain/calibre-web-automated-book-downloader:latest
+    container_name: calibre-book-downloader
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - FLASK_PORT=8084
+      - LOG_LEVEL=info
+      - BOOK_LANGUAGE=en
+      - USE_BOOK_TITLE=true
+      - APP_ENV=prod
+      - INGEST_DIR=/cwa-book-ingest
+      - SUPPORTED_FORMATS=epub
+      - PRIORITIZE_WELIB=false
+    volumes:
+      - /Volumes/4TB/DockerContainers/CalibreBookDownloader:/config
+      - /Volumes/Media/Downloads/BooksIngest:/cwa-book-ingest
+      - /Volumes/Media/Tape/Books:/calibre-library
+    ports:
+      - 8084:8084
+    restart: unless-stopped
+
+  # Monitoring and Utilities
+  checkrr:
+    image: aetaric/checkrr:latest
+    container_name: checkrr
+    command: ["-c", "/config/checkrr.yaml"]
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /Volumes/4TB/DockerContainers/Checkrr:/config
+      - "/Volumes/Media/Tape/TV Shows/Airing:/tv-airing"
+      - "/Volumes/Media/Tape/TV Shows/Archive:/tv-archive"
+      - /Volumes/Media/Tape/Movies:/movies
+    ports:
+      - 8585:8585
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+      - radarr
+
+  # mdblist: No official linuxserver image available
+
+  autopulse:
+    image: ghcr.io/dan-online/autopulse:latest
+    container_name: autopulse
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - AUTOPULSE__APP__DATABASE_URL=sqlite://autopulse.db
+    volumes:
+      - /Volumes/4TB/DockerContainers/Autopulse:/config
+    ports:
+      - 2875:2875
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - sonarr
+      - radarr
+
+  # Note: Many *arr services don't have official Docker images
+  # Removed: huntarr, labelarr, lingarr, posteria, posterizarr, pulsarr, 
+  # recommendarr, reiverr, suggestarr (no official images available)
+
+  # Cloudflare Tunnel for secure external access
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    restart: unless-stopped
+
+
+networks:
+  default:
+    name: arr-stack
