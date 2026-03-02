@@ -325,6 +325,11 @@ export const macosModule: ModuleV2 = {
       if (screen.screenshot_location) {
         const location = asString(screen.screenshot_location).replace(/^~\//, `${realHome()}/`);
         await runCommand('mkdir', ['-p', location], { dryRun: opts.dryRun, continueOnError: true });
+        // Ensure the directory is owned by the real user (not root when running under sudo)
+        const user = process.env.SUDO_USER || process.env.USER;
+        if (user) {
+          await runCommand('chown', [user, location], { dryRun: opts.dryRun, continueOnError: true });
+        }
         await defaultsWrite('com.apple.screencapture', 'location', location, opts.dryRun);
       }
       if (screen.screenshot_format) await defaultsWrite('com.apple.screencapture', 'type', screen.screenshot_format, opts.dryRun);

@@ -73,7 +73,7 @@ export const terminalModule: ModuleV2 = {
     if (item === 'fonts') {
       await runCommand(
         'bash',
-        ['-lc', 'if ! ls ~/Library/Fonts/Meslo* >/dev/null 2>&1; then git clone https://github.com/powerline/fonts.git --depth=1 && cd fonts && ./install.sh "Meslo LG" && cd .. && rm -rf fonts; fi'],
+        ['-lc', 'if ! ls ~/Library/Fonts/Meslo* >/dev/null 2>&1; then cd /tmp && git clone https://github.com/powerline/fonts.git --depth=1 && cd fonts && ./install.sh "Meslo LG" && cd /tmp && rm -rf fonts; fi'],
         { dryRun: opts.dryRun, continueOnError: true },
       );
     }
@@ -81,7 +81,7 @@ export const terminalModule: ModuleV2 = {
     if (item === 'powerline') {
       await runCommand(
         'bash',
-        ['-lc', 'if ! command -v powerline-shell >/dev/null 2>&1; then git clone https://github.com/b-ryan/powerline-shell.git --depth=1 && cd powerline-shell && python3 setup.py install && cd .. && rm -rf powerline-shell; fi'],
+        ['-lc', 'if ! command -v powerline-shell >/dev/null 2>&1; then cd /tmp && git clone https://github.com/b-ryan/powerline-shell.git --depth=1 && cd powerline-shell && python3 setup.py install && cd /tmp && rm -rf powerline-shell; fi'],
         { dryRun: opts.dryRun, continueOnError: true },
       );
 
