@@ -29,8 +29,17 @@ export async function saveUserConfig(config: ProfileConfig): Promise<void> {
 }
 
 export async function loadProfile(rootDir: string, profileName: string): Promise<ProfileConfig> {
-  const profilePath = path.join(rootDir, 'profiles', `${profileName}.yaml`);
-  const raw = await fs.readFile(profilePath, 'utf8');
+  // Check user profiles first (~/.dotfiles/profiles/), then built-in
+  const { DOTFILES_ROOT } = await import('./paths');
+  const userPath = path.join(DOTFILES_ROOT, 'profiles', `${profileName}.yaml`);
+  const builtInPath = path.join(rootDir, 'profiles', `${profileName}.yaml`);
+
+  let raw: string;
+  try {
+    raw = await fs.readFile(userPath, 'utf8');
+  } catch {
+    raw = await fs.readFile(builtInPath, 'utf8');
+  }
   return normalizeProfile(parse(raw) as Partial<ProfileConfig>);
 }
 

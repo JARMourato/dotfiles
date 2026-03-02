@@ -39,6 +39,7 @@ program
   .option('--uninstall', 'uninstall everything from last state')
   .option('--status', 'show machine status vs macsetup managed items')
   .option('--reset', 'aggressively undo macsetup changes')
+  .option('--edit', 'create or edit a profile interactively')
   .parse(process.argv);
 
 const options = program.opts<{
@@ -51,6 +52,7 @@ const options = program.opts<{
   uninstall?: boolean;
   status?: boolean;
   reset?: boolean;
+  edit?: boolean;
 }>();
 
 function handleCancelled<T>(value: T): T {
@@ -357,6 +359,12 @@ async function run(): Promise<void> {
 
   if (options.status) {
     await showStatus(rootDir);
+    return;
+  }
+
+  if (options.edit) {
+    const { runEditor } = await import('./editor');
+    await runEditor(rootDir);
     return;
   }
 
