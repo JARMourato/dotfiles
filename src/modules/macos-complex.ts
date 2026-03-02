@@ -4,6 +4,7 @@ import { realHome, runAsUser, runCommand } from '../utils/shell';
 type Operation = { cmd: string; args: string[] };
 
 const items = [
+  { id: 'dock-cleanup', label: 'Remove default Dock icons' },
   { id: 'dock-folders', label: 'Dock folders' },
   { id: 'photos', label: 'Photos / Image Capture' },
   { id: 'spotlight', label: 'Spotlight' },
@@ -69,6 +70,48 @@ const commandsBySection: Record<string, Operation[]> = {
   ],
 };
 
+const DOCK_REMOVE_APPS = [
+  'Messages',
+  'Maps',
+  'Photos',
+  'FaceTime',
+  'Phone',
+  'Contacts',
+  'Reminders',
+  'TV',
+  'Music',
+  'News',
+  'Keynote',
+  'Numbers',
+  'Pages',
+  'Freeform',
+];
+
+async function ensureDockutil(dryRun: boolean): Promise<boolean> {
+  const has = await runCommand('which', ['dockutil'], { continueOnError: true });
+  if (has.ok) return true;
+  if (dryRun) return true;
+  const install = await runCommand('brew', ['install', 'dockutil'], { continueOnError: true });
+  return install.ok;
+}
+
+async function removeDockIcons(dryRun: boolean): Promise<void> {
+  const hasDockutil = await ensureDockutil(dryRun);
+  if (!hasDockutil) return;
+
+  for (const app of DOCK_REMOVE_APPS) {
+    if (dryRun) {
+      console.log(`[dry-run] dockutil --remove '${app}' --no-restart`);
+      continue;
+    }
+    await runAsUser('dockutil', ['--remove', app, '--no-restart'], { continueOnError: true });
+  }
+
+  if (!dryRun) {
+    await runCommand('killall', ['Dock'], { continueOnError: true });
+  }
+}
+
 export const macosComplexModule: ModuleV2 = {
   name: 'macos_complex',
   label: 'macOS Complex Defaults',
@@ -84,7 +127,13 @@ export const macosComplexModule: ModuleV2 = {
     };
   },
   async install(selectedItems, opts) {
+    // Handle dock-cleanup separately (needs dockutil)
+    if (selectedItems.includes('dock-cleanup')) {
+      await removeDockIcons(opts.dryRun);
+    }
+
     for (const section of selectedItems) {
+      if (section === 'dock-cleanup') continue; // already handled
       if (section === 'sourcetree') {
         const sourceTree = await runCommand('test', ['-d', '/Applications/SourceTree.app'], { continueOnError: true });
         if (!sourceTree.ok) {

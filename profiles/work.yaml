@@ -29,6 +29,7 @@ macos:
   - time-machine
   - xcode
 macos_complex:
+  - dock-cleanup
   - dock-folders
   - photos
   - spotlight
