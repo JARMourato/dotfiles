@@ -92,6 +92,14 @@ export const macosComplexModule: ModuleV2 = {
         }
       }
 
+      // Skip dock-folders if Applications folder is already in the Dock
+      if (section === 'dock-folders') {
+        const current = await runAsUser('defaults', ['read', 'com.apple.dock', 'persistent-others'], { continueOnError: true });
+        if (current.ok && current.stdout.includes('/Applications/')) {
+          continue;
+        }
+      }
+
       for (const operation of commandsBySection[section] ?? []) {
         if (operation.cmd === 'defaults') {
           await runAsUser('defaults', operation.args, { dryRun: opts.dryRun });
