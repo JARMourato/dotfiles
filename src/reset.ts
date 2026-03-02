@@ -234,11 +234,12 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   log.info('9) Remove Meslo LG fonts from ~/Library/Fonts');
   log.info('10) Remove ANDROID_HOME lines from ~/.exports');
   log.info('11) Remove homeserver artifacts (Plex symlink, workspace symlink)');
-  log.info('12) Skip SSH keys (safety)');
-  log.info('13) Skip git config (safety)');
-  log.info('14) Skip machine name (safety)');
-  log.info('15) Clear state files (inside ~/.dotfiles/config/)');
-  log.info('16) Optionally remove Homebrew (extra prompt)');
+  log.info('12) Remove tool data dirs (~/.pyenv, ~/.rbenv, ~/.claude, ~/.gem, ~/.claude.json)');
+  log.info('13) Skip SSH keys (safety)');
+  log.info('14) Skip git config (safety)');
+  log.info('15) Skip machine name (safety)');
+  log.info('16) Clear state files (inside ~/.dotfiles/config/)');
+  log.info('17) Optionally remove Homebrew (extra prompt)');
 
   if (dryRun) {
     log.info(chalk.cyan('Dry run enabled: preview only, no changes were applied.'));
@@ -269,7 +270,7 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
     rootDir,
   };
 
-  const total = 11;
+  const total = 12;
   let step = 0;
   const progress = (label: string) => {
     step++;
@@ -327,13 +328,41 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   await removeAndroidExportsLines(false);
   await removeHomeserverArtifacts(false);
 
-  // 11) Clear state files (new + legacy locations)
+  // 11) Remove tool data directories left behind by uninstalled packages
+  progress('Removing tool data directories');
+  const toolDataDirs = [
+    { dir: '.pyenv', label: 'pyenv' },
+    { dir: '.rbenv', label: 'rbenv' },
+    { dir: '.claude', label: 'Claude Code' },
+    { dir: '.gem', label: 'Ruby gems' },
+  ];
+  const toolDataFiles = [
+    { file: '.claude.json', label: 'Claude Code config' },
+  ];
+  const home = realHome();
+  for (const { dir, label } of toolDataDirs) {
+    const fullPath = path.join(home, dir);
+    try {
+      await fs.access(fullPath);
+      log.info(chalk.dim(`  → removing ~/${dir} (${label})`));
+      await fs.rm(fullPath, { recursive: true, force: true });
+    } catch { /* not present */ }
+  }
+  for (const { file, label } of toolDataFiles) {
+    const fullPath = path.join(home, file);
+    try {
+      await fs.access(fullPath);
+      log.info(chalk.dim(`  → removing ~/${file} (${label})`));
+      await fs.rm(fullPath, { force: true });
+    } catch { /* not present */ }
+  }
+
+  // 12) Clear state files (new + legacy locations)
   progress('Clearing state files');
   await fs.rm(STATE_PATH, { force: true });
   await fs.rm(PREVIOUS_STATE_PATH, { force: true });
   await clearDefaultsBackup(false);
   // Clean legacy locations from before ~/.dotfiles consolidation
-  const home = realHome();
   for (const legacy of ['.macsetup-state.json', '.macsetup-state.previous.json', '.macsetup-defaults-backup.json']) {
     await fs.rm(path.join(home, legacy), { force: true });
   }
