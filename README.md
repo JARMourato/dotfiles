@@ -6,10 +6,10 @@ Interactive macOS setup CLI for provisioning machines from scratch. One command 
 
 ```bash
 # Run directly from GitHub (no clone needed)
-npx github:ultronservant/dotfiles#feat/npx-cli --profile work
+npx github:JARMourato/dotfiles --profile work
 
 # Or with a specific profile
-npx github:ultronservant/dotfiles#feat/npx-cli --profile minimal
+npx github:JARMourato/dotfiles --profile minimal
 ```
 
 ## Commands
