@@ -21,3 +21,9 @@ export const BACKUP_PATH = path.join(CONFIG_DIR, 'defaults-backup.json');
 
 /** Root ~/.dotfiles directory */
 export const DOTFILES_ROOT = DOTFILES_HOME;
+
+/** Git clone of the dotfiles repo */
+export const REPO_DIR = path.join(DOTFILES_HOME, 'repo');
+
+/** ~/Workspace directory */
+export const WORKSPACE_DIR = path.join(realHome(), 'Workspace');

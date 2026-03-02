@@ -33,6 +33,12 @@ npx github:JARMourato/dotfiles --reset --dry-run
 # Run a single module
 npx github:JARMourato/dotfiles --module terminal
 
+# Pull latest dotfiles from repo
+dotfiles --pull
+
+# Push local dotfile changes to repo
+dotfiles --push
+
 # Show diff from previous run
 npx github:JARMourato/dotfiles --diff
 
@@ -93,12 +99,36 @@ Walk through an interactive wizard:
 
 ```
 ~/.dotfiles/
+  repo/           # Git clone of the dotfiles repo (push/pull support)
   files/          # Dotfile copies (symlinked from ~/)
   config/         # state.json, defaults-backup.json
   profiles/       # Custom profiles from --edit
 ```
 
 Everything stays in `~/.dotfiles/`. Home directory stays clean.
+
+## Sync
+
+On first install, the repo is cloned to `~/.dotfiles/repo/`. This gives you full git push/pull support:
+
+```bash
+# Edit a dotfile
+vim ~/.aliases
+
+# Push your changes back to the repo
+dotfiles --push
+
+# On another machine, pull the latest
+dotfiles --pull
+```
+
+The flow:
+1. **Install** clones the repo → `~/.dotfiles/repo/`
+2. Dotfiles are copied from repo → `~/.dotfiles/files/` and symlinked to `~/`
+3. **Push** copies edited files back to repo, commits, and pushes
+4. **Pull** fetches latest, copies to `~/.dotfiles/files/`, re-symlinks
+
+For push access, make sure your SSH key is added to GitHub.
 
 ## Reset
 

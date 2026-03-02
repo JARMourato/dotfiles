@@ -40,6 +40,8 @@ program
   .option('--status', 'show machine status vs dotfiles managed items')
   .option('--reset', 'aggressively undo dotfiles changes')
   .option('--edit', 'create or edit a profile interactively')
+  .option('--pull', 'pull latest dotfiles from repo')
+  .option('--push', 'push local dotfile changes to repo')
   .parse(process.argv);
 
 const options = program.opts<{
@@ -53,6 +55,8 @@ const options = program.opts<{
   status?: boolean;
   reset?: boolean;
   edit?: boolean;
+  pull?: boolean;
+  push?: boolean;
 }>();
 
 function handleCancelled<T>(value: T): T {
@@ -359,6 +363,18 @@ async function run(): Promise<void> {
 
   if (options.status) {
     await showStatus(rootDir);
+    return;
+  }
+
+  if (options.pull) {
+    const { pullRepo } = await import('./sync');
+    await pullRepo();
+    return;
+  }
+
+  if (options.push) {
+    const { pushRepo } = await import('./sync');
+    await pushRepo();
     return;
   }
 
