@@ -11,6 +11,7 @@ import {
   text,
 } from '@clack/prompts';
 import chalk from 'chalk';
+import path from 'node:path';
 import { Command } from 'commander';
 import { loadProfile, loadUserConfig, saveUserConfig } from './config';
 import { modules } from './modules';
@@ -351,7 +352,7 @@ function summaryLines(selected: Record<string, string[]>): string[] {
 }
 
 async function run(): Promise<void> {
-  const rootDir = process.cwd();
+  const rootDir = path.resolve(__dirname, '..');
   const state = new JsonStateManager();
 
   if (options.status) {
