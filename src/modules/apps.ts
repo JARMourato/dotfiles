@@ -9,7 +9,6 @@ const items = [
   { id: 'proxyman', label: 'Proxyman' },
   { id: 'charles', label: 'Charles' },
   { id: 'postman', label: 'Postman' },
-  { id: 'cursor', label: 'Cursor' },
   { id: 'sf-symbols', label: 'SF Symbols' },
 ];
 

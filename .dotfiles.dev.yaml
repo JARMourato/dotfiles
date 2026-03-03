@@ -51,7 +51,6 @@ homebrew:
     - sublime-text
     - sourcetree
     - postman
-    - cursor
     
     # Browsers and communication
     - google-chrome
