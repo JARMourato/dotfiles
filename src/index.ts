@@ -438,10 +438,12 @@ async function run(): Promise<void> {
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
+        const natives = mod.items.filter((i) => i === 'claude-code');
+        const npms = mod.items.filter((i) => i === 'codex');
         const parts: string[] = [];
         if (casks.length > 0) parts.push(`brew uninstall --cask ${casks.join(', ')}`);
-        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'claude-code' ? '@anthropic-ai/claude-code' : p === 'codex' ? '@openai/codex' : p).join(', ')}`);
+        if (natives.length > 0) parts.push(`claude uninstall`);
+        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'codex' ? '@openai/codex' : p).join(', ')}`);
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else {
         log.info(`  🗑  ${mod.label}: ${mod.items.join(', ')}`);
@@ -485,10 +487,15 @@ async function run(): Promise<void> {
         if (formulas.length > 0) await uninstallFormulas(formulas, uninstallOpts);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const npms = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
+        const natives = mod.items.filter((i) => i === 'claude-code');
+        const npms = mod.items.filter((i) => i === 'codex');
         if (casks.length > 0) await uninstallCasks(casks, uninstallOpts);
+        for (const item of natives) {
+          const bin = item === 'claude-code' ? 'claude' : item;
+          await runCommand(bin, ['uninstall'], { continueOnError: true });
+        }
         for (const pkg of npms) {
-          const npmName = pkg === 'claude-code' ? '@anthropic-ai/claude-code' : pkg === 'codex' ? '@openai/codex' : pkg;
+          const npmName = pkg === 'codex' ? '@openai/codex' : pkg;
           await runCommand('npm', ['uninstall', '-g', npmName], { continueOnError: true });
         }
       }
