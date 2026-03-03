@@ -44,14 +44,12 @@ homebrew:
   casks:
     # Development tools
     - docker
-    - sf-symbols
     - proxyman
     - charles
     - visual-studio-code
     - sublime-text
     - sourcetree
     - postman
-    - cursor
     
     # Browsers and communication
     - google-chrome
