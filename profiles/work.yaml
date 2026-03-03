@@ -1,7 +1,7 @@
 name: work
 description: "Work machine — iOS, Android, Rails (Docker), web dev, AI tools"
 
-core: [jq, curl, wget, tree, bat, fd, ripgrep, htop]
+core: [jq, curl, wget, tree, bat, fd, ripgrep, htop, gh]
 terminal: [oh-my-zsh, powerline, theme, fonts]
 languages: [python, ruby]
 ios: [xcode, swiftlint, swiftformat, xcbeautify, asc]
