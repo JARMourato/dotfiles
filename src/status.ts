@@ -48,7 +48,6 @@ const MANAGED_CASKS = new Set([
   'proxyman',
   'charles',
   'postman',
-  'sf-symbols',
   'slack',
   'zoom',
   'whatsapp',

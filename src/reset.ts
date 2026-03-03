@@ -59,7 +59,6 @@ const MANAGED_CASKS = [
   'proxyman',
   'charles',
   'postman',
-  'sf-symbols',
   'slack',
   'zoom',
   'whatsapp',

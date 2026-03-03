@@ -44,7 +44,6 @@ homebrew:
   casks:
     # Development tools
     - docker
-    - sf-symbols
     - proxyman
     - charles
     - visual-studio-code
