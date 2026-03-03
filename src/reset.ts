@@ -80,7 +80,10 @@ const MANAGED_MAS_APPS = [
   { id: 904280696, name: 'Things 3' },
   { id: 441258766, name: 'Magnet' },
 ];
-const NPM_GLOBALS = ['@anthropic-ai/claude-code', '@openai/codex'];
+const NPM_GLOBALS = ['@openai/codex'];
+const NATIVE_UNINSTALLERS: { id: string; bin: string; args: string[] }[] = [
+  { id: 'claude-code', bin: 'claude', args: ['uninstall'] },
+];
 const DOTFILES = ['.aliases', '.exports', '.paths', '.gemrc', '.ruby-version', '.zshrc'];
 const ANDROID_ENV_MARKER = '# macsetup: android env';
 
@@ -227,7 +230,7 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   log.info(`2) Uninstall formulas: ${MANAGED_FORMULAS.join(', ')}`);
   log.info(`3) Uninstall casks: ${MANAGED_CASKS.join(', ')}`);
   log.info(`4) Uninstall Mac App Store apps: ${MANAGED_MAS_APPS.map((a) => a.name).join(', ')}`);
-  log.info(`5) Uninstall npm globals: ${NPM_GLOBALS.join(', ')}`);
+  log.info(`5) Uninstall CLI tools: ${NATIVE_UNINSTALLERS.map((n) => n.id).join(', ')}, ${NPM_GLOBALS.join(', ')}`);
   log.info(`6) Remove dotfile symlinks + ~/.dotfiles/ directory: ${DOTFILES.join(', ')}`);
   log.info('7) Remove ~/.oh-my-zsh and ~/.config/powerline-shell');
   log.info('8) Uninstall powerline-shell (pip3)');
@@ -293,8 +296,14 @@ export async function runReset(rootDir: string, dryRun: boolean): Promise<void> 
   progress('Uninstalling Mac App Store apps');
   await uninstallMasApps(false);
 
-  // 5) Uninstall npm globals
-  progress('Uninstalling npm globals');
+  // 5) Uninstall CLI tools (native + npm)
+  progress('Uninstalling CLI tools');
+  for (const native of NATIVE_UNINSTALLERS) {
+    log.info(chalk.dim(`  → ${native.id} (native uninstaller)`));
+    if (await commandExists(native.bin)) {
+      await runAsUser(native.bin, native.args, { continueOnError: true });
+    }
+  }
   for (const pkg of NPM_GLOBALS) {
     log.info(chalk.dim(`  → ${pkg}`));
     // Try as user first (normal case), then with sudo if it fails (e.g. global prefix owned by root)

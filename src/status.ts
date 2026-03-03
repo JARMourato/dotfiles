@@ -64,8 +64,9 @@ const MANAGED_CASKS = new Set([
   'claude',
   'chatgpt',
 ]);
-const NPM_GLOBALS = [
-  { label: 'claude-code', packageName: '@anthropic-ai/claude-code' },
+const NPM_GLOBALS: { label: string; packageName: string }[] = [];
+const NATIVE_CLI_TOOLS = [
+  { label: 'claude-code', bin: 'claude' },
 ];
 const MACOS_BASELINE: Record<string, BaselineCheck[]> = {
   dock: [
@@ -148,7 +149,12 @@ export async function showStatus(rootDir: string): Promise<void> {
     if (casks.length === 0) line('☐', 'No casks installed');
   }
 
-  log.info(chalk.bold(chalk.cyan('Status: npm Globals')));
+  log.info(chalk.bold(chalk.cyan('Status: CLI Tools')));
+  for (const tool of NATIVE_CLI_TOOLS) {
+    const check = await runCommand('which', [tool.bin], { continueOnError: true });
+    if (check.ok) line(chalk.green('✅'), tool.label, '(installed)');
+    else line('☐', tool.label, '(not installed)');
+  }
   for (const pkg of NPM_GLOBALS) {
     if (await npmGlobalInstalled(pkg.packageName)) line(chalk.green('✅'), pkg.label, '(installed)');
     else line('☐', pkg.label, '(not installed)');

@@ -11,8 +11,11 @@ const items = [
 
 const CASK_IDS = new Set(['claude', 'chatgpt']);
 const NPM_PACKAGES: Record<string, string> = {
-  'claude-code': '@anthropic-ai/claude-code',
   'codex': '@openai/codex',
+};
+// claude-code uses its native installer (auto-updates)
+const NATIVE_INSTALLERS: Record<string, { install: string[]; bin: string }> = {
+  'claude-code': { install: ['bash', '-c', 'curl -fsSL https://claude.ai/install.sh | bash'], bin: 'claude' },
 };
 
 export const aiModule: ModuleV2 = {
@@ -24,7 +27,7 @@ export const aiModule: ModuleV2 = {
   dependencies: ['core'],
   async detect(selectedItems) {
     const casks = selectedItems.filter((item) => CASK_IDS.has(item));
-    const cliItems = selectedItems.filter((item) => item in NPM_PACKAGES);
+    const cliItems = selectedItems.filter((item) => item in NPM_PACKAGES || item in NATIVE_INSTALLERS);
 
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
@@ -33,7 +36,7 @@ export const aiModule: ModuleV2 = {
     const commandInstalled: string[] = [];
     const commandMissing: string[] = [];
     for (const item of cliItems) {
-      const bin = item === 'claude-code' ? 'claude' : 'codex';
+      const bin = NATIVE_INSTALLERS[item]?.bin ?? item;
       const check = await runAsUser('which', [bin], { continueOnError: true });
       if (check.ok) commandInstalled.push(item);
       else commandMissing.push(item);
@@ -54,6 +57,20 @@ export const aiModule: ModuleV2 = {
   async installItem(item, opts) {
     if (CASK_IDS.has(item)) {
       await installCask(item, opts);
+      return;
+    }
+
+    const native = NATIVE_INSTALLERS[item];
+    if (native) {
+      const result = await runAsUser(native.install[0], native.install.slice(1), {
+        dryRun: opts.dryRun,
+        continueOnError: true,
+        timeoutMs: 180_000,
+      });
+      if (!result.ok) {
+        const err = (result.stderr || result.stdout).trim().slice(0, 300);
+        throw new Error(`Native install of ${item} failed: ${err || 'timed out after 3 minutes'}`);
+      }
       return;
     }
 
