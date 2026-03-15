@@ -144,6 +144,26 @@ export async function runCommand(
   }
 }
 
+/** Run a command with full stdio inheritance — for interactive prompts (e.g. 2FA) */
+export async function runInteractive(
+  cmd: string,
+  args: string[] = [],
+  opts: { dryRun?: boolean; env?: Record<string, string> } = {},
+): Promise<{ ok: boolean }> {
+  if (opts.dryRun) {
+    console.log(`[dry-run] ${cmd} ${args.join(' ')}`);
+    return { ok: true };
+  }
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, {
+      stdio: 'inherit',
+      env: { ...process.env, ...opts.env },
+    });
+    child.on('close', (code) => resolve({ ok: code === 0 }));
+    child.on('error', () => resolve({ ok: false }));
+  });
+}
+
 export async function runCapture(cmd: string, args: string[] = [], cwd?: string): Promise<string> {
   const result = await execa(cmd, args, { cwd, shell: false });
   return result.stdout;
