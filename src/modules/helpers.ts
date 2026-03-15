@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import type { DetectResult, InstallOptions } from '../types';
 import {
   brewCaskInstalled,
@@ -59,18 +60,21 @@ export async function installCasks(casks: string[], opts: InstallOptions): Promi
   }
 }
 
-export async function installCask(cask: string, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
+export async function installCask(cask: string, opts: InstallOptions & { onProgress?: (line: string) => void; pauseSpinner?: () => void; resumeSpinner?: (msg?: string) => void }): Promise<void> {
   if (!(await brewCaskInstalled(cask))) {
-    if (opts.onProgress) {
-      // Use streamed command to pipe download progress to the spinner
-      await runStreamedCommand('brew', ['install', '--cask', cask], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-        onProgress: opts.onProgress,
-      });
-    } else {
-      await runAsUser('brew', ['install', '--cask', cask], { dryRun: opts.dryRun });
+    // Some casks (e.g. Zoom) run .pkg installers that need interactive sudo.
+    // Use execFileSync with stdio:'inherit' so the password prompt is visible.
+    if (opts.dryRun) {
+      console.log(`[dry-run] brew install --cask ${cask}`);
+      return;
     }
+    opts.pauseSpinner?.();
+    try {
+      execFileSync('brew', ['install', '--cask', cask], { stdio: 'inherit' });
+    } catch {
+      console.error(`  ⚠ brew install --cask ${cask} failed`);
+    }
+    opts.resumeSpinner?.();
   }
 }
 
