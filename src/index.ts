@@ -16,7 +16,7 @@ import { Command } from 'commander';
 import { loadProfile, loadUserConfig, saveUserConfig } from './config';
 import { modules } from './modules';
 import { masAppsForItems, masItemsFromApps } from './modules/mas';
-import { runRequiredPhase } from './required';
+import { runRequiredPhase, stopSudoKeepAlive } from './required';
 import { runReset } from './reset';
 import { runModules } from './runner';
 import { showStatus } from './status';
@@ -604,6 +604,7 @@ async function run(): Promise<void> {
   await runRequiredPhase(installOpts);
 
   const result = await runModules(modules, selected, installOpts);
+  stopSudoKeepAlive();
   result.state.machine = machine;
 
   await state.save(result.state);
