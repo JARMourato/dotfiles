@@ -1,7 +1,6 @@
-import { spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import * as readline from 'node:readline';
 import { isCancel, password, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
@@ -75,42 +74,22 @@ async function ensureXcodesAuth(): Promise<void> {
   process.env.XCODES_PASSWORD = String(pwd);
 }
 
-/** Run xcodes install with 2FA support — watches output for the 2FA prompt,
- *  asks the user for the code, and pipes it into xcodes' stdin. */
-async function runXcodesInstall(dryRun?: boolean): Promise<{ ok: boolean }> {
+/** Run xcodes install synchronously with full terminal access for 2FA. */
+function runXcodesInstall(dryRun?: boolean): { ok: boolean } {
   if (dryRun) {
     console.log('[dry-run] xcodes install --latest --experimental-unxip');
     return { ok: true };
   }
 
-  return new Promise((resolve) => {
-    const child = spawn('xcodes', ['install', '--latest', '--experimental-unxip'], {
-      stdio: ['pipe', 'pipe', 'pipe'],
+  try {
+    execFileSync('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      stdio: 'inherit',
       env: process.env,
     });
-
-    let output = '';
-
-    const handleData = (data: Buffer) => {
-      const text = data.toString();
-      output += text;
-      process.stdout.write(text);
-
-      // Detect 2FA prompt
-      if (output.includes('Enter the 6 digit code')) {
-        const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-        rl.question('', (code) => {
-          rl.close();
-          child.stdin.write(code + '\n');
-        });
-      }
-    };
-
-    child.stdout.on('data', handleData);
-    child.stderr.on('data', handleData);
-    child.on('close', (code) => resolve({ ok: code === 0 }));
-    child.on('error', () => resolve({ ok: false }));
-  });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 async function copyXcodeTemplateMacros(opts: { dryRun?: boolean; rootDir: string }): Promise<void> {
