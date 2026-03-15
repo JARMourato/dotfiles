@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { isCancel, password, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
 import { brewFormulaInstalled, commandExists, realHome, runCommand, runStreamedCommand } from '../utils/shell';
@@ -49,6 +50,27 @@ async function ensureXcodes(opts: { dryRun?: boolean }): Promise<void> {
   if (!(await commandExists('xcodes'))) {
     throw new Error('Failed to install xcodes CLI');
   }
+}
+
+async function ensureXcodesAuth(): Promise<void> {
+  if (process.env.XCODES_USERNAME && process.env.XCODES_PASSWORD) return;
+
+  console.log('');
+  console.log('🍎 Xcode download requires an Apple ID');
+  const username = await text({
+    message: 'Apple ID (email):',
+    validate: (v) => (v.length === 0 ? 'Required' : undefined),
+  });
+  if (isCancel(username)) throw new Error('Xcode install cancelled');
+
+  const pwd = await password({
+    message: 'Apple ID password:',
+    validate: (v) => (v.length === 0 ? 'Required' : undefined),
+  });
+  if (isCancel(pwd)) throw new Error('Xcode install cancelled');
+
+  process.env.XCODES_USERNAME = String(username);
+  process.env.XCODES_PASSWORD = String(pwd);
 }
 
 async function copyXcodeTemplateMacros(opts: { dryRun?: boolean; rootDir: string }): Promise<void> {
@@ -101,6 +123,7 @@ export const iosModule: ModuleV2 = {
   async install(selectedItems, opts) {
     if (selectedItems.includes('xcode')) {
       await ensureXcodes(opts);
+      if (!opts.dryRun) await ensureXcodesAuth();
       const result = await runCommand('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
         continueOnError: true,
@@ -121,6 +144,7 @@ export const iosModule: ModuleV2 = {
     if (item === 'xcode') {
       const run = opts.onProgress ? runStreamedCommand : runCommand;
       await ensureXcodes(opts);
+      if (!opts.dryRun) await ensureXcodesAuth();
       const result = await run('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
         continueOnError: true,
