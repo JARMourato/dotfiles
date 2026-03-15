@@ -105,6 +105,14 @@ async function ensureSshKey(opts: InstallOptions): Promise<void> {
 }
 
 async function addSshKeyToGitHub(pubPath: string, opts: InstallOptions): Promise<void> {
+  // Quick check: if SSH to GitHub already works, the key is already registered
+  const sshTest = await runCommand('ssh', ['-T', '-o', 'StrictHostKeyChecking=no', '-o', 'BatchMode=yes', 'git@github.com'], { continueOnError: true });
+  // ssh -T returns exit code 1 even on success, but prints "successfully authenticated"
+  if ((sshTest.stdout + sshTest.stderr).includes('successfully authenticated')) {
+    log.info('✅ SSH key already on GitHub');
+    return;
+  }
+
   // Try gh CLI first (if available and authenticated)
   const hasGh = await commandExists('gh');
   if (hasGh) {
