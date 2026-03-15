@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { log, spinner } from '@clack/prompts';
 import type { InstallOptions, ModuleV2, StateFile } from './types';
 
@@ -49,20 +48,6 @@ export async function runModules(
   for (const module of order) {
     const selectedItems = selected[module.name] ?? [];
     if (selectedItems.length === 0) continue;
-
-    // Refresh sudo timestamp before each module so pkg installers don't hang.
-    // Use -n (non-interactive) first to check if sudo is still valid — only
-    // prompt with stdio:'inherit' if it actually expired.
-    if (!opts.dryRun) {
-      try {
-        execFileSync('sudo', ['-n', 'true'], { stdio: 'ignore' });
-      } catch {
-        // Sudo expired — prompt with real terminal access
-        try {
-          execFileSync('sudo', ['-v'], { stdio: 'inherit' });
-        } catch { /* continue without sudo */ }
-      }
-    }
 
     const s = spinner();
     let spinnerActive = false;

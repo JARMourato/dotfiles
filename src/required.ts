@@ -309,12 +309,27 @@ async function ensureWorkspace(opts: InstallOptions): Promise<void> {
   await fs.mkdir(WORKSPACE_DIR, { recursive: true });
 }
 
+let sudoKeepAliveTimer: ReturnType<typeof setInterval> | null = null;
+
 async function acquireSudo(dryRun: boolean): Promise<void> {
   if (dryRun) return;
-  // Request sudo upfront and validate — some modules need it (openjdk symlink, pmset, app removal)
-  const check = await runCommand('sudo', ['-v'], { continueOnError: true });
-  if (!check.ok) {
+  // Request sudo upfront with real terminal access for the password prompt
+  try {
+    execSync('sudo -v', { stdio: 'inherit' });
+  } catch {
     log.warn('Could not acquire sudo. Some operations may be skipped.');
+    return;
+  }
+  // Keep sudo alive for the entire install by refreshing every 60s
+  sudoKeepAliveTimer = setInterval(() => {
+    try { execSync('sudo -n true', { stdio: 'ignore' }); } catch { /* expired, will re-prompt if needed */ }
+  }, 60_000);
+}
+
+export function stopSudoKeepAlive(): void {
+  if (sudoKeepAliveTimer) {
+    clearInterval(sudoKeepAliveTimer);
+    sudoKeepAliveTimer = null;
   }
 }
 
