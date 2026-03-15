@@ -171,6 +171,9 @@ alias playstore="open -a safari https://play.google.com/console/u/1/developers/6
 # CLI shortcut — run the dotfiles provisioner without the full npx command
 alias dotfiles="npx github:JARMourato/dotfiles"
 
+# Remove oh-my-zsh git plugin alias that conflicts with gsd
+unalias gsd 2>/dev/null
+
 # Prints the PATH env var in a user-friendly way
 alias path="tr ':' '\n' <<< \"$PATH\""
 
