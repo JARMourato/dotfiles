@@ -1,9 +1,11 @@
+import { spawn } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import * as readline from 'node:readline';
 import { isCancel, password, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
-import { brewFormulaInstalled, commandExists, realHome, runCommand, runInteractive, runStreamedCommand } from '../utils/shell';
+import { brewFormulaInstalled, commandExists, realHome, runCommand } from '../utils/shell';
 
 const items = [
   { id: 'xcode', label: 'Xcode (via xcodes)', description: 'Full Xcode installation', critical: true },
@@ -73,6 +75,44 @@ async function ensureXcodesAuth(): Promise<void> {
   process.env.XCODES_PASSWORD = String(pwd);
 }
 
+/** Run xcodes install with 2FA support — watches output for the 2FA prompt,
+ *  asks the user for the code, and pipes it into xcodes' stdin. */
+async function runXcodesInstall(dryRun?: boolean): Promise<{ ok: boolean }> {
+  if (dryRun) {
+    console.log('[dry-run] xcodes install --latest --experimental-unxip');
+    return { ok: true };
+  }
+
+  return new Promise((resolve) => {
+    const child = spawn('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: process.env,
+    });
+
+    let output = '';
+
+    const handleData = (data: Buffer) => {
+      const text = data.toString();
+      output += text;
+      process.stdout.write(text);
+
+      // Detect 2FA prompt
+      if (output.includes('Enter the 6 digit code')) {
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+        rl.question('', (code) => {
+          rl.close();
+          child.stdin.write(code + '\n');
+        });
+      }
+    };
+
+    child.stdout.on('data', handleData);
+    child.stderr.on('data', handleData);
+    child.on('close', (code) => resolve({ ok: code === 0 }));
+    child.on('error', () => resolve({ ok: false }));
+  });
+}
+
 async function copyXcodeTemplateMacros(opts: { dryRun?: boolean; rootDir: string }): Promise<void> {
   const source = path.join(opts.rootDir, 'Xcode', 'IDETemplateMacros.plist');
   const targetDir = path.join(realHome(), 'Library', 'Developer', 'Xcode', 'UserData');
@@ -124,10 +164,7 @@ export const iosModule: ModuleV2 = {
     if (selectedItems.includes('xcode')) {
       await ensureXcodes(opts);
       if (!opts.dryRun) await ensureXcodesAuth();
-      // Run interactively so the user can respond to 2FA prompts
-      const result = await runInteractive('xcodes', ['install', '--latest', '--experimental-unxip'], {
-        dryRun: opts.dryRun,
-      });
+      const result = await runXcodesInstall(opts.dryRun);
       if (!result.ok) {
         console.error('  ⚠ xcodes install failed');
       }
@@ -143,10 +180,9 @@ export const iosModule: ModuleV2 = {
     if (item === 'xcode') {
       await ensureXcodes(opts);
       if (!opts.dryRun) await ensureXcodesAuth();
-      // Run interactively so the user can respond to 2FA prompts
-      const result = await runInteractive('xcodes', ['install', '--latest', '--experimental-unxip'], {
-        dryRun: opts.dryRun,
-      });
+      opts.pauseSpinner?.();
+      const result = await runXcodesInstall(opts.dryRun);
+      opts.resumeSpinner?.();
       if (!result.ok) {
         console.error('  ⚠ xcodes install failed');
       }
