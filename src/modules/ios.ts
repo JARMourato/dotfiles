@@ -3,7 +3,7 @@ import path from 'node:path';
 import { isCancel, password, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
-import { brewFormulaInstalled, commandExists, realHome, runCommand, runStreamedCommand } from '../utils/shell';
+import { brewFormulaInstalled, commandExists, realHome, runCommand, runInteractive, runStreamedCommand } from '../utils/shell';
 
 const items = [
   { id: 'xcode', label: 'Xcode (via xcodes)', description: 'Full Xcode installation', critical: true },
@@ -124,13 +124,12 @@ export const iosModule: ModuleV2 = {
     if (selectedItems.includes('xcode')) {
       await ensureXcodes(opts);
       if (!opts.dryRun) await ensureXcodesAuth();
-      const result = await runCommand('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      // Run interactively so the user can respond to 2FA prompts
+      const result = await runInteractive('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
-        continueOnError: true,
       });
       if (!result.ok) {
-        const output = (result.stderr || result.stdout).trim();
-        console.error(`  ⚠ xcodes install failed: ${output || 'unknown error'}`);
+        console.error('  ⚠ xcodes install failed');
       }
       await copyXcodeTemplateMacros(opts);
     }
@@ -142,17 +141,14 @@ export const iosModule: ModuleV2 = {
   },
   async installItem(item, opts) {
     if (item === 'xcode') {
-      const run = opts.onProgress ? runStreamedCommand : runCommand;
       await ensureXcodes(opts);
       if (!opts.dryRun) await ensureXcodesAuth();
-      const result = await run('xcodes', ['install', '--latest', '--experimental-unxip'], {
+      // Run interactively so the user can respond to 2FA prompts
+      const result = await runInteractive('xcodes', ['install', '--latest', '--experimental-unxip'], {
         dryRun: opts.dryRun,
-        continueOnError: true,
-        onProgress: opts.onProgress,
       });
       if (!result.ok) {
-        const output = (result.stderr || result.stdout).trim();
-        console.error(`  ⚠ xcodes install failed: ${output || 'unknown error'}`);
+        console.error('  ⚠ xcodes install failed');
       }
       await copyXcodeTemplateMacros(opts);
     } else {
