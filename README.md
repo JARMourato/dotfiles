@@ -4,8 +4,17 @@ Interactive macOS setup CLI for provisioning machines from scratch. One command 
 
 ## Quick Start
 
+On a **fresh Mac** (nothing installed yet):
+
 ```bash
-# Run directly from GitHub (no clone needed)
+bash <(curl -Lks https://raw.githubusercontent.com/JARMourato/dotfiles/main/bootstrap.sh)
+```
+
+This installs Xcode CLI tools, Homebrew, and Node.js automatically, then runs the interactive setup.
+
+Once Node.js is available, you can also run directly:
+
+```bash
 npx github:JARMourato/dotfiles --profile work
 ```
 
