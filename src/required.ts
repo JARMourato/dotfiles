@@ -66,25 +66,42 @@ async function ensureNode(opts: InstallOptions): Promise<void> {
 async function ensureSshKey(opts: InstallOptions): Promise<void> {
   const sshDir = path.join(realHome(), '.ssh');
   const pubPath = path.join(sshDir, 'id_rsa.pub');
-  const pubExists = await runCommand('test', ['-f', pubPath], { continueOnError: true });
-  if (pubExists.ok) return;
 
   if (!opts.dryRun) {
     await fs.mkdir(sshDir, { recursive: true });
   }
 
-  const email = opts.profile.config.git?.user_email ?? 'user@example.com';
-  await runCommand('ssh-keygen', ['-t', 'rsa', '-b', '4096', '-C', email, '-f', path.join(sshDir, 'id_rsa'), '-N', ''], {
-    dryRun: opts.dryRun,
-    continueOnError: true,
-  });
-  await runCommand('bash', ['-lc', 'eval "$(ssh-agent -s)" && ssh-add -K ~/.ssh/id_rsa'], {
-    dryRun: opts.dryRun,
-    continueOnError: true,
-  });
+  // Generate key if it doesn't exist
+  const pubExists = await runCommand('test', ['-f', pubPath], { continueOnError: true });
+  if (!pubExists.ok) {
+    const email = opts.profile.config.git?.user_email ?? 'user@example.com';
+    await runCommand('ssh-keygen', ['-t', 'rsa', '-b', '4096', '-C', email, '-f', path.join(sshDir, 'id_rsa'), '-N', ''], {
+      dryRun: opts.dryRun,
+      continueOnError: true,
+    });
+    await runCommand('bash', ['-lc', 'eval "$(ssh-agent -s)" && ssh-add -K ~/.ssh/id_rsa'], {
+      dryRun: opts.dryRun,
+      continueOnError: true,
+    });
+  }
 
-  // Add SSH key to GitHub if gh CLI is available
+  // Always ensure the key is on GitHub (handles re-runs where key exists but wasn't added)
   await addSshKeyToGitHub(pubPath, opts);
+
+  // Pre-trust github.com so SSH clone doesn't hang on host verification
+  const knownHostsPath = path.join(sshDir, 'known_hosts');
+  const alreadyKnown = await runCommand('grep', ['-q', 'github.com', knownHostsPath], { continueOnError: true });
+  if (!alreadyKnown.ok) {
+    if (opts.dryRun) {
+      log.info('[dry-run] ssh-keyscan github.com >> ~/.ssh/known_hosts');
+    } else {
+      const scan = await runCommand('ssh-keyscan', ['-t', 'ed25519,rsa', 'github.com'], { continueOnError: true });
+      if (scan.ok && scan.stdout) {
+        await fs.appendFile(knownHostsPath, scan.stdout + '\n');
+        log.info('✅ github.com added to known_hosts');
+      }
+    }
+  }
 }
 
 async function addSshKeyToGitHub(pubPath: string, opts: InstallOptions): Promise<void> {
