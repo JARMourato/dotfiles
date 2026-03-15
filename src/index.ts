@@ -262,7 +262,7 @@ async function resolveProfile(rootDir: string): Promise<{ profile: ProfileConfig
     await select({
       message: 'What kind of setup?',
       options: [
-        { value: 'dev', label: 'Full Dev' },
+        { value: 'work', label: 'Work' },
         { value: 'server', label: 'Server' },
         { value: 'minimal', label: 'Minimal' },
         { value: 'custom', label: 'Custom' },
