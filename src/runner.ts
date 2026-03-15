@@ -1,4 +1,5 @@
 import { log, spinner } from '@clack/prompts';
+import { runCommand } from './utils/shell';
 import type { InstallOptions, ModuleV2, StateFile } from './types';
 
 function resolveExecutionOrder(modules: ModuleV2[], selected: string[]): ModuleV2[] {
@@ -48,6 +49,11 @@ export async function runModules(
   for (const module of order) {
     const selectedItems = selected[module.name] ?? [];
     if (selectedItems.length === 0) continue;
+
+    // Refresh sudo timestamp before each module so pkg installers don't hang
+    if (!opts.dryRun) {
+      await runCommand('sudo', ['-v'], { continueOnError: true });
+    }
 
     const s = spinner();
     let spinnerActive = false;
