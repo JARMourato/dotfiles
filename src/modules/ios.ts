@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import * as readline from 'node:readline';
 import { isCancel, password, text } from '@clack/prompts';
 import type { ModuleV2 } from '../types';
 import { detectFormulas, installFormula, installFormulas } from './helpers';
@@ -54,30 +53,38 @@ async function ensureXcodes(opts: { dryRun?: boolean }): Promise<void> {
   }
 }
 
-async function ensureXcodesAuth(): Promise<void> {
-  if (process.env.XCODES_USERNAME && process.env.XCODES_PASSWORD) return;
+async function ensureXcodesAuth(): Promise<{ twoFactorCode?: string }> {
+  if (!process.env.XCODES_USERNAME || !process.env.XCODES_PASSWORD) {
+    console.log('');
+    console.log('🍎 Xcode download requires an Apple ID');
+    const username = await text({
+      message: 'Apple ID (email):',
+      validate: (v) => (v.length === 0 ? 'Required' : undefined),
+    });
+    if (isCancel(username)) throw new Error('Xcode install cancelled');
 
-  console.log('');
-  console.log('🍎 Xcode download requires an Apple ID');
-  const username = await text({
-    message: 'Apple ID (email):',
-    validate: (v) => (v.length === 0 ? 'Required' : undefined),
+    const pwd = await password({
+      message: 'Apple ID password:',
+      validate: (v) => (v.length === 0 ? 'Required' : undefined),
+    });
+    if (isCancel(pwd)) throw new Error('Xcode install cancelled');
+
+    process.env.XCODES_USERNAME = String(username);
+    process.env.XCODES_PASSWORD = String(pwd);
+  }
+
+  // Ask for 2FA code upfront — xcodes will need it but can't prompt interactively
+  const code = await text({
+    message: '2FA code (6 digits from your trusted device):',
+    validate: (v) => (/^\d{6}$/.test(v) ? undefined : 'Must be 6 digits'),
   });
-  if (isCancel(username)) throw new Error('Xcode install cancelled');
+  if (isCancel(code)) throw new Error('Xcode install cancelled');
 
-  const pwd = await password({
-    message: 'Apple ID password:',
-    validate: (v) => (v.length === 0 ? 'Required' : undefined),
-  });
-  if (isCancel(pwd)) throw new Error('Xcode install cancelled');
-
-  process.env.XCODES_USERNAME = String(username);
-  process.env.XCODES_PASSWORD = String(pwd);
+  return { twoFactorCode: String(code) };
 }
 
-/** Run xcodes install with 2FA support — watches output for the 2FA prompt,
- *  asks the user for the code, and pipes it into xcodes' stdin. */
-async function runXcodesInstall(dryRun?: boolean): Promise<{ ok: boolean }> {
+/** Run xcodes install — pipes the 2FA code when xcodes asks for it. */
+async function runXcodesInstall(twoFactorCode: string, dryRun?: boolean): Promise<{ ok: boolean }> {
   if (dryRun) {
     console.log('[dry-run] xcodes install --latest --experimental-unxip');
     return { ok: true };
@@ -90,19 +97,17 @@ async function runXcodesInstall(dryRun?: boolean): Promise<{ ok: boolean }> {
     });
 
     let output = '';
+    let codeSent = false;
 
     const handleData = (data: Buffer) => {
-      const text = data.toString();
-      output += text;
-      process.stdout.write(text);
+      const chunk = data.toString();
+      output += chunk;
+      process.stdout.write(chunk);
 
-      // Detect 2FA prompt
-      if (output.includes('Enter the 6 digit code')) {
-        const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-        rl.question('', (code) => {
-          rl.close();
-          child.stdin.write(code + '\n');
-        });
+      // When xcodes asks for the 2FA code, pipe it in
+      if (!codeSent && output.includes('Enter the 6 digit code')) {
+        child.stdin.write(twoFactorCode + '\n');
+        codeSent = true;
       }
     };
 
@@ -163,8 +168,8 @@ export const iosModule: ModuleV2 = {
   async install(selectedItems, opts) {
     if (selectedItems.includes('xcode')) {
       await ensureXcodes(opts);
-      if (!opts.dryRun) await ensureXcodesAuth();
-      const result = await runXcodesInstall(opts.dryRun);
+      const { twoFactorCode } = opts.dryRun ? { twoFactorCode: undefined } : await ensureXcodesAuth();
+      const result = await runXcodesInstall(twoFactorCode ?? '', opts.dryRun);
       if (!result.ok) {
         console.error('  ⚠ xcodes install failed');
       }
@@ -179,9 +184,9 @@ export const iosModule: ModuleV2 = {
   async installItem(item, opts) {
     if (item === 'xcode') {
       await ensureXcodes(opts);
-      if (!opts.dryRun) await ensureXcodesAuth();
       opts.pauseSpinner?.();
-      const result = await runXcodesInstall(opts.dryRun);
+      const { twoFactorCode } = opts.dryRun ? { twoFactorCode: undefined } : await ensureXcodesAuth();
+      const result = await runXcodesInstall(twoFactorCode ?? '', opts.dryRun);
       opts.resumeSpinner?.();
       if (!result.ok) {
         console.error('  ⚠ xcodes install failed');
