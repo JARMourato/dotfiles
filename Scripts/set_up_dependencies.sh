@@ -266,8 +266,14 @@ else
     echo "⚠️  Node.js not installed, skipping Claude Code CLI installation"
 fi
 
-
-
+# Verify claude command is reachable in current shell
+if command -v claude >/dev/null 2>&1; then
+    echo "✅ Claude CLI available in PATH ($(command -v claude))"
+else
+    echo "⚠️  Claude CLI installed but not in PATH for this shell."
+    echo "   Add this to your ~/.paths (or ~/.zshrc), then open a new terminal:"
+    echo "   export PATH=\"$HOME/.local/bin:$PATH\""
+fi
 
 echo
 echo "========================================"

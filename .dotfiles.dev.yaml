@@ -60,6 +60,7 @@ homebrew:
     
     # Productivity
     - bitwarden
+    - 1password
     - spotify
     - iina
     - betterzip

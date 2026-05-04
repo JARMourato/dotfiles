@@ -11,3 +11,6 @@ export PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"
 
 # llvm (Apple Silicon path)
 export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+
+# Local user binaries (Claude Code installer drops `claude` here)
+export PATH="$HOME/.local/bin:$PATH"

@@ -97,7 +97,7 @@ Walk through an interactive wizard:
 | **Cloud** | Docker Desktop, docker-compose |
 | **Apps** | Chrome, VS Code, SourceTree, Proxyman |
 | **Communication** | Slack, Zoom, Telegram, WhatsApp |
-| **Productivity** | Bitwarden, Setapp |
+| **Productivity** | Bitwarden, 1Password, Setapp |
 | **Media** | Spotify, IINA |
 | **AI Tools** | Claude, ChatGPT, Claude Code CLI, Codex CLI |
 | **Mac App Store** | LanScan, Things 3, Magnet |
