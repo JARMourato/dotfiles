@@ -7,6 +7,13 @@
 source .exports
 source Scripts/set_up_symlinks.sh
 
+# Validate zsh config syntax early (avoid broken terminal sessions)
+if ! zsh -n "$HOME/.zshrc" >/dev/null 2>&1; then
+  echo "❌ ~/.zshrc has syntax errors after symlink/setup."
+  echo "   Run: nl -ba ~/.zshrc | sed -n '110,140p'"
+  exit 1
+fi
+
 # Sync state (compare with previous run and optionally remove orphaned packages)
 Scripts/sync_state.sh sync
 
