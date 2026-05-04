@@ -64,6 +64,7 @@ const MANAGED_CASKS = [
   'whatsapp',
   // 'telegram', — skipped: control channel for OpenClaw, same install path as other casks
   'bitwarden',
+  '1password',
   'betterzip',
   'setapp',
   'dockdoor',

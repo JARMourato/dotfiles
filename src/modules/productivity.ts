@@ -3,6 +3,7 @@ import { detectCasks, installCask, installCasks } from './helpers';
 
 const items = [
   { id: 'bitwarden', label: 'Bitwarden' },
+  { id: '1password', label: '1Password' },
   { id: 'betterzip', label: 'BetterZip' },
   { id: 'setapp', label: 'Setapp' },
   { id: 'dockdoor', label: 'DockDoor' },

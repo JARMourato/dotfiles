@@ -53,6 +53,7 @@ const MANAGED_CASKS = new Set([
   'whatsapp',
   'telegram',
   'bitwarden',
+  '1password',
   'betterzip',
   'setapp',
   'dockdoor',
