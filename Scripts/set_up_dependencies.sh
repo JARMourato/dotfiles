@@ -276,8 +276,17 @@ if command -v claude >/dev/null 2>&1; then
     echo "✅ Claude CLI available in PATH ($(command -v claude))"
 else
     echo "⚠️  Claude CLI installed but not in PATH for this shell."
-    echo "   Add this to your ~/.paths (or ~/.zshrc), then open a new terminal:"
-    echo "   export PATH=\"$HOME/.local/bin:$PATH\""
+
+    # Dotfiles-managed safe fix: ensure ~/.paths contains ~/.local/bin once.
+    if [ -f "$HOME/.paths" ] && ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.paths"; then
+        echo '' >> "$HOME/.paths"
+        echo '# Local user binaries (Claude Code installer drops `claude` here)' >> "$HOME/.paths"
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.paths"
+        echo "✅ Added ~/.local/bin to ~/.paths"
+    fi
+
+    echo "   Open a new terminal (or run: source ~/.paths) and retry:"
+    echo "   command -v claude && claude --version"
 fi
 
 echo
