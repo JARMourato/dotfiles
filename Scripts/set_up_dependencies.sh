@@ -254,16 +254,21 @@ echo "🤖 Installing AI Assistant Tools..."
 echo "========================================"
 echo
 
-# Install Claude Code CLI (requires Node.js)
-if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-    if npm list -g @anthropic-ai/claude-code >/dev/null 2>&1; then
-        echo "✅ Claude Code CLI already installed"
-    else
-        echo "🤖 Installing Claude Code CLI..."
-        npm install -g @anthropic-ai/claude-code
-    fi
+# Install Claude Code CLI (official installer)
+if command -v claude >/dev/null 2>&1; then
+    echo "✅ Claude Code CLI already installed"
+    echo "🔧 Ensuring shell integration is up to date..."
+    claude install stable || true
 else
-    echo "⚠️  Node.js not installed, skipping Claude Code CLI installation"
+    if command -v curl >/dev/null 2>&1; then
+        echo "🤖 Installing Claude Code CLI (official installer via curl)..."
+        curl -fsSL https://claude.ai/install.sh | bash
+    elif command -v wget >/dev/null 2>&1; then
+        echo "🤖 Installing Claude Code CLI (official installer via wget)..."
+        wget -qO- https://claude.ai/install.sh | bash
+    else
+        echo "⚠️  Neither curl nor wget is installed, skipping Claude Code CLI installation"
+    fi
 fi
 
 # Verify claude command is reachable in current shell
