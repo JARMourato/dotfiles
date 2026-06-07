@@ -148,7 +148,7 @@ npx github:JARMourato/dotfiles --reset
 Undoes everything:
 - Restores macOS defaults from backup
 - Uninstalls all brew formulas and casks
-- Uninstalls Mac App Store apps, npm globals
+- Uninstalls Mac App Store apps and AI CLIs
 - Removes dotfile symlinks, oh-my-zsh, powerline, fonts
 - Cleans tool data dirs (~/.pyenv, ~/.rbenv, ~/.claude, ~/.gem)
 - Removes homeserver artifacts

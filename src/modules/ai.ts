@@ -10,12 +10,11 @@ const items = [
 ];
 
 const CASK_IDS = new Set(['claude', 'chatgpt']);
-const NPM_PACKAGES: Record<string, string> = {
-  'codex': '@openai/codex',
-};
-// claude-code uses its native installer (auto-updates)
+// Claude Code and Codex both have official native installers that keep them
+// closer to upstream release/update behavior than package-manager installs.
 const NATIVE_INSTALLERS: Record<string, { install: string[]; bin: string }> = {
   'claude-code': { install: ['bash', '-c', 'curl -fsSL https://claude.ai/install.sh | bash'], bin: 'claude' },
+  'codex': { install: ['bash', '-c', 'curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh'], bin: 'codex' },
 };
 
 export const aiModule: ModuleV2 = {
@@ -27,7 +26,7 @@ export const aiModule: ModuleV2 = {
   dependencies: ['core'],
   async detect(selectedItems) {
     const casks = selectedItems.filter((item) => CASK_IDS.has(item));
-    const cliItems = selectedItems.filter((item) => item in NPM_PACKAGES || item in NATIVE_INSTALLERS);
+    const cliItems = selectedItems.filter((item) => item in NATIVE_INSTALLERS);
 
     const caskDetect = casks.length > 0
       ? await detectCasks(casks)
@@ -74,17 +73,5 @@ export const aiModule: ModuleV2 = {
       return;
     }
 
-    const pkg = NPM_PACKAGES[item];
-    if (pkg) {
-      const result = await runAsUser('npm', ['install', '-g', pkg], {
-        dryRun: opts.dryRun,
-        continueOnError: true,
-        timeoutMs: 180_000,
-      });
-      if (!result.ok) {
-        const err = (result.stderr || result.stdout).trim().slice(0, 300);
-        throw new Error(`npm install -g ${pkg} failed: ${err || 'timed out after 3 minutes'}`);
-      }
-    }
   },
 };

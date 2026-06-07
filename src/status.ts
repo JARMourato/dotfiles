@@ -63,9 +63,9 @@ const MANAGED_CASKS = new Set([
   'claude',
   'chatgpt',
 ]);
-const NPM_GLOBALS: { label: string; packageName: string }[] = [];
 const NATIVE_CLI_TOOLS = [
   { label: 'claude-code', bin: 'claude' },
+  { label: 'codex', bin: 'codex' },
 ];
 const MACOS_BASELINE: Record<string, BaselineCheck[]> = {
   dock: [
@@ -117,11 +117,6 @@ async function readDefault(domain: string, key: string): Promise<string | number
   return parseValue(read.stdout);
 }
 
-async function npmGlobalInstalled(packageName: string): Promise<boolean> {
-  const result = await runCommand('npm', ['ls', '-g', packageName, '--depth=0'], { continueOnError: true });
-  return result.ok;
-}
-
 export async function showStatus(rootDir: string): Promise<void> {
   log.info(chalk.bold(chalk.cyan('Status: Brew')));
   const formulasRes = await runCommand('brew', ['list', '--formula'], { continueOnError: true });
@@ -154,11 +149,6 @@ export async function showStatus(rootDir: string): Promise<void> {
     if (check.ok) line(chalk.green('✅'), tool.label, '(installed)');
     else line('☐', tool.label, '(not installed)');
   }
-  for (const pkg of NPM_GLOBALS) {
-    if (await npmGlobalInstalled(pkg.packageName)) line(chalk.green('✅'), pkg.label, '(installed)');
-    else line('☐', pkg.label, '(not installed)');
-  }
-
   log.info(chalk.bold(chalk.cyan('Status: Dotfile Symlinks')));
   for (const dotfile of DOTFILES) {
     const filePath = path.join(realHome(), dotfile);

@@ -1,3 +1,4 @@
+import { promises as fs } from 'node:fs';
 import {
   cancel,
   confirm,
@@ -24,6 +25,7 @@ import { JsonStateManager } from './state';
 import type { InstallOptions, ModuleV2, ProfileConfig } from './types';
 import { detectMachine } from './utils/detect';
 import { getKeychainPassword, setKeychainPassword } from './utils/keychain';
+import { realHome, runCommand } from './utils/shell';
 
 const program = new Command();
 
@@ -78,6 +80,21 @@ function sanitizeItems(module: ModuleV2, items: string[]): string[] {
 
 function legacyIncludes(profile: ProfileConfig, name: string): boolean {
   return Array.isArray(profile.modules) && profile.modules.includes(name);
+}
+
+async function uninstallCodexNative(): Promise<void> {
+  const home = realHome();
+  await fs.rm(path.join(home, '.local', 'bin', 'codex'), { force: true });
+  await fs.rm(path.join(home, '.codex', 'packages', 'standalone'), { recursive: true, force: true });
+
+  const profileCandidates = ['.zprofile', '.bash_profile', '.zshrc', '.bashrc', '.profile'];
+  for (const profile of profileCandidates) {
+    const profilePath = path.join(home, profile);
+    const contents = await fs.readFile(profilePath, 'utf8').catch(() => '');
+    if (!contents.includes('# >>> Codex installer >>>')) continue;
+    const cleaned = contents.replace(/\n?# >>> Codex installer >>>[\s\S]*?# <<< Codex installer <<</g, '');
+    await fs.writeFile(profilePath, cleaned, 'utf8');
+  }
 }
 
 function selectionsFromProfile(profile: ProfileConfig): Record<string, string[]> {
@@ -438,12 +455,11 @@ async function run(): Promise<void> {
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const natives = mod.items.filter((i) => i === 'claude-code');
-        const npms = mod.items.filter((i) => i === 'codex');
+        const natives = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
         const parts: string[] = [];
         if (casks.length > 0) parts.push(`brew uninstall --cask ${casks.join(', ')}`);
-        if (natives.length > 0) parts.push(`claude uninstall`);
-        if (npms.length > 0) parts.push(`npm uninstall -g ${npms.map((p) => p === 'codex' ? '@openai/codex' : p).join(', ')}`);
+        if (natives.includes('claude-code')) parts.push('claude uninstall');
+        if (natives.includes('codex')) parts.push('remove ~/.local/bin/codex + ~/.codex/packages/standalone');
         log.info(`  🗑  ${mod.label}: ${parts.join(' + ')}`);
       } else {
         log.info(`  🗑  ${mod.label}: ${mod.items.join(', ')}`);
@@ -487,16 +503,14 @@ async function run(): Promise<void> {
         if (formulas.length > 0) await uninstallFormulas(formulas, uninstallOpts);
       } else if (mod.name === 'ai') {
         const casks = mod.items.filter((i) => i === 'claude' || i === 'chatgpt');
-        const natives = mod.items.filter((i) => i === 'claude-code');
-        const npms = mod.items.filter((i) => i === 'codex');
+        const natives = mod.items.filter((i) => i === 'claude-code' || i === 'codex');
         if (casks.length > 0) await uninstallCasks(casks, uninstallOpts);
         for (const item of natives) {
-          const bin = item === 'claude-code' ? 'claude' : item;
-          await runCommand(bin, ['uninstall'], { continueOnError: true });
-        }
-        for (const pkg of npms) {
-          const npmName = pkg === 'codex' ? '@openai/codex' : pkg;
-          await runCommand('npm', ['uninstall', '-g', npmName], { continueOnError: true });
+          if (item === 'claude-code') {
+            await runCommand('claude', ['uninstall'], { continueOnError: true });
+          } else if (item === 'codex') {
+            await uninstallCodexNative();
+          }
         }
       }
     }

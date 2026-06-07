@@ -290,6 +290,32 @@ else
 fi
 
 echo
+
+# Install Codex CLI (official installer)
+if command -v codex >/dev/null 2>&1; then
+    echo "✅ Codex CLI already installed"
+else
+    if command -v curl >/dev/null 2>&1; then
+        echo "🤖 Installing Codex CLI (official standalone installer via curl)..."
+        curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh
+    elif command -v wget >/dev/null 2>&1; then
+        echo "🤖 Installing Codex CLI (official standalone installer via wget)..."
+        wget -qO- https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh
+    else
+        echo "⚠️  Neither curl nor wget is installed, skipping Codex CLI installation"
+    fi
+fi
+
+# Verify codex command is reachable in current shell
+if command -v codex >/dev/null 2>&1; then
+    echo "✅ Codex CLI available in PATH ($(command -v codex))"
+else
+    echo "⚠️  Codex CLI installed but not in PATH for this shell."
+    echo "   Open a new terminal and retry:"
+    echo "   command -v codex && codex --version"
+fi
+
+echo
 echo "========================================"
 echo "🎉 Dependencies Setup Complete!"
 echo "========================================"
