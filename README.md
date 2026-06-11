@@ -95,7 +95,7 @@ Walk through an interactive wizard:
 | **iOS Dev** | Xcode (via xcodes), swiftlint, swiftformat, xcbeautify, ASC CLI |
 | **Android Dev** | Android Studio, OpenJDK, bundletool, env setup, SDK licenses |
 | **Cloud** | Docker Desktop, docker-compose |
-| **Apps** | Chrome, VS Code, SourceTree, Proxyman |
+| **Apps** | Chrome, VS Code, Sublime Text, Obsidian, SourceTree, Proxyman |
 | **Communication** | Slack, Zoom, Telegram, WhatsApp |
 | **Productivity** | Bitwarden, 1Password, Setapp |
 | **Media** | Spotify, IINA |
