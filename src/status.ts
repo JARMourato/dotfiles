@@ -18,6 +18,7 @@ const MANAGED_FORMULAS = new Set([
   'fd',
   'ripgrep',
   'htop',
+  'bun',
   'swiftlint',
   'swiftformat',
   'cocoapods',

@@ -89,7 +89,7 @@ Walk through an interactive wizard:
 
 | Module | Items |
 |--------|-------|
-| **Core Tools** | jq, curl, wget, tree, bat, fd, ripgrep, htop |
+| **Core Tools** | jq, curl, wget, tree, bat, fd, ripgrep, htop, Bun |
 | **Terminal** | oh-my-zsh, powerline-shell, Highway theme, Meslo fonts |
 | **Languages** | Python (pyenv), Ruby (rbenv + bundler) |
 | **iOS Dev** | Xcode (via xcodes), swiftlint, swiftformat, xcbeautify, ASC CLI |

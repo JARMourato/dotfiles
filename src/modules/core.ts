@@ -10,13 +10,14 @@ const items = [
   { id: 'fd', label: 'fd' },
   { id: 'ripgrep', label: 'ripgrep' },
   { id: 'htop', label: 'htop' },
+  { id: 'bun', label: 'Bun' },
   { id: 'gh', label: 'GitHub CLI' },
 ];
 
 export const coreModule: ModuleV2 = {
   name: 'core',
   label: 'Core Tools',
-  description: 'jq, curl, wget, tree, bat, fd, ripgrep, htop, gh',
+  description: 'jq, curl, wget, tree, bat, fd, ripgrep, htop, bun, gh',
   items,
   defaultItems: items.map((item) => item.id),
   async detect(selectedItems) {
