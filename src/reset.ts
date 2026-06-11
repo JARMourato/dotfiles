@@ -28,6 +28,7 @@ const MANAGED_FORMULAS = [
   'fd',
   'ripgrep',
   'htop',
+  'bun',
   'swiftlint',
   'swiftformat',
   'cocoapods',
