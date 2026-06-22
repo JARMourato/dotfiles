@@ -94,7 +94,7 @@ Walk through an interactive wizard:
 | **Languages** | Python (pyenv), Ruby (rbenv + bundler) |
 | **iOS Dev** | Xcode (via xcodes), swiftlint, swiftformat, xcbeautify, ASC CLI |
 | **Android Dev** | Android Studio, OpenJDK, bundletool, env setup, SDK licenses |
-| **Cloud** | Docker Desktop, docker-compose |
+| **Cloud** | Docker Desktop, docker-compose, AWS CLI |
 | **Apps** | Chrome, VS Code, Sublime Text, Obsidian, SourceTree, Proxyman |
 | **Communication** | Slack, Zoom, Telegram, WhatsApp |
 | **Productivity** | Bitwarden, 1Password, Setapp |
