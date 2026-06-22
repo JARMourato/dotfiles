@@ -5,6 +5,7 @@ const items = [
   { id: 'google-chrome', label: 'Google Chrome' },
   { id: 'visual-studio-code', label: 'Visual Studio Code' },
   { id: 'sublime-text', label: 'Sublime Text' },
+  { id: 'obsidian', label: 'Obsidian' },
   { id: 'sourcetree', label: 'SourceTree' },
   { id: 'proxyman', label: 'Proxyman' },
   { id: 'charles', label: 'Charles' },

@@ -56,6 +56,7 @@ const MANAGED_CASKS = [
   'google-chrome',
   'visual-studio-code',
   'sublime-text',
+  'obsidian',
   'sourcetree',
   'proxyman',
   'charles',

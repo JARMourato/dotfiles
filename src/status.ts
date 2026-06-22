@@ -45,6 +45,7 @@ const MANAGED_CASKS = new Set([
   'google-chrome',
   'visual-studio-code',
   'sublime-text',
+  'obsidian',
   'sourcetree',
   'proxyman',
   'charles',
