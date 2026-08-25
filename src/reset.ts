@@ -59,6 +59,7 @@ const MANAGED_CASKS = [
   'obsidian',
   'sourcetree',
   'proxyman',
+  // 'tailscale-app', — skipped: removing it can cut remote access mid-reset
   'charles',
   'postman',
   'slack',

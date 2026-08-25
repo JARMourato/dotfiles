@@ -48,6 +48,7 @@ const MANAGED_CASKS = new Set([
   'obsidian',
   'sourcetree',
   'proxyman',
+  'tailscale-app',
   'charles',
   'postman',
   'slack',
