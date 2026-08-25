@@ -8,6 +8,7 @@ const items = [
   { id: 'obsidian', label: 'Obsidian' },
   { id: 'sourcetree', label: 'SourceTree' },
   { id: 'proxyman', label: 'Proxyman' },
+  { id: 'tailscale-app', label: 'Tailscale' },
   { id: 'charles', label: 'Charles' },
   { id: 'postman', label: 'Postman' },
 ];
