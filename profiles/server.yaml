@@ -3,9 +3,11 @@ description: "Media server — Plex, Sonarr, Radarr, qBittorrent, and more"
 
 core: [jq, curl, wget, htop]
 terminal: [oh-my-zsh, powerline, theme, fonts]
-cloud: [docker, docker-compose]
+cloud: [docker, docker-compose, orbstack]
 ai: [claude-code, codex]
 media: [iina]
+mas:
+  - { id: 937984704, name: Amphetamine }
 homeserver:
   - hostname
   - plex

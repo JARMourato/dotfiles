@@ -5,6 +5,7 @@ const masItems: Array<{ id: string; label: string; app: MasAppSelection }> = [
   { id: 'lanscan', label: 'LanScan', app: { id: 472226235, name: 'LanScan' } },
   { id: 'things-3', label: 'Things 3', app: { id: 904280696, name: 'Things 3' } },
   { id: 'magnet', label: 'Magnet', app: { id: 441258766, name: 'Magnet' } },
+  { id: 'amphetamine', label: 'Amphetamine', app: { id: 937984704, name: 'Amphetamine' } },
 ];
 
 const byItem = new Map(masItems.map((item) => [item.id, item]));
