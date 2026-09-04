@@ -100,7 +100,7 @@ Walk through an interactive wizard:
 | **Productivity** | Bitwarden, 1Password, Setapp |
 | **Media** | Spotify, IINA |
 | **AI Tools** | Claude, ChatGPT, Claude Code CLI, Codex CLI |
-| **Mac App Store** | LanScan, Things 3, Magnet |
+| **Mac App Store** | LanScan, Things 3, Magnet, Amphetamine |
 | **macOS Defaults** | Dock, Finder, Keyboard, Trackpad, Mouse, Power, Screenshots, etc. |
 | **Cleanup** | Remove GarageBand, iMovie, Keynote, Numbers, Pages |
 
