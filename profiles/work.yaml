@@ -12,6 +12,8 @@ comms: [slack, zoom, telegram, whatsapp]
 productivity: [bitwarden, 1password, setapp]
 media: [spotify, iina]
 ai: [claude, chatgpt, claude-code, codex]
+mas:
+  - { id: 937984704, name: Amphetamine }
 macos:
   - dock
   - finder
