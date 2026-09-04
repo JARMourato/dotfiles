@@ -10,7 +10,8 @@ apps: []
 comms: []
 productivity: []
 ai: []
-mas: []
+mas:
+  - { id: 937984704, name: Amphetamine }
 macos: []
 macos_complex: []
 cleanup: []
