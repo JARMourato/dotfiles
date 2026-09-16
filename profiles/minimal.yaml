@@ -37,4 +37,4 @@ config:
       disable_auto_capitalization: true
       disable_auto_correct: true
       key_repeat_rate: 2
-      initial_key_repeat: 35
+      initial_key_repeat: 15
