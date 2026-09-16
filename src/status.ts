@@ -92,6 +92,7 @@ const MACOS_BASELINE: Record<string, BaselineCheck[]> = {
   screenshots: [{ domain: 'com.apple.screencapture', key: 'type', factory: 'png' }],
   'menu-bar': [{ domain: 'com.apple.menuextra.clock', key: 'ShowSeconds', factory: false }],
   'hot-corners': [{ domain: 'com.apple.dock', key: 'wvous-tl-corner', factory: 1 }],
+  'window-tiling': [{ domain: 'com.apple.WindowManager', key: 'EnableTilingByEdgeDrag', factory: true }],
   'language-region': [{ domain: '-g', key: 'AppleTemperatureUnit', factory: 'Fahrenheit' }],
   'activity-monitor': [{ domain: 'com.apple.ActivityMonitor', key: 'OpenMainWindow', factory: false }],
   'app-store': [{ domain: 'com.apple.SoftwareUpdate', key: 'ScheduleFrequency', factory: 7 }],

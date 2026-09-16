@@ -38,3 +38,6 @@ config:
       disable_auto_correct: true
       key_repeat_rate: 2
       initial_key_repeat: 15
+    window_tiling:
+      drag_to_screen_edges: false
+      drag_to_menu_bar: false

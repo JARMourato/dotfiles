@@ -24,6 +24,7 @@ macos:
   - screenshots
   - menu-bar
   - hot-corners
+  - window-tiling
   - language-region
   - activity-monitor
   - app-store
@@ -145,6 +146,9 @@ config:
       top_right: 3
       bottom_left: 0
       bottom_right: 2
+    window_tiling:
+      drag_to_screen_edges: false
+      drag_to_menu_bar: false
     xcode:
       trim_whitespace: true
       trim_whitespace_only_lines: true

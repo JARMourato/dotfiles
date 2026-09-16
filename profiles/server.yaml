@@ -26,6 +26,7 @@ macos:
   - screenshots
   - menu-bar
   - hot-corners
+  - window-tiling
 macos_complex:
   - spotlight
   - bluetooth-audio
@@ -79,3 +80,6 @@ config:
       top_left: 4
       top_right: 3
       bottom_right: 2
+    window_tiling:
+      drag_to_screen_edges: false
+      drag_to_menu_bar: false
