@@ -101,7 +101,7 @@ Walk through an interactive wizard:
 | **Media** | Spotify, IINA |
 | **AI Tools** | Claude, ChatGPT, Claude Code CLI, Codex CLI |
 | **Mac App Store** | LanScan, Things 3, Magnet, Amphetamine |
-| **macOS Defaults** | Dock, Finder, Keyboard, Trackpad, Mouse, Power, Screenshots, etc. |
+| **macOS Defaults** | Dock, Finder, Keyboard, Trackpad, Mouse, Power, Screenshots, Window Tiling, etc. |
 | **Cleanup** | Remove GarageBand, iMovie, Keynote, Numbers, Pages |
 
 ## File Layout

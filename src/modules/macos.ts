@@ -19,6 +19,7 @@ const macosItems = [
   { id: 'screenshots', label: 'Screenshots' },
   { id: 'menu-bar', label: 'Menu Bar' },
   { id: 'hot-corners', label: 'Hot Corners' },
+  { id: 'window-tiling', label: 'Window Tiling' },
   { id: 'language-region', label: 'Language & Region' },
   { id: 'activity-monitor', label: 'Activity Monitor' },
   { id: 'app-store', label: 'App Store' },
@@ -37,6 +38,7 @@ const sectionKeyByItem: Record<string, string> = {
   screenshots: 'screen',
   'menu-bar': 'menu_bar',
   'hot-corners': 'hot_corners',
+  'window-tiling': 'window_tiling',
   'language-region': 'language_region',
   'activity-monitor': 'activity_monitor',
   'app-store': 'app_store',
@@ -372,6 +374,21 @@ export const macosModule: ModuleV2 = {
         if (hotCorners[source] !== undefined) {
           await defaultsWrite('com.apple.dock', cornerKey, hotCorners[source], opts.dryRun);
           await defaultsWrite('com.apple.dock', modifierKey, 0, opts.dryRun);
+        }
+      }
+    }
+
+    const windowTiling = cfg.window_tiling ?? {};
+    if (has('window-tiling')) {
+      const windowTilingMap: Array<[string, string]> = [
+        ['drag_to_screen_edges', 'EnableTilingByEdgeDrag'],
+        ['drag_to_menu_bar', 'EnableTopTilingByEdgeDrag'],
+        ['hold_option_to_tile', 'EnableTilingOptionAccelerator'],
+        ['tiled_window_margins', 'EnableTiledWindowMargins'],
+      ];
+      for (const [source, key] of windowTilingMap) {
+        if (windowTiling[source] !== undefined) {
+          await defaultsWrite('com.apple.WindowManager', key, asBool(windowTiling[source]), opts.dryRun);
         }
       }
     }
