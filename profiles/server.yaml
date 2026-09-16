@@ -63,7 +63,7 @@ config:
       disable_smart_quotes: true
       disable_auto_correct: true
       key_repeat_rate: 2
-      initial_key_repeat: 35
+      initial_key_repeat: 15
       disable_press_and_hold: true
     trackpad:
       tap_to_click: true
