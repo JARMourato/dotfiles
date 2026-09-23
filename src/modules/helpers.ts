@@ -98,17 +98,36 @@ export async function detectMasApps(ids: number[]): Promise<DetectResult> {
   return { installed, missing, partial: installed.length > 0 && missing.length > 0 };
 }
 
+/** The `mas` CLI is not part of the core module, so make sure it exists before using it. */
+export async function ensureMasCli(opts: InstallOptions): Promise<void> {
+  if (await commandExists('mas')) return;
+  const result = await runAsUser('brew', ['install', 'mas'], { dryRun: opts.dryRun });
+  if (!opts.dryRun && !result.ok) {
+    throw new Error(`Failed to install the mas CLI: ${result.stderr.trim() || 'brew install mas failed'}`);
+  }
+}
+
+async function runMasInstall(id: number, opts: InstallOptions): Promise<void> {
+  const result = await runAsUser('mas', ['install', String(id)], { dryRun: opts.dryRun });
+  if (!opts.dryRun && !result.ok) {
+    throw new Error(`mas install ${id} failed: ${result.stderr.trim() || result.stdout.trim() || 'unknown error (are you signed in to the App Store?)'}`);
+  }
+}
+
 export async function installMasApps(ids: number[], opts: InstallOptions): Promise<void> {
+  if (ids.length === 0) return;
+  await ensureMasCli(opts);
   for (const id of ids) {
     if (!(await masAppInstalled(id))) {
-      await runAsUser('mas', ['install', String(id)], { dryRun: opts.dryRun });
+      await runMasInstall(id, opts);
     }
   }
 }
 
 export async function installMasApp(id: number, opts: InstallOptions & { onProgress?: (line: string) => void }): Promise<void> {
+  await ensureMasCli(opts);
   if (!(await masAppInstalled(id))) {
-    await runAsUser('mas', ['install', String(id)], { dryRun: opts.dryRun });
+    await runMasInstall(id, opts);
   }
 }
 
