@@ -78,6 +78,8 @@ mas_apps:
     name: "LanScan"
   - id: 904280696
     name: "Things 3"
+  - id: 1160435653
+    name: "AutoMounter"
 
 # Configuration
 config:
